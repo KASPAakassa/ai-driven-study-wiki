@@ -318,7 +318,7 @@ nav:
       - "Crush(缁堢缂栫▼鎼。)": 08-harness/crush-coding-agent.md
       - "Avernet(Agent 鍗忎綔灞?": 08-harness/avernet-collaboration-network.md
       - "AutoAgent(闆朵唬鐮佹鏋?": 08-harness/autoagent-zero-code-framework.md
-  - 馃摜 鏀朵欢绠? inbox/README.md
+  - "收件箱": inbox/README.md
   - "馃彨 Agent 鍓嶆部瀛︽湳":
       - 09-agent-research/index.md
       - "鎺ㄧ悊鏃堕獙璇?DeepVerifier)璁烘枃瑙ｆ瀽": 09-agent-research/inference-time-verification.md
