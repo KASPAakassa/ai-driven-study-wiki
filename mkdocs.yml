@@ -23,7 +23,8 @@ theme:
       accent: indigo
       toggle:
         icon: material/weather-night
-        name: 鍒囨崲鍒版繁鑹叉ā寮?    - scheme: slate
+        name: 鍒囨崲鍒版繁鑹叉ā寮?
+    - scheme: slate
       primary: indigo
       accent: indigo
       toggle:
