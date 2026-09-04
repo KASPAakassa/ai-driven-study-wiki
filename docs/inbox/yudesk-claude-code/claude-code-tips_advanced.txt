@@ -1,0 +1,160 @@
+跳转到主要内容
+Yu的赛博工位
+
+笔记收录独立开发博客关于🇨🇳
+
+文档Claude Code 相关
+Claude Code 隐藏技巧Claude Code 隐藏技巧快捷键篇输入与交互篇思考与模型控制篇会话管理篇上下文管理篇实用命令与自动化篇配置与诊断篇进阶篇
+
+系统架构全解析工具调用系统Worktree 指南Agent Teams 指南Claude Skills
+
+Claude Code Plugin
+
+Claude Code Subagent
+
+Agent 与工作流
+Agent 记忆系统
+
+Pi Agent
+
+规格驱动开发
+
+Ralph Wiggum
+
+GSD
+
+gstack
+
+Matt Pocock 的 Claude Code 技能集
+
+工程实践
+AI 时代的 TDD
+
+Tmux 入门
+
+Yu的赛博工位
+
+搜索⌘K
+笔记收录独立开发博客关于🇨🇳
+
+进阶篇
+
+Claude Code 隐藏技巧
+
+下载
+
+进阶篇
+Copy page
+
+AI 辅助写的
+Claude Code 进阶技巧：终端通知、Hooks 进阶用法、插件生态、Agent Teams 多代理协作、提示词心法
+终端通知：任务完成提醒
+
+Claude 完成任务后希望收到通知？
+
+claude config set --global preferredNotifChannel terminal_bell
+
+配合 iTerm2 的通知功能，或者用 terminal-notifier 做自定义通知（参考 最佳实践 中的 Hooks 配置）。
+
+Hooks 进阶用法
+
+Hooks 不只是能跑 shell 命令。实际上有四种类型：
+
+command：Shell 命令（最常见）
+
+http：POST JSON 到 URL（支持自定义 headers 和环境变量展开）
+
+prompt：发给 Claude 评估（比如「所有任务都完成了吗？」）
+
+agent：启动一个有工具访问权限的子代理来验证
+
+一些进阶的 Hook 事件：
+
+PostCompact：压缩完成后触发，适合注入提醒让 Claude 重新读取关键文件
+
+SessionStart：写入 $CLAUDE_ENV_FILE 可以给整个会话持久化环境变量
+
+PreToolUse：可以修改工具输入（updatedInput），甚至自动批准或拒绝操作
+
+插件生态
+
+/plugin 可以浏览和安装社区插件。一些值得了解的插件：
+
+dx（by ykdojo）：提供 /handoff（自动写交接文档）、/clone（克隆对话）、/half-clone（只克隆最近的对话减少上下文）
+
+mine（by anipotts）：把所有 Claude Code 会话数据导入 SQLite，支持成本追踪、缓存分析、错误记忆等查询
+
+Agent Teams：多代理协作
+
+设置环境变量开启实验性的 Agent Teams 功能：
+
+export CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1
+
+开启后，一个会话可以作为 Team Lead，通过 git worktree 协调多个代理同时工作。每个代理在自己的上下文窗口中独立运行，适合大型项目的并行开发。
+
+不过 token 消耗会增加 4-15 倍，酌情使用。
+
+提示词心法
+
+以下来自 Boris Cherny 推特中分享的团队实践，算是「提示工程」在 Claude Code 场景下的最佳应用。
+
+让 Claude 当你的审查员
+
+不要只是让 Claude 写代码，还可以让它审查你的代码：
+
+Grill me on these changes and don't make a PR until I pass your test.
+
+或者让它证明代码是可以工作的：
+
+Prove to me this works. Diff behavior between main and my feature branch.
+
+回答不满意时不要重复提问
+
+Boris 的第 6 条 tip 提到：如果 Claude 给了一个平庸的回答，不要换个说法重新问一遍。直接说「这个方案不够好，具体说说哪里可以改进」，让它在现有基础上迭代，比从头开始效果好。
+
+让 Claude 自己更新 CLAUDE.md
+
+每次纠正 Claude 的错误后，加一句：
+
+Update your CLAUDE.md so you don't make that mistake again.
+
+Boris 说 Claude 在「给自己写规则」这件事上出奇地好。这样 CLAUDE.md 会越来越精准，后续对话的质量也会持续提升。
+
+直接说「fix」
+
+启用 Slack MCP 后，把 Slack 中的 bug 报告直接粘贴给 Claude，只说一个字：fix。零上下文切换。
+
+或者 CI 挂了，直接说：
+
+Go fix the failing CI tests.
+
+不需要手动分析日志，不需要解释是什么问题，让 Claude 自己去看日志、定位问题、修复。
+
+写在最后
+
+Claude Code 的功能更新非常快，这些技巧也在不断演进中。建议关注官方 Changelog 保持同步。
+
+如果你还没看过我之前的文章，建议先从基础的工作流开始：
+
+延伸阅读
+
+《我的 Claude Code 最佳实践》— 工作流层面的核心技巧和斜杠命令指南
+
+《AI编程质量控制：5道防线确保代码质量》— Claude Code 编程中的质量保障体系
+
+《Claude 系统架构全解析》— 理解 MCP、Skills、Subagents、Hooks 等组件
+
+评论
+
+配置与诊断篇
+
+Claude Code 配置与诊断：/statusline 自定义状态栏、settings.json 自动补全、/stats 使用分析、/doctor 健康检查、社区工具
+系统架构全解析
+
+深入理解 Claude 系统中 MCP、Skills、Subagents、Hooks、Plugins 等组件的定位、设计意图与协同关系
+
+目录
+
+终端通知：任务完成提醒Hooks 进阶用法插件生态Agent Teams：多代理协作提示词心法让 Claude 当你的审查员回答不满意时不要重复提问让 Claude 自己更新 CLAUDE.md直接说「fix」写在最后延伸阅读
+
+进阶篇 | Yu的赛博工位

@@ -1,0 +1,252 @@
+跳转到主要内容
+Yu的赛博工位
+
+笔记收录独立开发博客关于🇨🇳
+
+文档Claude Code 相关
+Claude Code 隐藏技巧
+
+系统架构全解析工具调用系统Worktree 指南Agent Teams 指南Claude Skills
+
+Claude Code Plugin
+
+Claude Code Subagent
+
+Agent 与工作流
+Agent 记忆系统
+
+Pi Agent
+
+规格驱动开发
+
+Ralph Wiggum
+
+GSD
+
+gstack
+
+Matt Pocock 的 Claude Code 技能集概览初始化配置Grill MeBatch Grill MeGrill With DocsPRD 与 Issues诊断与分诊TDDZoom OutPrototype深化代码架构其他 Skills
+
+工程实践
+AI 时代的 TDD
+
+Tmux 入门
+
+Yu的赛博工位
+
+搜索⌘K
+笔记收录独立开发博客关于🇨🇳
+
+Prototype
+
+Matt Pocock 的 Claude Code 技能集
+
+下载
+
+Prototype：用可丢弃代码回答一个设计问题
+Copy page
+
+AI 辅助写的
+拆解 Matt Pocock 的 /prototype skill：原型不是低质量实现，而是为了回答一个问题而写的可丢弃代码。它分成逻辑状态机原型和 UI 多方案原型两条分支
+原型不是「先随便写一个」
+
+/prototype 的第一句定义很重要：
+
+原型是用来回答一个问题的可丢弃代码。
+
+这句话把原型和「偷懒版实现」分开了。原型不是生产代码的前身，不是以后慢慢改成正式版的半成品。它从第一天开始就应该被标记为 throwaway。
+
+所以 /prototype 的关键不是写得快，而是先问清楚：
+
+这个原型到底要回答什么问题？
+
+两条分支
+
+Matt 把原型分成两类，输出完全不同。
+
+要回答的问题分支输出
+逻辑、状态机、数据模型是否合理
+Logic prototype
+一个可运行的终端小程序
+
+这个界面应该长什么样
+UI prototype
+一个路由里多套可切换 UI 方案
+
+这点很实用。很多团队说「做个 prototype」，但没说清楚是想验证交互外观，还是验证状态流转。两者需要的东西完全不同。
+
+Logic prototype：把状态摊在终端里
+
+如果问题是「这个状态机对不对」「这个业务规则能不能跑通」，原型应该是一个很小的命令行程序。
+
+它的特点：
+
+内存态，不依赖真实数据库
+
+一个命令启动
+
+每个操作后打印完整相关状态
+
+覆盖那些纸面上难以推演的分支
+
+不写测试，不做异常兜底，不抽象成框架
+
+例子：你要设计订阅状态流。
+
+不要直接改生产代码。先写一个 subscription-prototype.ts，让用户可以在终端里选择：
+
+1. start trial
+2. pay
+3. cancel
+4. expire
+5. refund
+6. print state
+
+每按一步，打印当前 entitlement、trial quota、paid state、next renewal。你会很快发现有些状态组合根本没想清楚。
+
+这类原型的价值是：让抽象规则变成可操作对象。
+
+UI prototype：在一个路由里放多套激进方案
+
+如果问题是「界面应该怎么设计」，原型应该生成几套差异足够大的 UI，而不是把同一个方案微调三次。
+
+/prototype 的 UI 分支要求：
+
+在一个路由里放多个 variation
+
+用 URL search param 或底部浮动切换条切换
+
+方案之间要有明显差异
+
+原型代码靠近未来真实页面，但命名要清楚表示 prototype
+
+不要过早接真实数据和持久化
+
+这和普通 AI 生成 UI 的区别在于：它不是让 AI 一次给「最佳方案」，而是让你用真实浏览器比较几种方向。
+
+比如一个 dashboard 空状态，不要只让 AI 改文案。可以让它做：
+
+A：表格式、密度高，强调下一步操作
+
+B：任务导向，左侧 checklist + 右侧预览
+
+C：引导式，突出一个主 CTA 和历史示例
+
+然后你在同一路由切换，而不是在聊天里看三张截图脑补。
+
+所有原型都必须可删除
+
+/prototype 的通用规则里，最重要的是「可删除」：
+
+文件名或路径要表明这是 prototype
+
+不要默认接生产数据库
+
+不要写通用抽象
+
+不要做过度错误处理
+
+结束后要删除，或者把学到的结论吸收到正式代码
+
+如果一个原型不能删，它就已经变成生产代码负债。
+
+这点在 AI 编程里尤其重要。AI 很擅长把 prototype 写得「看起来能用」，然后人类懒得删，最后项目里多出一堆没人敢碰的临时代码。
+
+原型结束后要留下什么
+
+原型代码不值得保留，但答案值得保留。
+
+Matt 建议把下面几件事写到一个持久位置：
+
+原型要回答的问题
+
+观察到的结论
+
+选择了哪个方向
+
+放弃了哪些方向
+
+如果需要，转成 ADR、issue、PRD 或 commit message
+
+也就是说，/prototype 的产物不是代码，而是决策。
+
+什么时候不该用
+
+不要把 /prototype 用在这些场景：
+
+需求已经明确，只需要实现
+
+bug 已经有复现，应该用 /diagnose
+
+重构方向已经清楚，应该用 /tdd 保护后实施
+
+UI 只是小 polish，不值得做多套方案
+
+你没有时间删除或吸收原型
+
+原型的成本不在写，而在收尾。没有收尾，就不要开。
+
+一个好用的提示词
+
+可以这样调用：
+
+/prototype
+
+我想验证这个 checkout 状态机是否合理。请走 logic 分支。
+只做可丢弃终端原型，不接真实 DB。
+每次操作后打印完整状态。
+
+或者：
+
+/prototype
+
+我想比较项目详情页的 3 种信息架构。请走 UI 分支。
+放在现有路由体系下的 prototype route，提供底部切换条。
+不要动生产组件。
+
+这里最重要的是明确「要回答的问题」。只要这个问题清楚，原型就不容易跑偏。
+
+和 Grill Me 的关系
+
+/grill-me 适合通过提问收束决策；/prototype 适合通过试玩收束决策。
+
+有些问题靠问就能解决，比如「匿名评论要不要审核」。有些问题必须摸一下，比如「这个拖拽排序状态机到底会不会难用」。后者就该 prototype。
+
+所以我会把它放在工作流的一个分叉位置：
+
+想法模糊
+  ↓
+/grill-me
+  ↓
+如果仍然需要体验或验证
+  ↓
+/prototype
+  ↓
+保留结论，删除原型
+  ↓
+/to-prd 或 /tdd
+
+参考资源
+
+prototype 源文件
+用可丢弃原型回答逻辑、状态、业务规则或 UI 设计问题。
+
+Matt PocockGitHub2026
+EN前往
+
+下一篇：Improve Codebase Architecture：把 shallow 重构成 deep modules。
+
+评论
+
+Zoom Out
+
+拆解 Matt Pocock 最短的工程 skill /zoom-out：它只做一件事，让 agent 从局部代码跳到更高一层，按项目领域语言说明相关模块、调用者和系统位置
+深化代码架构
+
+Matt Pocock 工作流的最后一步——周期性扫描代码库找「deepening opportunities」。深入理解 John Ousterhout 的 deep modules 理论、Matt 独创的 deletion test，以及为什么 AI 时代特别需要这个 skill
+
+目录
+
+原型不是「先随便写一个」两条分支Logic prototype：把状态摊在终端里UI prototype：在一个路由里放多套激进方案所有原型都必须可删除原型结束后要留下什么什么时候不该用一个好用的提示词和 Grill Me 的关系参考资源
+
+Prototype：用可丢弃代码回答一个设计问题 | Yu的赛博工位

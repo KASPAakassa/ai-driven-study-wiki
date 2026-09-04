@@ -1,0 +1,359 @@
+跳转到主要内容
+Yu的赛博工位
+
+笔记收录独立开发博客关于🇨🇳
+
+文档Claude Code 相关
+Claude Code 隐藏技巧
+
+系统架构全解析工具调用系统Worktree 指南Agent Teams 指南Claude Skills
+
+Claude Code Plugin
+
+Claude Code Subagent
+
+Agent 与工作流
+Agent 记忆系统
+
+Pi Agent
+
+规格驱动开发
+
+Ralph Wiggum
+
+GSD
+
+gstack
+
+Matt Pocock 的 Claude Code 技能集概览初始化配置Grill MeBatch Grill MeGrill With DocsPRD 与 Issues诊断与分诊TDDZoom OutPrototype深化代码架构其他 Skills
+
+工程实践
+AI 时代的 TDD
+
+Tmux 入门
+
+Yu的赛博工位
+
+搜索⌘K
+笔记收录独立开发博客关于🇨🇳
+
+深化代码架构
+
+Matt Pocock 的 Claude Code 技能集
+
+下载
+
+Improve Codebase Architecture：把 shallow 重构成 deep modules
+Copy page
+
+AI 辅助写的
+Matt Pocock 工作流的最后一步——周期性扫描代码库找「deepening opportunities」。深入理解 John Ousterhout 的 deep modules 理论、Matt 独创的 deletion test，以及为什么 AI 时代特别需要这个 skill
+代码库应该由少量大而深的模块组成，每个都有简单的接口。深模块：丰富的功能被隐藏在简单接口之后。
+
+John Ousterhout《软件设计哲学》
+EN前往
+
+失败模式：「AI 在烂代码库里乱走」
+
+Matt 演讲里的第四个失败模式是个图景比喻：
+
+"Shallow modules in a codebase look like this——你有一堆零碎的 tiny blob，AI 必须穿过一堆模块、还要理解所有依赖才能改对。"
+
+"AI is really good at creating codebases like this. So you'll have a situation where AI doesn't understand what your code is doing. It will attempt to explore the code, but because it's poorly laid out, filled with shallow modules, it doesn't get to the right module in time, or doesn't understand all the dependencies."
+
+这是 AI 编程特有的恶性循环：
+
+AI 写代码倾向于产生 shallow 模块（小、多、互相依赖）
+    ↓
+代码库变得 shallow
+    ↓
+下次 AI 进来探索更难，更容易写错
+    ↓
+更多 shallow 模块被加进去
+    ↓
+代码库越来越烂，AI 越来越无能
+
+要打破这个循环，必须周期性手动反向重构——把 shallow 模块合并成 deep 模块。这正是 /improve-codebase-architecture 干的事。
+
+经典理论：Ousterhout 的 Deep Modules
+
+John Ousterhout 是 Stanford CS 教授（也是 Tcl 语言、Raft 论文的作者）。他 2018 年那本《A Philosophy of Software Design》提出了一个简单但极有力的尺子：
+
+模块的「深度」 = 接口隐藏的复杂度
+
+类型接口实现形象
+Deep（深）
+简单
+丰富
+一个长方形：窄而深
+
+Shallow（浅）
+复杂
+简单
+一个长方形：宽而浅
+
+理想模块是深的——使用者只需要看简短的接口，复杂度藏在内部。极端反例是 shallow 模块：接口几乎和实现一样复杂，等于没封装，使用者还不如直接看实现。
+
+Ousterhout 的判断：好代码库由少量深模块构成；坏代码库由大量浅模块构成。这和「函数尽量小、文件尽量短、模块尽量多」的传统教条完全相反——他认为那种教条产生的恰恰是 shallow 模块。
+
+Matt 的延伸：Deletion Test
+
+Matt 把 Ousterhout 的理论翻译成一个可操作的工程检验，他叫它 deletion test：
+
+Imagine deleting the module. If complexity vanishes, it was a pass-through. If complexity reappears across N callers, it was earning its keep.
+
+人话：
+
+删掉它，复杂度消失了 → 这模块本来就是 pass-through（中转），没在干活，砍掉
+
+删掉它，复杂度散到 N 个调用方那里 → 它本来在帮你藏复杂度，是真的 deep，留下
+
+这条测试的妙处是双向的——既能识别「该删的薄包装」，也能识别「该提取的公共逻辑」。如果你发现一段代码删掉之后复杂度会散到 5 个地方，说明这段代码值得提取成一个深模块。
+
+关键术语（Matt 的精确定义）
+
+improve-codebase-architecture/SKILL.md 里有一段 Glossary，要求严格用这些词——不要漂移到「component」「service」「API」「boundary」：
+
+术语定义
+Module
+任何有接口和实现的东西（function / class / package / slice）
+
+Interface
+调用方必须知道的全部信息——类型、不变量、错误模式、顺序、配置（不只是函数签名）
+
+Implementation
+模块内部的代码
+
+Depth
+接口处的杠杆。深 = 高杠杆，浅 = 接口几乎和实现一样复杂
+
+Seam（接缝）
+接口所在的位置——可以在不就地修改的情况下改变行为的地方。用 "seam" 不要用 "boundary"
+
+Adapter
+在 seam 处实现某个接口的具体实现
+
+Leverage
+调用方从「深」中获得的好处
+
+Locality
+维护者从「深」中获得的好处——变更、bug、知识全部集中在一个地方
+
+几条核心原则：
+
+Deletion test：见上文
+
+The interface is the test surface：测试只能通过接口跑——这是 deep module 可测的根基
+
+One adapter = hypothetical seam. Two adapters = real seam.：只有一个实现的接口是假接缝。真接缝至少要有两个 adapter
+
+最后这条特别反直觉——很多团队会预先抽象一个接口「以备未来扩展」，但实际只有一个实现。Matt 的判断：没用，删掉。等真的有第二个实现时再抽。这跟 YAGNI 同源。
+
+Skill 工作流
+
+1. Explore（探索）
+
+Skill 先让 AI 读 CONTEXT.md 和 docs/adr/，然后用 subagent_type=Explore 派一个子 agent 去走代码库。
+
+不用刚性启发，用摩擦感做信号：
+
+Where does understanding one concept require bouncing between many small modules?
+
+Where are modules shallow — interface nearly as complex as the implementation?
+
+Where have pure functions been extracted just for testability, but the real bugs hide in how they're called (no locality)?
+
+Where do tightly-coupled modules leak across their seams?
+
+Which parts of the codebase are untested, or hard to test through their current interface?
+
+每发现一个可疑点，应用 deletion test：删掉它会让复杂度消失还是散开？答「散开」就是值得 deepen 的候选。
+
+2. Present Candidates（陈述候选）
+
+把候选用编号列表呈现：
+
+1. Files: src/orders/parser.ts, src/orders/validator.ts, src/orders/normalizer.ts
+   Problem: 三个文件互相调用，理解 Order 入站需要在三处跳转
+   Solution: 合并为单一 OrderIntake 模块，对外只暴露 parse(raw) → ValidatedOrder
+   Benefits:
+     - Locality: Order 入站的所有逻辑、错误处理、bug 修复集中一处
+     - Leverage: 调用方从理解 3 个接口降为 1 个
+     - Tests: 只需测 parse() 的输入输出，不再需要 mock 内部协作
+
+要求：
+
+用 CONTEXT.md 词汇 谈领域（"the Order intake module"，不是 "the FooBarHandler"）
+
+用 Glossary 词汇 谈架构（"seam"、"depth"、"locality"）
+
+不要立刻提议接口设计——先让用户挑感兴趣的候选
+
+如果某个候选会和已有 ADR 冲突——只在「冲突值得重新讨论 ADR」时才提，并明确标记：
+
+"contradicts ADR-0007 — but worth reopening because…"
+
+不要把每个 ADR 禁止过的重构都翻出来。
+
+3. Grilling Loop（拷问循环）
+
+用户挑了一个候选之后，drop 进 grilling 模式（继承自 /grill-with-docs）：
+
+走 design tree——约束、依赖、深化后的模块形状、接缝后面藏什么、哪些测试能存活
+
+副作用即时发生：
+
+给深化模块起了 CONTEXT.md 里没有的名字 → 立刻加进 CONTEXT.md
+
+拷问中锐化了某个模糊术语 → 立刻更新 CONTEXT.md
+
+用户拒绝候选且理由是 load-bearing（关键的、未来探索者需要知道的）→ 提议生成 ADR
+
+想探索深化模块的多种接口设计 → 跳到 INTERFACE-DESIGN.md 单独流程
+
+文档维护和架构改造是同一个对话里发生的——不分两轮。
+
+真实案例：Mejba Ahmed 的实践
+
+第三方开发者 Mejba Ahmed 写了篇 《Deep Modules: The Claude Code Skill Saving My Codebase》 详细记录了他用这个 skill 的体感。要点：
+
+他原来一个项目里有 50+ 个文件，每个文件 100 行以下——典型 shallow 库
+
+/improve-codebase-architecture 跑出 8 个 deepening candidates
+
+他选了 3 个深化（两个数据处理模块合并、一个工具集合并）
+
+结果：文件数从 50+ 降到 30+，但总代码量基本不变——复杂度被压进了少量深模块
+
+后续 Claude 在这个库里改代码的命中率显著提高（他说「from 60% to 90%」，未严格测量但体感强）
+
+Mejba 也提醒了一条：不要一次深化 8 个。一次只挑一个，做完跑测试 + commit + observe，再挑下一个。否则一次做完没法回滚。
+
+怎么装、怎么用
+
+npx skills@latest add mattpocock/skills
+
+勾选 improve-codebase-architecture + setup-matt-pocock-skills。
+
+调用：/improve-codebase-architecture
+
+推荐节奏：
+
+每周或每个 sprint 末跑一次
+
+或做完一波密集开发后跑一次（AI 高频写代码后特别容易堆 shallow 模块）
+
+不要在赶工时跑——它会建议大改动，赶工时没时间消化
+
+典型流程：
+
+/improve-codebase-architecture
+
+AI 探索 + 列出 N 个 candidates（带 deletion test 论证）
+
+你挑一个最有感觉的
+
+drop 进 grilling 循环对齐设计
+
+AI 实施重构（建议配合 /tdd 一起跑——重构必须有测试保护）
+
+commit + 观察
+
+一周后再来一次
+
+这个 Skill 为什么是 Matt 工作流的「闭环」
+
+回到 Matt 的工作流图：
+
+/grill-me → /to-prd → /to-issues → /tdd → /improve-codebase-architecture → 回到 /grill-me
+
+注意它循环回到了起点。/improve-codebase-architecture 不是一次性工具，是周期性维护——因为：
+
+AI 持续往代码库里加 shallow 模块（这是它的默认偏向，写多了就堆）
+
+业务持续演化，老接缝会过时
+
+CONTEXT.md 里的术语持续锐化，老命名会跟不上
+
+每跑一次这个 skill，代码库的 AI 友好度就刷新一次。这是和 LLM 长期协作的代码库唯一能保持健康的方式——不刷新，三个月后 AI 在你的代码库里就废了。
+
+这套思维比 Skill 本身更值钱
+
+即使你完全不装 /improve-codebase-architecture，光是把以下三件事记住，PR review 质量就会提一档：
+
+deletion test：每看到一个新模块，问自己「删了它复杂度会消失还是散开？」
+
+真接缝至少两个 adapter：单实现接口 = 假抽象，删
+
+接口就是测试面：测不动 = 接口设计有问题
+
+这三条不需要 AI、不需要 skill——是工程审美的硬通货。Matt 把它们包装成 skill 是为了批量化执行，但真正的杠杆是这三条原则本身。
+
+注意事项
+
+不要过度深化。Ousterhout 自己说过 deep module 是目标而不是教条——一个大型 Util 类把所有功能塞进去也不是 deep module，是上帝模块。判断标准是「接口简单 + 实现内聚」，两个都得满足。
+
+deepening 必须有测试保护。结构改动是高风险操作，没有测试就敢重构 = 等着背锅。如果当前没有测试，先去 /tdd 给关键路径补测试再回来。
+
+ADR 决策不要一时兴起。grilling 时你拒绝某个候选，AI 会顺手提议生成 ADR——只在那个理由真的「未来人需要知道」时才接受。否则 docs/adr/ 会堆满流水账。
+
+有些代码就是 shallow 也没关系。一个 logger wrapper、一个常量文件、一个一次性脚本——它们是浅的、没问题。这个 skill 找的是那些假装在帮你抽象但其实在添乱的浅模块。
+
+参考资源
+
+improve-codebase-architecture Skill 源文件
+完整术语表、deletion test、候选呈现格式、grilling 集成。
+
+Matt PocockGitHub2026
+EN前往
+
+《软件设计哲学》
+定义 deep modules 的原书，约 190 页，过去十年性价比最高的软件设计书。
+
+John OusterhoutAmazon2018
+EN前往
+
+深模块：拯救我代码库的 Claude Code Skill
+第三方开发者在真实项目中使用 improve-codebase-architecture 的完整记录，含改造前后数据。
+
+Mejba Ahmedmejba.me2026
+EN前往
+
+系列结语
+
+到这里 6 篇都看完了。回顾整个工作流：
+
+/grill-me 或 /grill-with-docs   ← 谈清楚要做什么
+        ↓
+   /to-prd                       ← 凝固成 PRD
+        ↓
+   /to-issues                    ← 切成 vertical slice
+        ↓
+   /tdd                          ← 一个 slice 一个 slice 跑红绿
+        ↓
+   /improve-codebase-architecture ← 周期性深化
+        ↓
+        回到 /grill-me
+
+这套流程的精神可以浓缩成一句话：
+
+AI 是地面上的战术兵，你是战略层。把「定义问题」「拆问题」「验问题」这三件事拿回来自己做，把「写代码」交给 AI——这才是 AI 时代工程师的真定位。
+
+Matt 这套 skill 不是终极答案，是当前阶段的最佳实践。三个月后可能有更好的，但精神层面的东西不会变：好代码库永远比烂代码库重要，软件基本功永远值钱。
+
+回到 概览，或挑一个最有体感的 skill 装上试试。
+
+评论
+
+Prototype
+
+拆解 Matt Pocock 的 /prototype skill：原型不是低质量实现，而是为了回答一个问题而写的可丢弃代码。它分成逻辑状态机原型和 UI 多方案原型两条分支
+其他 Skills
+
+汇总 mattpocock/skills 里非主线但值得知道的一组小工具：caveman、handoff、teach、write-a-skill，以及 git guardrails、setup-pre-commit、migrate-to-shoehorn、scaffold-exercises
+
+目录
+
+失败模式：「AI 在烂代码库里乱走」经典理论：Ousterhout 的 Deep ModulesMatt 的延伸：Deletion Test关键术语（Matt 的精确定义）Skill 工作流1. Explore（探索）2. Present Candidates（陈述候选）3. Grilling Loop（拷问循环）真实案例：Mejba Ahmed 的实践怎么装、怎么用这个 Skill 为什么是 Matt 工作流的「闭环」这套思维比 Skill 本身更值钱注意事项参考资源系列结语
+
+Improve Codebase Architecture：把 shallow 重构成 deep modules | Yu的赛博工位

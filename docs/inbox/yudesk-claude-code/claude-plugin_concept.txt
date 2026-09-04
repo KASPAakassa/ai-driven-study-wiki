@@ -1,0 +1,421 @@
+跳转到主要内容
+Yu的赛博工位
+
+笔记收录独立开发博客关于🇨🇳
+
+文档Claude Code 相关
+Claude Code 隐藏技巧
+
+系统架构全解析工具调用系统Worktree 指南Agent Teams 指南Claude Skills
+
+Claude Code Plugin概念介绍实践指南
+
+Claude Code Subagent
+
+Agent 与工作流
+Agent 记忆系统
+
+Pi Agent
+
+规格驱动开发
+
+Ralph Wiggum
+
+GSD
+
+gstack
+
+Matt Pocock 的 Claude Code 技能集
+
+工程实践
+AI 时代的 TDD
+
+Tmux 入门
+
+Yu的赛博工位
+
+搜索⌘K
+笔记收录独立开发博客关于🇨🇳
+
+概念介绍
+
+Claude Code Plugin
+
+下载
+
+Claude Code Plugin 概念介绍
+Copy page
+
+AI 辅助写的
+深入理解 Claude Code 插件机制：如何通过 Plugin 打包分发工作流，实现团队协作与社区共享
+引言
+
+They let you bundle all your customisations into shareable packages that install with a single command.
+
+ComposioImproving your coding workflow with Claude Code Plugins
+中文前往
+
+当你在 Claude Code 中配置好了一套完美的工作流——自定义命令、代码审查钩子、专属 Skills——你可能会想：能不能把这些打包起来，分享给团队或者社区？
+
+这就是 Plugin 要解决的问题。
+
+如果说 Skills 是给 AI 的"工作手册"，那么 Plugin 就是一个"工具箱"——它把 Skills、Commands、Hooks、MCP 服务器等所有配置打包在一起，让你可以一键安装、一键分发。
+
+理解 Plugin
+
+想象你是一位经验丰富的工匠，多年来积累了一套趁手的工具：锤子、锯子、尺子、各种螺丝刀。每次换工作台时，你都要一件件搬运这些工具，重新整理。Plugin 就像一个设计精良的工具箱——它不仅能装下所有工具，还能按类别分隔整齐，搬到哪儿都能立刻开工。
+
+从技术角度来说，Plugin 是 Claude Code 的扩展包机制。一个 Plugin 可以包含：
+
+组件作用文件位置
+斜杠命令
+快捷操作入口
+commands/
+
+Subagents
+专门化的子代理
+agents/
+
+Skills
+AI 的专业知识包
+skills/
+
+Hooks
+事件触发的自动化脚本
+hooks/
+
+MCP 服务器
+外部系统连接
+.mcp.json
+
+LSP 服务器
+语言服务器配置
+.lsp.json
+
+这些组件协同工作，形成一个完整的工作流解决方案。
+
+Plugin vs 独立配置
+
+在 Claude Code 中，你可以把配置放在项目的 .claude/ 目录下，也可以打包成 Plugin。两者的核心区别在于分发方式和命名空间：
+
+方面独立配置 (.claude/)Plugin
+命令名称
+/hello
+/plugin-name:hello
+
+适用场景
+个人工作流、项目特定配置
+团队共享、社区分发
+
+版本管理
+随项目代码管理
+支持语义化版本
+
+更新方式
+手动同步
+支持自动更新
+
+冲突处理
+可能与其他配置冲突
+命名空间隔离
+
+何时选择 Plugin：
+
+需要与团队成员共享工作流配置
+
+想要在多个项目中复用同一套工具
+
+准备将配置分发到社区
+
+需要版本控制和自动更新
+
+何时使用独立配置：
+
+个人使用的快速实验
+
+项目特定的、不需要复用的配置
+
+简单的一次性命令
+
+Plugin 目录结构
+
+一个标准的 Plugin 结构如下：
+
+my-plugin/
+├── .claude-plugin/           # 元数据目录
+│   └── plugin.json           # 必需：插件清单
+├── commands/                 # 斜杠命令
+│   ├── review.md
+│   └── deploy.md
+├── agents/                   # 子代理
+│   └── code-reviewer.md
+├── skills/                   # Agent Skills
+│   └── code-review/
+│       └── SKILL.md
+├── hooks/                    # 事件钩子
+│   └── hooks.json
+├── scripts/                  # 辅助脚本
+│   └── format-code.sh
+├── .mcp.json                 # MCP 服务器配置
+└── .lsp.json                 # LSP 服务器配置
+
+关键注意事项：
+
+plugin.json 必须放在 .claude-plugin/ 目录内
+
+其他目录（commands、agents、skills 等）放在插件根目录
+
+不要把功能目录放进 .claude-plugin/ 里
+
+核心配置文件
+
+Plugin 的核心是 .claude-plugin/plugin.json，它定义了插件的元数据和组件路径：
+
+{
+  "name": "my-awesome-plugin",
+  "version": "1.0.0",
+  "description": "一个示例插件",
+  "author": {
+    "name": "Your Name",
+    "email": "you@example.com"
+  },
+  "keywords": ["example", "demo"],
+  "commands": "./commands/",
+  "agents": "./agents/",
+  "skills": "./skills/",
+  "hooks": "./hooks/hooks.json",
+  "mcpServers": "./.mcp.json"
+}
+
+字段必需说明
+name
+是
+插件唯一标识，使用小写字母和连字符
+
+version
+否
+语义化版本号
+
+description
+否
+插件简短描述
+
+author
+否
+作者信息
+
+keywords
+否
+用于发现的标签
+
+commands
+否
+命令文件或目录路径
+
+agents
+否
+代理文件或目录路径
+
+skills
+否
+Skills 目录路径
+
+hooks
+否
+钩子配置路径
+
+mcpServers
+否
+MCP 配置路径
+
+安装范围
+
+Plugin 支持四种安装范围，适应不同的使用场景：
+
+范围配置文件用途
+user
+~/.claude/settings.json
+个人插件，所有项目可用
+
+project
+.claude/settings.json
+团队插件，通过版本控制共享
+
+local
+.claude/settings.local.json
+项目特定，gitignored
+
+managed
+managed-settings.json
+企业管理（只读）
+
+默认安装到 user 范围。如果你想把插件配置提交到 Git 供团队使用，选择 project 范围。
+
+核心优势
+
+命名空间隔离
+
+Plugin 的命令带有命名空间前缀（如 /my-plugin:review），避免了与其他插件或项目配置的命名冲突。这在团队协作时尤为重要——不同团队开发的插件可以和平共处。
+
+版本管理
+
+Plugin 支持语义化版本（Semantic Versioning），你可以：
+
+追踪插件的变更历史
+
+在需要时回滚到旧版本
+
+自动接收兼容的更新
+
+分发便利
+
+通过 Plugin Marketplace，你可以：
+
+将插件托管在 GitHub
+
+让用户通过简单命令安装
+
+自动处理依赖和更新
+
+团队协作
+
+Plugin 特别适合团队场景：
+
+统一团队的开发工具链
+
+新成员一键获取所有工具
+
+配置集中管理，减少重复工作
+
+Plugin 生态
+
+Claude Code 的 Plugin 生态正在快速发展。截至 2025 年初，生态规模已相当可观：
+
+229+ 插件 正在生态中活跃
+
+239 个 Agent Skills 跨市场分布
+
+200+ MCP 服务器 在 Docker 工具包中预构建
+
+官方资源：
+
+资源链接说明
+anthropics/skills
+GitHub
+官方 Skills 仓库
+
+anthropics/claude-plugins-official
+GitHub
+官方插件目录
+
+Docker MCP Toolkit
+官网
+200+ 预构建 MCP 服务器
+
+社区精选：
+
+资源链接说明
+awesome-claude-plugins
+GitHub
+243 个插件自动收集
+
+awesome-claude-code
+GitHub
+最佳实践汇总
+
+claude-plugins.dev
+官网
+社区注册表和 CLI
+
+wshobson/agents
+GitHub
+99 代理 + 15 编排器
+
+Compound Engineering
+GitHub
+17 个专门代理
+
+与其他功能的关系
+
+Plugin 是一个"容器"概念，它可以包含 Claude Code 生态中的其他功能：
+
+Plugin（容器）
+├── Skills（知识包）
+├── Commands（快捷命令）
+├── Agents（子代理）
+├── Hooks（事件钩子）
+└── MCP/LSP（外部连接）
+
+理解这个层次关系很重要：
+
+Skills 教会 Claude 如何做某件事
+
+Commands 提供快捷触发入口
+
+Agents 处理独立的专门任务
+
+Hooks 实现事件驱动的自动化
+
+Plugin 把这些都打包在一起，便于分发和管理
+
+Skills vs Plugins
+
+初次接触可能会困惑 Skills 和 Plugins 的区别。根据 Young Leaders Tech 的分析：
+
+特性Skills（技能）Plugins（插件）
+作用范围
+所有 Claude 产品（网页、API、Code）
+仅限 Claude Code
+
+包含内容
+Markdown 指南 + 可选脚本
+命令、代理、钩子、MCP、技能
+
+激活方式
+自动（模型决定何时使用）
+可变（取决于组件类型）
+
+最佳用途
+教授 Claude 领域专业知识
+扩展 Claude Code 环境
+
+分发方式
+GitHub 仓库、文件系统
+去中心化 Marketplace
+
+关键洞察：Skills 由模型自动触发，无需手动调用；Plugins 是打包机制，解决了分布式共享的难题。两者可以结合使用——Plugin 可以包含 Skills。
+
+小结
+
+Claude Code Plugin 本质上是一个工作流打包分发机制。它解决了配置复用和团队协作的痛点，让你可以把精心打造的工具链分享给更多人。
+
+记住三个关键词：
+
+关键词含义
+打包
+将多种配置组件整合为一个单元
+
+隔离
+命名空间避免冲突
+
+分发
+通过 Marketplace 轻松共享
+
+了解了概念之后，下一篇《Claude Code Plugin 实战指南》将带你动手实践：从零创建 Plugin、发布到 Marketplace、以及团队协作的最佳实践。
+
+如果你还不熟悉 Plugin 可以包含的组件，建议先阅读《Claude Skills 是什么》了解 Skills 的核心概念。
+
+评论
+
+Skill-Creator 解析
+
+深入解析 Anthropic 官方「元技能」Skill-Creator——如何系统性地创建、测试、评估和优化 Claude Code 技能，将技能开发从直觉驱动转向数据驱动
+实践指南
+
+从零创建 Claude Code 插件：完整的开发流程、Marketplace 发布、团队协作配置与常见问题排查
+
+目录
+
+引言理解 PluginPlugin vs 独立配置Plugin 目录结构核心配置文件安装范围核心优势命名空间隔离版本管理分发便利团队协作Plugin 生态与其他功能的关系Skills vs Plugins小结
+
+Claude Code Plugin 概念介绍 | Yu的赛博工位

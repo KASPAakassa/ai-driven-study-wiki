@@ -1,0 +1,200 @@
+跳转到主要内容
+Yu的赛博工位
+
+笔记收录独立开发博客关于🇨🇳
+
+文档Claude Code 相关
+Claude Code 隐藏技巧
+
+系统架构全解析工具调用系统Worktree 指南Agent Teams 指南Claude Skills
+
+Claude Code Plugin
+
+Claude Code Subagent
+
+Agent 与工作流
+Agent 记忆系统
+
+Pi Agent
+
+规格驱动开发
+
+Ralph Wiggum
+
+GSD
+
+gstack
+
+Matt Pocock 的 Claude Code 技能集概览初始化配置Grill MeBatch Grill MeGrill With DocsPRD 与 Issues诊断与分诊TDDZoom OutPrototype深化代码架构其他 Skills
+
+工程实践
+AI 时代的 TDD
+
+Tmux 入门
+
+Yu的赛博工位
+
+搜索⌘K
+笔记收录独立开发博客关于🇨🇳
+
+Zoom Out
+
+Matt Pocock 的 Claude Code 技能集
+
+下载
+
+Zoom Out：当你迷路时，让 AI 先画地图
+Copy page
+
+AI 辅助写的
+拆解 Matt Pocock 最短的工程 skill /zoom-out：它只做一件事，让 agent 从局部代码跳到更高一层，按项目领域语言说明相关模块、调用者和系统位置
+最短，但很有用
+
+/zoom-out 可能是 Matt 这套稳定 engineering skill 里最短的一个。它的核心指令可以概括成一句：
+
+我不熟悉这块代码，请上升一层抽象，用项目领域语言给我画出相关模块和调用者地图。
+
+它不是用来写代码的，也不是用来重构的。它用来处理一种很常见的状态：你和 AI 都已经钻进某个文件，但开始忘记这个文件为什么存在。
+
+它解决的失败模式
+
+AI 编程很容易进入局部最优：
+
+用户指了一个文件
+
+AI 读这个文件
+
+AI 根据局部代码猜意图
+
+改完之后才发现上游调用者、领域规则或 ADR 不支持这个改法
+
+人类也一样。我们 debug 久了会盯住一个函数，忘掉它在系统里的位置。
+
+/zoom-out 的作用是打断这种隧道视野。它让 agent 暂停实现，先回答：
+
+这块代码属于哪个领域概念？
+
+谁调用它？
+
+它调用谁？
+
+它背后有哪些不变量？
+
+它和 CONTEXT.md 里的术语怎么对应？
+
+它是否受某个 ADR 约束？
+
+和 /improve-codebase-architecture 的区别
+
+/zoom-out 和 /improve-codebase-architecture 都会看系统全局，但目标完全不同。
+
+Skill目标输出
+/zoom-out
+帮你理解一块陌生代码
+地图、调用关系、领域解释
+
+/improve-codebase-architecture
+找可深化的架构机会
+候选重构、deletion test、接口设计
+
+/zoom-out 更像「请给我讲讲这块」。它不应该急着提出重构方案，更不应该直接改代码。它的任务是降低认知负担。
+
+为什么要强调领域词汇
+
+这个 skill 明确要求使用项目的 domain glossary。原因是：如果只用文件名解释，AI 很容易输出这种东西：
+
+OrderService 调用 OrderRepository，然后 OrderRepository 调用 db client。
+
+这听起来像解释了，其实没解释。更有用的地图应该长这样：
+
+Checkout flow 里，Order Draft 是用户尚未支付前的临时订单。
+Order Finalization 会把 Draft 转成不可变 Order，并触发 Inventory Reservation。
+`OrderService.finalize()` 是这个转换的 seam，调用者主要来自 Payment Callback 和 Admin Retry。
+
+第二种解释把代码放回了业务语言里。你不只是知道「谁调用谁」，还知道「它为什么存在」。
+
+适合什么时候用
+
+我建议在这些场景下主动调用 /zoom-out：
+
+接手一个陌生模块前
+
+改一个 bug，但还不确定相关调用链
+
+review AI 生成代码，看不出它是否改到了正确层级
+
+准备写 PRD，想确认模块边界
+
+已经看了 3 个文件还没形成系统图
+
+准备跑 /improve-codebase-architecture，但还不确定候选区域
+
+它特别适合作为「动手前的 5 分钟」。有些 bug 不是因为代码难，而是因为一开始就看错了层级。
+
+一个可复用的输出格式
+
+虽然原始 skill 极短，但我建议在使用时让 AI 按这个格式输出：
+
+## 这块代码在系统里的位置
+
+## 关键领域术语
+
+## 主要模块
+
+| 模块 | 责任 | 调用者 | 被调用对象 |
+|---|---|---|---|
+
+## 关键流程
+
+## 已知约束 / ADR
+
+## 我建议你先看的文件
+
+这个格式比普通解释更稳定，也更适合转成后续 /to-prd 或 /diagnose 的上下文。
+
+不要把它用成计划模式
+
+/zoom-out 的危险是：AI 讲完地图后，顺手开始建议「可以这么改」。如果你只是想理解代码，应该明确限制：
+
+只解释结构，不提出实现方案，不改文件。
+
+因为它的价值就在于把决策和理解分开。理解不清时提方案，往往只是把误解包装得更漂亮。
+
+我的使用建议
+
+/zoom-out 很适合和其他 skill 组合：
+
+/zoom-out → /diagnose：先看系统地图，再建反馈回路
+
+/zoom-out → /grill-with-docs：先理解现有领域语言，再拷问新需求
+
+/zoom-out → /to-prd：先确认模块位置，再写 PRD
+
+/zoom-out → /improve-codebase-architecture：先画地图，再找 shallow/deep 问题
+
+它不是完整流程，只是一个刹车。AI 开始在局部文件里越改越多时，先让它 zoom out，通常能省掉后面一轮返工。
+
+参考资源
+
+zoom-out 源文件
+让 agent 上升一层抽象，说明相关模块和调用者地图。
+
+Matt PocockGitHub2026
+EN前往
+
+下一篇：Prototype：用可丢弃代码回答一个设计问题。
+
+评论
+
+TDD
+
+Matt Pocock 自称「最稳定提升 agent 输出质量的方法」。深入拆解他的 TDD skill 为什么坚持 vertical 而非 horizontal 红绿重构、怎么避免测试与实现耦合、以及 AI 时代 TDD 的新意义
+Prototype
+
+拆解 Matt Pocock 的 /prototype skill：原型不是低质量实现，而是为了回答一个问题而写的可丢弃代码。它分成逻辑状态机原型和 UI 多方案原型两条分支
+
+目录
+
+最短，但很有用它解决的失败模式和 /improve-codebase-architecture 的区别为什么要强调领域词汇适合什么时候用一个可复用的输出格式不要把它用成计划模式我的使用建议参考资源
+
+Zoom Out：当你迷路时，让 AI 先画地图 | Yu的赛博工位

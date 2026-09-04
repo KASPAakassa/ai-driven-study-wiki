@@ -1,0 +1,144 @@
+跳转到主要内容
+Yu的赛博工位
+
+笔记收录独立开发博客关于🇨🇳
+
+文档Claude Code 相关
+Claude Code 隐藏技巧Claude Code 隐藏技巧快捷键篇输入与交互篇思考与模型控制篇会话管理篇上下文管理篇实用命令与自动化篇配置与诊断篇进阶篇
+
+系统架构全解析工具调用系统Worktree 指南Agent Teams 指南Claude Skills
+
+Claude Code Plugin
+
+Claude Code Subagent
+
+Agent 与工作流
+Agent 记忆系统
+
+Pi Agent
+
+规格驱动开发
+
+Ralph Wiggum
+
+GSD
+
+gstack
+
+Matt Pocock 的 Claude Code 技能集
+
+工程实践
+AI 时代的 TDD
+
+Tmux 入门
+
+Yu的赛博工位
+
+搜索⌘K
+笔记收录独立开发博客关于🇨🇳
+
+配置与诊断篇
+
+Claude Code 隐藏技巧
+
+下载
+
+配置与诊断篇
+Copy page
+
+AI 辅助写的
+Claude Code 配置与诊断：/statusline 自定义状态栏、settings.json 自动补全、/stats 使用分析、/doctor 健康检查、社区工具
+/statusline：自定义状态栏
+
+用 /statusline 可以通过自然语言描述来自定义底部状态栏显示的信息。或者手动创建 ~/.claude/statusline.sh 脚本。
+
+可以显示的信息包括：当前模型、git 分支、未提交文件数、上下文使用进度、会话花费等。当你同时开多个 Claude 窗口处理不同任务时，状态栏能帮你快速分清每个窗口在干什么。
+
+ccstatusline 交互式状态栏配置
+settings.json 自动补全
+
+在 settings.json 开头加上 $schema，VS Code / Cursor 就会提供配置项的自动补全和校验：
+
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json"
+}
+
+一些有用的隐藏配置
+
+{
+  "showTurnDuration": true,
+  "env": {
+    "DISABLE_AUTOUPDATER": "1"
+  }
+}
+
+showTurnDuration：显示每轮对话的耗时
+
+DISABLE_AUTOUPDATER：关闭自动更新检查，减少上下文开销
+
+/stats 和 /insights：使用分析
+
+/stats 和 /insights 使用分析
+
+/stats：可视化展示每日用量、会话历史、使用条纹、模型偏好，支持日期范围筛选
+
+/insights：分析你所有的 Claude Code 历史记录，告诉你什么工作流有效、哪里在拖慢你，还能生成优化建议
+
+history.jsonl：提示词历史
+
+Claude 会把你发送过的每一条提示词保存在 ~/.claude/history.jsonl 中。你可以让 Claude 分析这个文件，找出提示词模式和优化空间。
+
+/doctor：健康检查
+
+遇到奇怪的问题时，跑一下 /doctor（或在终端运行 claude doctor），它会检查安装状态、版本、认证状态和系统依赖，帮你快速定位问题。
+
+社区工具
+
+社区工具 ccusage 可以追踪 token 用量：
+
+npx ccusage daily
+
+如果你用了 --dangerously-skip-permissions 或者批准了很多命令，可以用 cc-safe 扫描一下有没有风险：
+
+npx cc-safe .
+
+它会检查 .claude/settings.json 中的 sudo、rm -rf、chmod 777、git reset --hard 等高风险命令。
+
+更多值得了解的斜杠命令
+
+命令功能
+/export [filename]
+导出对话为纯文本
+
+/pr-comments [PR]
+获取 PR 评论（自动检测当前分支）
+
+/release-notes
+查看当前版本更新日志
+
+/plugin
+浏览和安装社区插件
+
+/fast
+切换快速模式
+
+claude --debug
+启动时开启调试日志（支持分类过滤，如 --debug "api,hooks"）
+
+/install-github-app
+安装 GitHub App 实现自动 PR 审查
+
+评论
+
+实用命令与自动化篇
+
+Claude Code 实用命令：/diff 交互式查看器、/simplify 多代理审查、/batch 并行重构、/loop 定时任务、Headless 模式参数
+进阶篇
+
+Claude Code 进阶技巧：终端通知、Hooks 进阶用法、插件生态、Agent Teams 多代理协作、提示词心法
+
+目录
+
+/statusline：自定义状态栏settings.json 自动补全一些有用的隐藏配置/stats 和 /insights：使用分析history.jsonl：提示词历史/doctor：健康检查社区工具更多值得了解的斜杠命令
+
+配置与诊断篇 | Yu的赛博工位

@@ -1,0 +1,269 @@
+跳转到主要内容
+Yu的赛博工位
+
+笔记收录独立开发博客关于🇨🇳
+
+文档Claude Code 相关
+Claude Code 隐藏技巧
+
+系统架构全解析工具调用系统Worktree 指南Agent Teams 指南Claude Skills概念介绍实践指南Skill-Creator 解析
+
+Claude Code Plugin
+
+Claude Code Subagent
+
+Agent 与工作流
+Agent 记忆系统
+
+Pi Agent
+
+规格驱动开发
+
+Ralph Wiggum
+
+GSD
+
+gstack
+
+Matt Pocock 的 Claude Code 技能集
+
+工程实践
+AI 时代的 TDD
+
+Tmux 入门
+
+Yu的赛博工位
+
+搜索⌘K
+笔记收录独立开发博客关于🇨🇳
+
+概念介绍
+
+Claude Skills
+
+下载
+
+Claude Skills 概念介绍
+Copy page
+
+AI 辅助写的
+深入理解 Claude Skills 的核心原理：可重用 AI 工作手册如何通过渐进式披露实现 Token 效率与可组合性
+引言
+
+Claude Skills are awesome, maybe a bigger deal than MCP... I expect we'll see a Cambrian explosion in Skills which will make this year's MCP rush look pedestrian by comparison.
+
+Simon WillisonClaude Skills are awesome, maybe a bigger deal than MCP
+中文前往
+
+2025 年 10 月，Anthropic 悄然发布了一项名为 Claude Skills 的新功能。这个看似低调的更新，却被知名技术博主 Simon Willison 评价为"可能比 MCP 更重要"，并预测将引发 AI 工具领域的"寒武纪大爆发"。
+
+这样的评价并非空穴来风。如果你经常使用 AI 助手，一定遇到过这样的困扰：每次开始新对话，都要重复输入相同的工作流程说明；好不容易把 AI 调教到满意的状态，换个对话窗口又要从头来过。Skills 正是为解决这个痛点而生的。
+
+理解 Claude Skills
+
+Claude Skills：给 AI 助手的可重用工作手册
+想象你是一家公司的老板，新员工入职时你会给他一本工作手册，里面详细记录了公司的工作流程、品牌规范、常见问题的处理方式。Claude Skills 就是给 AI 助手的这本"工作手册"——让它能够以可重复、标准化的方式完成特定任务。
+
+从技术角度来说，Skills 是包含指令、脚本和资源的文件夹，Claude 可以在需要时动态加载它们。每个 Skill 教会 Claude 如何以一致的方式完成某类任务，而且这些知识可以跨对话持久保存。这意味着你只需要"培训"一次，之后无论何时使用，Claude 都会记得该怎么做。
+
+三大组成部分
+
+一个完整的 Skill 由以下三部分构成：
+
+组件作用是否必需
+SKILL.md
+核心指令文档，包含元数据和详细指令
+必需
+
+参考资料
+品牌指南、政策文件、模板等补充信息
+可选
+
+脚本
+Python/JavaScript 代码，处理复杂计算或文件操作
+可选
+
+其中 SKILL.md 是整个 Skill 的"灵魂"，它的基本结构如下：
+
+---
+name: your-skill-name
+description: Brief description of what this Skill does and when to use it
+---
+
+# Your Skill Name
+
+## Instructions
+Provide clear, step-by-step guidance for Claude.
+
+## Examples
+Show concrete examples of using this Skill.
+
+## Guidelines
+- Guideline 1
+- Guideline 2
+
+文件开头的 YAML frontmatter 包含两个关键字段：name 是技能的标识名称，最多 64 个字符；description 告诉 Claude 这个技能是做什么的、什么时候应该使用它，最多 200 个字符。Claude 正是根据这个描述来判断何时应该调用某个 Skill，所以写得越清晰准确，Skill 被正确触发的概率就越高。
+
+应用场景
+
+Skills 的应用场景非常广泛，覆盖了日常工作中的各种重复性任务：
+
+文档处理：批量创建 Excel 表格、PPT 演示文稿、Word 文档、PDF 报告。Anthropic 官方就提供了一套文档技能，开箱即用。
+
+品牌合规：将公司的品牌色、Logo 使用规则、间距规范、语气风格打包成 Skill，确保 AI 生成的所有内容都符合品牌标准。
+
+会议纪要：自动总结会议记录、提取行动项、分配负责人、生成跟进邮件。
+
+数据分析：执行标准化的分析流程，比如竞争情报扫描（结构化提取产品更新、定价变化、分析师评论）、财务分析（分析财报、构建财务模型）。
+
+项目管理：从目标构建项目计划、建议里程碑、生成周报/投资者简报。
+
+渐进式披露架构
+
+Skills 最精妙的设计在于它的信息加载方式。传统的 MCP 工具描述可能消耗数千甚至数万个 token，而 Skills 的元数据仅占用数十个 token。这意味着你可以同时启用大量 Skills，完全不用担心上下文窗口被工具描述占满。
+
+这种高效源于一种叫做渐进式披露（Progressive Disclosure）的架构设计。Skills 采用三层信息结构，按需逐层加载——就像一本有目录的手册：
+
+📚 Skills 工作手册
+│
+├─ 📋 目录 ─────────────────────────── 【元数据层】启动时预加载
+│   │
+│   │  name: "weekly-report"
+│   │  description: "根据工作内容生成标准化周报"
+│   │
+│   │  ✓ 仅占 30-50 tokens
+│   │  ✓ 所有 Skills 的目录同时可见
+│   │
+│
+├─ 📖 正文章节 ─────────────────────── 【核心文档层】相关时加载
+│   │
+│   │  # Weekly Report Generator
+│   │
+│   │  ## Instructions
+│   │  按以下结构生成周报...
+│   │
+│   │  ## Examples
+│   │  输入：这周完成了登录功能...
+│   │  输出：### 本周完成 ...
+│   │
+│   │  ⚡ Claude 判断需要时才展开
+│   │  📊 消耗数百至数千 tokens
+│   │
+│
+└─ 📎 附录 ─────────────────────────── 【引用资源层】需要时加载
+    │
+    │  references/
+    │  ├── brand-guide.md      品牌规范
+    │  ├── template.xlsx       报告模板
+    │  └── examples/           历史周报
+    │
+    │  🔍 仅在明确需要时加载
+    │  📦 可包含大量参考资料
+
+你先看目录知道有哪些章节（元数据层），找到需要的章节再翻开阅读（核心文档层），最后如果需要更多细节再去查附录（引用资源层）。
+
+层级内容加载时机Token 消耗
+元数据层
+name + description
+启动时预加载
+30-50
+
+核心文档层
+SKILL.md 全文
+相关时加载
+数百至数千
+
+引用资源层
+参考文件、模板等
+需要时加载
+按需
+
+这完全符合大语言模型的本质——"输入文本让模型理解"。Skills 没有引入复杂的协议或 API 调用，而是通过精心组织的文本结构，让 AI 能够高效地获取和运用知识。Simon Willison 评价这种设计"简洁得令人发指"，正是因为它把复杂的问题用最朴素的方式解决了。
+
+核心优势
+
+Token 效率
+
+Skills 的渐进式披露架构带来了极高的 token 效率。我们可以用一个简单的对比来理解：
+
+方案启动时 Token 消耗100 个技能的总消耗
+传统方案（全量加载）
+数千至数万
+可能超出上下文窗口
+
+Skills（渐进式披露）
+30-50
+3000-5000
+
+由于每个技能的元数据仅占数十个 token，你可以同时启用几十甚至上百个 Skills，完整内容按需加载，不会浪费宝贵的上下文空间。
+
+可组合性
+
+多个 Skills 可以自动协同工作。当你提出一个复杂任务时，Claude 会智能识别需要调用哪些 Skills，并协调它们一起完成任务。
+
+比如你说"根据这份销售数据生成季度报告"，Claude 可能会：
+
+调用数据分析 Skill 处理原始数据
+
+调用图表生成 Skill 创建可视化
+
+调用文档 Skill 生成最终报告
+
+整个过程你不需要手动指定使用哪个 Skill，Claude 会根据任务需求自动选择和组合。
+
+可移植性
+
+同一个 Skill 可以在 Anthropic 生态系统的所有平台使用：
+
+平台说明
+Claude.ai
+网页版，适合普通用户
+
+Claude Code
+命令行工具，适合开发者
+
+API
+程序化集成，适合系统开发
+
+你为团队创建的品牌写作 Skill，可以在所有这些平台上保持一致的行为，真正实现一次构建、随处使用。
+
+其他 AI 平台的策略：目前 Skills 是 Anthropic 独有的功能。OpenAI 采用 Custom GPTs + Assistants API 的双轨策略（两套系统不统一）；Microsoft Copilot 和 Google Gemini 则专注于各自生态系统的深度集成，而非可复用的技能模块。Claude Skills 被认为是一个有意义的差异化特性。
+
+效率数据
+
+根据 Anthropic 内部基准测试，使用 Skills 的团队减少了 73% 的重复提示工程时间。这不仅意味着效率提升，更重要的是工作流程的标准化和可复用性——团队成员不再需要各自维护一套提示词，而是共享同一套经过验证的 Skills。
+
+小结
+
+Claude Skills 本质上是给 AI 助手的可重用工作手册。它通过渐进式披露架构实现了极高的 token 效率，让 AI 能够掌握大量专业知识而不会占用宝贵的上下文空间。
+
+记住三个关键词，你就掌握了 Skills 的精髓：
+
+关键词含义
+高效
+元数据仅占数十个 token，按需加载
+
+可组合
+多个 Skills 自动协同工作
+
+可移植
+跨平台一致体验
+
+了解了概念之后，下一篇《Claude Skills 实战指南》将带你动手实践：如何启用和安装 Skills、创建你的第一个自定义 Skill、以及避开常见的坑。
+
+如果你希望进一步规范化的工作流程，可以参考《规格驱动开发是什么》，了解如何将 AI 编程从「直觉」升级到「工程」。
+
+评论
+
+Agent Teams 指南
+
+掌握 Claude Code 的 Agent Teams 功能：如何协调多个 Claude 实例组成团队，实现真正的多智能体协作开发
+实践指南
+
+从零开始创建自定义 Skill：对比 MCP、Subagents 的区别，掌握启用、安装和创建 Skills 的最佳实践
+
+目录
+
+引言理解 Claude Skills三大组成部分应用场景渐进式披露架构核心优势Token 效率可组合性可移植性效率数据小结
+
+Claude Skills 概念介绍 | Yu的赛博工位

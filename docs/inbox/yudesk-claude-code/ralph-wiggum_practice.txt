@@ -1,0 +1,736 @@
+跳转到主要内容
+Yu的赛博工位
+
+笔记收录独立开发博客关于🇨🇳
+
+Notes
+
+Curations
+
+Indie Dev
+
+Yu的赛博工位
+
+搜索⌘K
+笔记收录独立开发博客关于🇨🇳
+
+Ralph 实战指南
+
+NotesRalph wiggum
+
+下载
+
+Ralph 实战指南
+Copy page
+
+AI 辅助写的
+snarktank/ralph 完整操作手册——从安装到实际使用，涵盖 PRD 编写、循环执行、质量门禁和经验教训
+引言
+
+在上一篇文章中，我们理解了 Ralph 的核心原理——无限循环 + 每次全新上下文 + 文件作为唯一真相源。这三个支柱听起来简单，但从理解概念到真正跑起来，中间有不少细节需要打通。
+
+这篇文章，我们来动手。你将学会如何使用 snarktank/ralph 完成从安装到执行的完整流程。snarktank/ralph 是社区中最成熟的 Ralph 实现之一（10k+ stars），支持 Claude Code 和 Amp 两种工具，配套 PRD 生成、JSON 转换、自动化执行的完整工具链。
+
+前置条件
+
+开始之前，确保你的环境满足以下要求：
+
+依赖说明
+AI 编程工具
+Claude Code (npm install -g @anthropic-ai/claude-code) 或 Amp CLI
+
+jq
+JSON 处理工具 (macOS: brew install jq)
+
+Git
+项目需要是 Git 仓库
+
+# 检查依赖
+claude --version   # Claude Code CLI
+jq --version       # JSON 处理
+git --version      # Git
+
+安装与配置
+
+snarktank/ralph 提供多种安装方式，根据使用场景选择。
+
+方式一：直接在 Claude Code 中安装（推荐）
+
+最简单的方式——在 Claude Code 对话中粘贴 GitHub 链接，让 Claude 自动完成安装：
+
+Install this skill for me: https://github.com/snarktank/ralph
+
+Claude Code 会自动克隆仓库并将 skill 文件复制到正确位置。安装完成后即可使用 /prd 和 /ralph 命令。
+
+方式二：Claude Code 市场安装
+
+通过市场命令安装：
+
+# 添加并安装插件
+/plugin marketplace add snarktank/ralph
+/plugin install ralph-skills@ralph-marketplace
+
+安装后可使用 /prd（生成 PRD）和 /ralph（转换为 JSON）两个 skill。
+
+方式三：手动 Skill 安装（Claude Code / Amp）
+
+手动将 skill 文件复制到对应工具的全局配置目录：
+
+# 先克隆仓库
+git clone https://github.com/snarktank/ralph.git /tmp/ralph
+
+# Claude Code 用户
+cp -r /tmp/ralph/skills/prd ~/.claude/skills/
+cp -r /tmp/ralph/skills/ralph ~/.claude/skills/
+
+# Amp 用户
+cp -r /tmp/ralph/skills/prd ~/.config/amp/skills/
+cp -r /tmp/ralph/skills/ralph ~/.config/amp/skills/
+
+安装完成后即可使用 /prd 和 /ralph 命令。
+
+方式四：项目级安装
+
+将 Ralph 脚本直接复制到项目中——适合需要团队共享或自定义脚本的场景：
+
+# 克隆 Ralph 仓库
+git clone https://github.com/snarktank/ralph.git /tmp/ralph
+
+# 复制核心文件到项目
+mkdir -p scripts/ralph
+cp /tmp/ralph/ralph.sh scripts/ralph/
+cp /tmp/ralph/CLAUDE.md scripts/ralph/   # Claude Code 用户
+# 或
+cp /tmp/ralph/prompt.md scripts/ralph/   # Amp 用户
+
+# 赋予执行权限
+chmod +x scripts/ralph/ralph.sh
+
+安装完成后，项目结构如下：
+
+your-project/
+├── scripts/ralph/
+│   ├── ralph.sh        # 核心循环脚本
+│   └── CLAUDE.md       # Claude Code 的 Prompt 模板
+├── tasks/              # PRD 文件目录（执行时自动创建）
+│   └── prd.json        # 你的任务定义
+└── ...
+
+建议：方式一最省事——把 GitHub 链接丢给 Claude Code 就行。如果想手动控制安装过程，选方式二（市场命令）或方式三（手动复制）。需要团队共享或自定义脚本时选方式四。
+
+核心文件结构
+
+Ralph 的记忆完全依赖文件系统。理解每个文件的角色，是用好 Ralph 的前提。
+
+ralph.sh —— 循环引擎
+
+这是 Ralph 的核心：一个 bash 脚本，不断生成新的 AI 实例。
+
+# 基本用法
+./scripts/ralph/ralph.sh [max_iterations]        # 默认：Amp
+./scripts/ralph/ralph.sh --tool claude [iterations]  # 使用 Claude Code
+
+每次迭代，ralph.sh 会执行以下步骤：
+
+创建功能分支（来自 prd.json 中的 branchName）
+
+选择优先级最高的未完成 story（passes: false）
+
+生成一个全新的 AI 实例来实现这个 story
+
+运行质量检查（类型检查、测试）
+
+检查通过 → git commit；检查失败 → 留给下次迭代
+
+更新 prd.json，将该 story 标记为 passes: true
+
+将学到的经验追加到 progress.txt
+
+重复，直到所有 story 完成或达到迭代次数上限
+
+默认迭代上限为 10 次。根据项目复杂度调整：
+
+# 简单项目
+./scripts/ralph/ralph.sh --tool claude 10
+
+# 复杂项目
+./scripts/ralph/ralph.sh --tool claude 50
+
+prd.json —— 任务定义
+
+这是 Ralph 的"大脑"——所有任务都定义在这里。它是一个扁平的 JSON 文件：
+
+{
+  "projectName": "Blog i18n Translation",
+  "branchName": "ralph/i18n-translation",
+  "userStories": [
+    {
+      "id": "US-001",
+      "title": "Translate homepage metadata",
+      "description": "Create content/docs/meta.en.json with English translations for all navigation items",
+      "acceptanceCriteria": [
+        "meta.en.json file exists with valid JSON format",
+        "All navigation titles are translated to English",
+        "pnpm types:check passes"
+      ],
+      "priority": 1,
+      "passes": false,
+      "dependsOn": [],
+      "notes": "Reference the existing meta.json structure"
+    },
+    {
+      "id": "US-002",
+      "title": "Translate blog post hello-world",
+      "description": "Create content/blog/hello-world.en.mdx, translated from Chinese to English",
+      "acceptanceCriteria": [
+        "hello-world.en.mdx file exists",
+        "All QuoteCard components have defaultLang='en'",
+        "Internal links use /en/ prefix",
+        "Code blocks remain untranslated",
+        "pnpm types:check passes"
+      ],
+      "priority": 2,
+      "passes": false,
+      "dependsOn": ["US-001"],
+      "notes": "Preserve MDX component props format"
+    }
+  ]
+}
+
+字段说明：
+
+字段说明
+projectName
+项目名称，用于日志和分支命名
+
+branchName
+Git 分支名——Ralph 会自动创建
+
+id
+Story 唯一标识，推荐 US-001 格式
+
+title
+简短标题
+
+description
+详细描述——越具体越好
+
+acceptanceCriteria
+验收标准列表——这是最关键的字段
+
+priority
+优先级数字——数字越小越先执行
+
+passes
+是否完成——Ralph 会自动更新
+
+dependsOn
+依赖的 story ID 列表
+
+notes
+额外的提示和上下文
+
+progress.txt —— 经验日志
+
+这是 Ralph 的"长期记忆"。每次迭代后，AI 会追加学到的经验：
+
+=== Iteration 1 (US-001) ===
+- Discovered: typecheck command is `pnpm types:check`, not `pnpm typecheck`
+- Discovered: meta.en.json needs to mirror exact structure of meta.json
+- Pattern: fumadocs i18n uses `.en.` suffix convention
+
+=== Iteration 2 (US-002) ===
+- Discovered: QuoteCard requires both `quote` and `quoteZh` props
+- Gotcha: internal links must use /en/ prefix for English pages
+- Pattern: code blocks should never be translated
+
+下一次迭代的全新 Claude 实例会读取这个文件，立即获得之前所有的经验。这就是 Ralph 越跑越顺的原因——知识在迭代间积累，而上下文保持干净。
+
+AGENTS.md —— 持久知识库
+
+除了 progress.txt，Ralph 还会更新项目中的 AGENTS.md（或 CLAUDE.md）文件。Claude Code 和 Amp 启动时都会自动读取这些文件。
+
+与 progress.txt 不同，AGENTS.md 记录的是稳定的、跨项目的知识：
+
+# AGENTS.md
+
+## Codebase Conventions
+- Use fumadocs for documentation framework
+- MDX files use custom components: QuoteCard, BlogImage, GlossaryCard
+- i18n files use `.en.mdx` suffix
+
+## Gotchas
+- Always run `pnpm types:check` after modifying MDX files
+- QuoteCard: set `defaultLang='en'` in English translations
+
+编写 PRD
+
+PRD（产品需求文档）的质量直接决定 Ralph 的执行效果。写得好，Ralph 一路畅通。写得差，Ralph 会在同一个 story 上反复失败。
+
+用 Skill 生成 PRD
+
+如果你安装了 snarktank/ralph 的 skill，可以交互式生成 PRD：
+
+# 在 Claude Code 或 Amp 中
+/prd I want to add i18n support to the blog, translating all Chinese content to English
+
+AI 会问你一些澄清问题（涉及哪些文件、技术栈限制、质量标准等），然后生成结构化的 PRD 文档。
+
+生成后，用 /ralph 命令将 PRD 转换为 prd.json 格式：
+
+/ralph    # 转换 PRD 为 prd.json
+
+手动编写 PRD
+
+你也可以直接编写 prd.json。以下是关键的设计原则。
+
+原则一：Story 粒度适中
+
+每个 story 应该小到能在一次迭代中完成，大到能独立交付价值。
+
+// ❌ 太大：一次迭代完不成
+{
+  "id": "US-001",
+  "title": "Build complete user authentication system",
+  "description": "Implement registration, login, forgot password, OAuth, permission management..."
+}
+
+// ❌ 太小：没有独立价值
+{
+  "id": "US-001",
+  "title": "Create email field on User table",
+  "description": "Add email field to User model"
+}
+
+// ✅ 刚好：一次迭代能完成，有独立价值
+{
+  "id": "US-001",
+  "title": "Implement email/password login",
+  "description": "Create login API and login page with email/password authentication",
+  "acceptanceCriteria": [
+    "POST /api/auth/login accepts email + password",
+    "Returns JWT token",
+    "Login page form submits successfully",
+    "All tests pass"
+  ]
+}
+
+经验法则：一个 story 涉及 1-3 个文件修改，有 3-5 条验收标准。
+
+原则二：验收标准必须可自动验证
+
+Ralph 需要判断 story 是否完成，因此验收标准必须是可客观评估的：
+
+// ❌ 模糊的标准
+"acceptanceCriteria": [
+  "Code quality is good",
+  "Performance is decent",
+  "User experience is smooth"
+]
+
+// ✅ 可验证的标准
+"acceptanceCriteria": [
+  "pnpm types:check passes",
+  "pnpm test passes",
+  "API response time < 200ms",
+  "File src/auth/login.ts exists and exports loginHandler function"
+]
+
+原则三：用 dependsOn 控制执行顺序
+
+有些 story 存在依赖关系。dependsOn 字段确保 Ralph 按正确顺序执行：
+
+{
+  "userStories": [
+    {
+      "id": "US-001",
+      "title": "Create database schema",
+      "dependsOn": []
+    },
+    {
+      "id": "US-002",
+      "title": "Implement user registration API",
+      "dependsOn": ["US-001"]
+    },
+    {
+      "id": "US-003",
+      "title": "Implement login page",
+      "dependsOn": ["US-002"]
+    }
+  ]
+}
+
+原则四：在 notes 中提供上下文
+
+notes 字段给 AI 额外提示。把你知道但 AI 不一定知道的信息写在这里：
+
+{
+  "notes": "Project uses fumadocs framework, i18n files follow .en.mdx suffix naming. Reference content/docs/notes/speckit/concept.en.mdx for translation style."
+}
+
+执行 Ralph 循环
+
+PRD 准备好后，就可以运行循环了。
+
+启动执行
+
+# 使用 Claude Code，默认 10 次迭代
+./scripts/ralph/ralph.sh --tool claude
+
+# 指定迭代次数
+./scripts/ralph/ralph.sh --tool claude 30
+
+# 使用 Amp（默认）
+./scripts/ralph/ralph.sh 20
+
+执行过程
+
+启动后，你会看到类似这样的输出：
+
+=== Ralph Loop - Iteration 1 ===
+Branch: ralph/i18n-translation
+Selected story: US-001 - Translate homepage metadata
+Spawning fresh Claude instance...
+
+[Claude Code executing...]
+
+Quality check: pnpm types:check ... PASSED
+Committing: feat: [US-001] - Translate homepage metadata
+Updating prd.json: US-001 passes: true
+Appending to progress.txt
+
+=== Ralph Loop - Iteration 2 ===
+Selected story: US-002 - Translate blog post hello-world
+Spawning fresh Claude instance...
+
+每次迭代都是全新的 Claude 实例。它通过读取 prd.json 知道要做什么，通过读取 progress.txt 知道之前学到了什么。
+
+完成信号
+
+当所有 story 都标记为 passes: true 时，Ralph 输出完成信号并退出：
+
+All stories completed!
+<promise>COMPLETE</promise>
+
+监控与调试
+
+Ralph 运行期间，可以用以下命令查看进度：
+
+# 查看每个 story 的完成状态
+cat tasks/prd.json | jq '.userStories[] | {id, title, passes}'
+
+# 查看经验日志
+cat progress.txt
+
+# 查看最近的 git 提交
+git log --oneline -10
+
+# 实时跟踪 Ralph 输出
+tail -f progress.txt
+
+自动归档
+
+当你启动新功能（使用不同的 branchName）时，Ralph 会自动将上次运行的文件归档到 archive/YYYY-MM-DD-feature-name/ 目录，保持工作目录整洁。
+
+反馈循环与质量门禁
+
+Ralph 的"自我纠错"能力完全取决于反馈循环的质量。没有反馈循环，Ralph 只是一个盲目循环的脚本——它会不停地产出代码，但无法判断代码是否正确。
+
+配置质量检查
+
+在 CLAUDE.md（或 prompt.md）中定义质量检查命令：
+
+## Quality Commands
+
+After implementing each story, run these checks IN ORDER:
+
+1. `pnpm types:check` — TypeScript type checking
+2. `pnpm test` — Unit tests
+3. `pnpm build` — Full build verification
+
+If any check fails:
+- DO NOT commit
+- Fix the issue
+- Re-run all checks
+- Only commit when all checks pass
+
+质量门禁层级
+
+层级工具捕获的问题
+即时反馈
+TypeScript 编译器
+类型错误、语法错误
+
+功能验证
+单元测试
+逻辑错误、边界情况
+
+集成验证
+构建命令
+依赖问题、配置错误
+
+运行时验证
+dev-browser skill
+UI 渲染问题（前端项目）
+
+对于前端 story，Ralph 建议添加这条验收标准："使用 dev-browser skill 在浏览器中验证"——让 AI 真正打开浏览器确认页面渲染正确。
+
+质量检查失败时
+
+如果某个 story 的质量检查反复失败，Ralph 不会无限重试同一个 story。达到迭代上限后会停止，保留当前状态。你可以：
+
+查看 progress.txt 了解卡住的原因
+
+手动修复问题后重新运行
+
+调整 story 粒度（可能太大了）
+
+在 notes 字段中补充更多上下文
+
+Prompt 定制
+
+Ralph 的 prompt 模板（CLAUDE.md 或 prompt.md）是你控制 AI 行为的主要手段。安装后，你应该根据项目进行定制。
+
+关键定制项
+
+1. 项目特定的质量命令
+
+## Project-Specific Commands
+- Typecheck: `pnpm types:check` (not `tsc` or `pnpm typecheck`)
+- Test: `pnpm vitest run`
+- Build: `pnpm build`
+- Lint: `pnpm lint`
+
+2. 代码风格约束
+
+## Code Conventions
+- Use TypeScript strict mode
+- Prefer named exports over default exports
+- Use fumadocs components for MDX content
+- Follow existing file naming patterns (kebab-case)
+
+3. 已知的坑
+
+## Known Gotchas
+- MDX files: always import components at the top
+- i18n: English files use `.en.mdx` suffix
+- Links: English pages must use `/en/` prefix
+- QuoteCard: set `defaultLang` to match the file language
+
+4. 卡住时的处理
+
+## When Stuck
+If you cannot complete a story after 3 attempts within the same iteration:
+1. Document what's blocking in progress.txt
+2. Move to the next story if possible
+3. Do NOT modify files unrelated to the current story
+
+实战案例：用 Ralph 翻译博客
+
+为了展示 Ralph 在实际中如何运作，这里是一个真实案例：使用 Ralph 风格的自主 Agent 将整个博客从中文翻译成英文。
+
+项目设置
+
+该项目需要将 22+ 个内容文件（博客文章、文档、导航元数据）从中文翻译成英文，项目基于 fumadocs 的 Next.js 博客，支持 i18n。任务定义在 prd.json 文件中，包含 16 个 user story，每个都有明确的验收标准：
+
+scripts/ralph/
+├── prd.json          # 16 个 user story，带验收标准
+└── progress.txt      # 经验日志，每个 story 完成后更新
+
+每个 user story 遵循一致的模式：
+
+明确的交付物："Create content/blog/xxx.en.mdx"
+
+可验证的标准："Typecheck passes"、"Internal links use /en/ prefix"
+
+技术约束："Keep code blocks untranslated"、"Set defaultLang='en' on QuoteCard"
+
+执行模式
+
+Agent 遵循 Ralph 方法论的核心原则：
+
+文件即真相源：prd.json 追踪哪些 story 通过了（passes: true/false）。progress.txt 在迭代间积累经验——例如"Typecheck command is pnpm types:check, not pnpm typecheck"
+
+自动化质量门禁：每次翻译后，pnpm types:check 运行以验证 MDX 文件编译正确。如果类型检查失败，先修复再提交。
+
+增量推进：每个 story 独立提交，带描述性的提交信息（feat: [US-003] - Translate blog/claude-code-quality-control.mdx），需要时可以轻松回滚。
+
+并行执行：对于较长的文章，多个子 Agent 同时翻译——例如 US-010（claude-skills concept + practice）、US-011（speckit concept + practice）和 US-012（claude-architecture + claude-subagent）并行运行。
+
+关键经验
+
+经验详情
+积累的知识很重要
+早期 story 发现的模式（QuoteCard defaultLang、链接前缀规则）让后续 story 更快完成
+
+Typecheck 作为反馈循环
+在问题叠加之前捕获缺失导入或格式错误的 MDX
+
+并行化可扩展
+6 个翻译 Agent 同时运行，完成时间与 1 个 Agent 大致相同
+
+PRD 粒度至关重要
+每个 story 范围为 1-2 个文件——小到能可靠完成，大到有意义
+
+进度日志防止重复犯错
+progress.txt 的"Codebase Patterns"部分成为知识库，防止重新发现相同问题
+
+成果
+
+16 个 user story 在单次会话中全部完成：创建了 8 个 meta.en.json 导航文件，翻译了 3 篇博客文章，翻译了 12 个文档页面，完整站点构建验证通过。每个翻译保持了一致的质量，因为验收标准是明确的，反馈循环（typecheck）能即时捕获问题。
+
+这个项目展示了 Ralph 的完整实现模式——定义明确的任务 + 清晰的成功标准 + 自动化验证 + 通过文件系统增量交付。
+
+社区实现与替代方案
+
+snarktank/ralph 不是唯一选择。根据需求不同，这些实现各有所长：
+
+资源链接说明
+snarktank/ralph
+snarktank/ralph
+本文使用，功能最完整
+
+ralph-orchestrator
+mikeyobrien/ralph-orchestrator
+Mickey O'Brien 开发，有更多自定义选项
+
+ralph-loop-agent
+vercel-labs/ralph-loop-agent
+Vercel 基于 AI SDK 的实现
+
+ralphy
+michaelshimeles/ralphy
+Michael Shimeles 的轻量实现
+
+替代方案：GSD
+
+GSD 严格来说不是 Ralph 的"社区实现"——它是一种替代方案。它运用了 Ralph 的核心原则（上下文管理、原子任务），但提供了更完整的工作流：讨论 → 计划 → 执行 → 验证。
+
+资源链接说明
+GSD (Get Stuff Done)
+glittercowboy/get-shit-done
+从想法到 PRD 到执行的完整框架
+
+如果你觉得 Ralph 太"原始"，需要更多流程支持，GSD 可能更适合。详见 GSD 深度解析。
+
+推荐资源
+
+官方来源：
+
+资源链接说明
+Geoffrey Huntley 的博客
+ghuntley.com/ralph
+发明者的原始文章
+
+how-to-ralph-wiggum
+ghuntley/how-to-ralph-wiggum
+官方使用指南
+
+视频教程：
+
+资源链接说明
+Ralph Wiggum 深度讨论
+Why Claude Code's implementation isn't it
+Geoffrey Huntley 解释官方实现的问题
+
+正确使用 Ralph
+You're Using Ralph Wiggum Loops WRONG
+Roman (Mentat) 的使用演示
+
+我们需要谈谈 Ralph
+We need to talk about Ralph
+Theo 对争议的分析
+
+最佳实践与 FAQ
+
+成本控制
+
+Ralph 的自动化执行意味着 API 费用在持续产生。几个控制措施：
+
+始终设置 max_iterations：这是最基本的安全网
+
+保持 story 粒度合理：太大的 story 消耗多次迭代；太细碎的 story 增加启动开销
+
+先小规模测试：新项目先跑 3-5 次迭代，确认 prompt 和质量门禁工作正常后再扩大
+
+常见陷阱
+
+陷阱一：Story 太大
+
+症状：某个 story 反复失败，迭代次数快速消耗殆尽。
+
+解决：拆成 2-3 个更小的 story。"构建完整认证系统" 拆成 "实现登录 API" + "创建登录页面" + "添加 JWT 中间件"。
+
+陷阱二：没有反馈循环
+
+症状：Ralph 声称 story 完成了，但实际代码有问题。
+
+解决：在验收标准中添加可执行的检查命令。"代码写好了" 不是验收标准——"pnpm test all passes" 才是。
+
+陷阱三：progress.txt 没被利用
+
+症状：不同迭代中反复出现相同错误。
+
+解决：确认你的 prompt 模板明确指示"读取 progress.txt 并遵循其中的经验"。如果 AI 没有自动追加经验，在 prompt 中添加"每个 story 完成后，将经验追加到 progress.txt"。
+
+陷阱四：依赖顺序错误
+
+症状：某个 story 依赖尚不存在的代码，导致实现失败。
+
+解决：正确设置 dependsOn 字段。确保基础设施 story 排在前面。
+
+FAQ
+
+Q：Ralph 和官方插件有什么区别？
+
+核心区别：snarktank/ralph 每次迭代都生成新进程（真正全新的上下文），而官方插件在同一会话内循环（上下文持续累积）。详见上一篇文章的分析。
+
+Q：执行过程中可以手动修改 prd.json 吗？
+
+可以。Ralph 在每次迭代开始时重新读取 prd.json。你可以在迭代之间修改 story 描述、添加新 story、或手动将某个 story 标记为 passes: true（跳过它）。
+
+Q：Ralph 卡在某个反复失败的 story 上怎么办？
+
+查看 progress.txt 了解失败原因
+
+在 notes 中补充更多上下文
+
+拆分 story（可能太大了）
+
+手动修复阻塞问题后重新运行
+
+Q：Ralph 运行时我可以做其他事吗？
+
+可以。Ralph 设计为 "Human on the Loop"——你不需要盯着它。AFK 模式下，下班前启动，第二天早上检查结果。只是不要修改 Ralph 正在处理的文件。
+
+Q：如何控制成本？
+
+三个方法：设置合理的 max_iterations、保持 story 粒度适当（减少浪费迭代）、先小规模试运行确认流程正确。一般来说，10-20 个 story 的项目，API 费用在 $50-100 以内。
+
+总结
+
+Ralph 的工作流可以提炼为五步：
+
+安装 → 编写 PRD → 配置质量门禁 → 运行循环 → 检查结果
+
+核心理念始终不变：让文件成为唯一真相源，让每次迭代从全新开始，让质量门禁替你把关。
+
+现在，回到你的项目，准备好 prd.json，运行 ./scripts/ralph/ralph.sh --tool claude，然后去泡杯咖啡吧。
+
+延伸阅读
+
+Ralph Wiggum 深度解析 —— 重新回顾 Ralph 的核心原理
+
+GSD 深度解析 —— 在 Ralph 基础上构建的完整上下文工程系统
+
+什么是 Claude Skills —— Ralph 的 PRD skill 就是一个 Claude Skill
+
+Speckit 实战指南 —— 另一种结构化的 AI 编程工作流
+
+评论
+
+目录
+
+引言前置条件安装与配置方式一：直接在 Claude Code 中安装（推荐）方式二：Claude Code 市场安装方式三：手动 Skill 安装（Claude Code / Amp）方式四：项目级安装核心文件结构ralph.sh —— 循环引擎prd.json —— 任务定义progress.txt —— 经验日志AGENTS.md —— 持久知识库编写 PRD用 Skill 生成 PRD手动编写 PRD执行 Ralph 循环启动执行执行过程完成信号监控与调试自动归档反馈循环与质量门禁配置质量检查质量门禁层级质量检查失败时Prompt 定制关键定制项实战案例：用 Ralph 翻译博客项目设置执行模式关键经验成果社区实现与替代方案替代方案：GSD推荐资源最佳实践与 FAQ成本控制常见陷阱FAQ总结延伸阅读
+
+Ralph 实战指南 | Yu的赛博工位

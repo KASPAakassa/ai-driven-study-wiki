@@ -1,0 +1,557 @@
+跳转到主要内容
+Yu的赛博工位
+
+笔记收录独立开发博客关于🇨🇳
+
+文档Claude Code 相关
+Claude Code 隐藏技巧
+
+系统架构全解析工具调用系统Worktree 指南Agent Teams 指南Claude Skills
+
+Claude Code Plugin
+
+Claude Code Subagent
+
+Agent 与工作流
+Agent 记忆系统
+
+Pi Agent
+
+规格驱动开发
+
+Ralph Wiggum
+
+GSD概念介绍实践指南
+
+gstack
+
+Matt Pocock 的 Claude Code 技能集
+
+工程实践
+AI 时代的 TDD
+
+Tmux 入门
+
+Yu的赛博工位
+
+搜索⌘K
+笔记收录独立开发博客关于🇨🇳
+
+实践指南
+
+GSD
+
+下载
+
+GSD 实践指南
+Copy page
+
+AI 辅助写的
+GSD 完整命令参考、配置详解、实战工作流演示与常见问题——从安装到项目交付的操作手册
+引言
+
+上一篇我们深入了解了 GSD 的核心原理——上下文工程、子代理编排、目标回溯规划和原子提交。这些理念听起来优雅，但从"理解原理"到"实际跑通一个项目"之间还有不少操作细节。
+
+这一篇，我们来动手操作。你将学会 GSD 的完整命令体系、配置选项、产出文件结构，以及如何用它从零交付一个完整功能。
+
+安装与配置
+
+安装
+
+npx get-shit-done-cc@latest
+
+安装器会提示你选择：
+
+安装器会提示你选择运行时和安装位置
+
+运行时 — Claude Code、OpenCode、Gemini CLI 或全部
+
+位置 — 全局（所有项目）或本地（当前项目）
+
+安装后在运行时中输入 /gsd:help 验证安装成功。
+
+推荐：跳过权限模式
+
+GSD 设计为无摩擦自动化。推荐以下方式运行 Claude Code：
+
+claude --dangerously-skip-permissions
+
+如果不想用这个标志，可以在 .claude/settings.json 中配置细粒度权限。
+
+更新
+
+/gsd:update
+
+GSD 更新非常频繁（TÂCHES 几乎每天推送 15-20 次更新），建议定期运行此命令保持最新版本。
+
+完整命令参考
+
+GSD 的所有交互都通过 /gsd: 前缀的斜杠命令完成。以下按功能分类列出完整命令。
+
+核心工作流命令
+
+这五个命令构成 GSD 的主循环，按顺序使用。
+
+命令说明
+/gsd:new-project
+初始化项目。系统持续提问直到理解你的想法，然后研究、提取需求、创建路线图
+
+/gsd:discuss-phase [N]
+讨论第 N 阶段的灰色地带。捕获你的实现偏好，为规划提供方向
+
+/gsd:plan-phase [N]
+为第 N 阶段创建原子任务计划。包含研究、规划、验证三个子步骤
+
+/gsd:execute-phase <N>
+执行第 N 阶段。子代理并行实现任务，每个任务独立提交
+
+/gsd:verify-work [N]
+验证第 N 阶段的交付物。引导你逐一确认，自动诊断问题
+
+[N] 表示可选参数——省略时系统会自动检测当前阶段。<N> 表示必填参数。
+
+里程碑管理
+
+命令说明
+/gsd:audit-milestone
+审计当前里程碑进度——检查所有阶段状态，识别未完成项
+
+/gsd:complete-milestone
+归档当前里程碑，标记版本，准备进入下一个周期
+
+/gsd:new-milestone [name]
+创建新里程碑。可选提供名称，系统会基于已完成工作规划下一阶段
+
+阶段管理
+
+命令说明
+/gsd:add-phase
+在路线图末尾添加新阶段
+
+/gsd:insert-phase [N]
+在指定位置插入紧急阶段，后续阶段自动重新编号
+
+/gsd:remove-phase [N]
+移除指定阶段，级联删除所有相关产出文件
+
+/gsd:list-phase-assumptions [N]
+列出指定阶段的所有假设和依赖，帮助识别潜在风险
+
+Quick Mode 与工具
+
+命令说明
+/gsd:quick [--full]
+快速模式——跳过研究、计划检查和验证，适合小任务。--full 启用完整保障
+
+/gsd:debug [desc]
+启动隔离的调试子代理。可选描述问题，系统会假设→取证→解决
+
+/gsd:add-todo [desc]
+记录想法到待办列表，不修改路线图
+
+/gsd:check-todos
+查看当前待办列表
+
+/gsd:map-codebase
+分析已有代码库——技术栈、架构、约定、潜在问题
+
+Session 与配置管理
+
+命令说明
+/gsd:pause-work
+暂停工作。保存当前状态到 STATE.md，方便下次恢复
+
+/gsd:resume-work
+恢复工作。从 STATE.md 读取上次状态，继续上次中断的地方
+
+/gsd:progress
+查看项目整体进度——完成阶段数、当前位置、待处理项
+
+/gsd:help
+显示所有可用命令和简要说明
+
+/gsd:settings
+查看和修改 GSD 配置
+
+/gsd:set-profile
+切换模型配置（quality / balanced / budget）
+
+/gsd:update
+更新 GSD 到最新版本
+
+配置详解
+
+模型配置
+
+GSD 支持三种模型配置，通过 /gsd:set-profile 切换：
+
+配置规划执行验证适用场景
+quality
+Opus
+Opus
+Sonnet
+复杂项目、关键功能、首次使用
+
+balanced (默认)
+Opus
+Sonnet
+Sonnet
+日常开发、多数场景的最佳平衡
+
+budget
+Sonnet
+Sonnet
+Haiku
+简单功能、预算敏感、快速迭代
+
+核心设置
+
+通过 /gsd:settings 查看和修改以下配置：
+
+设置默认值说明
+mode
+balanced
+模型配置选择
+
+depth
+standard
+研究深度：quick（快速）/ standard（标准）/ deep（深入）
+
+git.branching_strategy
+feature
+Git 分支策略：feature（按功能分支）/ phase（按阶段分支）/ none
+
+工作流开关
+
+以下代理可以单独开关，在速度和质量之间取舍：
+
+开关默认说明
+research
+开
+规划前是否进行自动研究
+
+plan_check
+开
+计划创建后是否自动验证
+
+verifier
+开
+执行后是否自动验证
+
+auto_advance
+关
+阶段完成后是否自动进入下一阶段
+
+关闭 research 和 plan_check 可以显著加快速度，但可能降低规划质量。建议在熟悉项目后再考虑关闭。
+
+产出文件结构
+
+GSD 的所有状态和产出都保存在 .planning/ 目录下。理解这个结构有助于调试和手动干预。
+
+项目级文件
+
+文件作用创建时机
+PROJECT.md
+项目愿景和范围
+new-project
+
+REQUIREMENTS.md
+分版本的需求文档，带阶段追溯
+new-project
+
+ROADMAP.md
+阶段规划和进度
+new-project
+
+STATE.md
+当前状态——决策、阻碍、位置
+new-project，持续更新
+
+阶段级文件
+
+每个阶段会产生以下文件（以阶段 1 为例）：
+
+文件作用创建时机
+01-CONTEXT.md
+讨论阶段的决策记录
+discuss-phase 1
+
+01-RESEARCH.md
+研究发现和技术调查
+plan-phase 1
+
+01-01-PLAN.md
+第一个原子任务计划
+plan-phase 1
+
+01-02-PLAN.md
+第二个原子任务计划
+plan-phase 1
+
+01-01-SUMMARY.md
+第一个计划的执行记录
+execute-phase 1
+
+01-02-SUMMARY.md
+第二个计划的执行记录
+execute-phase 1
+
+01-VERIFICATION.md
+自动验证结果
+execute-phase 1
+
+01-UAT.md
+用户验收测试记录
+verify-work 1
+
+目录结构示例
+
+.planning/
+├── PROJECT.md
+├── REQUIREMENTS.md
+├── ROADMAP.md
+├── STATE.md
+├── research/
+│   ├── tech-stack.md
+│   ├── features.md
+│   ├── architecture.md
+│   └── pitfalls.md
+├── 01-CONTEXT.md
+├── 01-RESEARCH.md
+├── 01-01-PLAN.md
+├── 01-02-PLAN.md
+├── 01-01-SUMMARY.md
+├── 01-02-SUMMARY.md
+├── 01-VERIFICATION.md
+├── 01-UAT.md
+├── 02-CONTEXT.md
+├── 02-RESEARCH.md
+├── 02-01-PLAN.md
+│   ...
+└── todos.md
+
+实战工作流演示
+
+以下以"为博客系统添加评论功能"为例，演示从初始化到交付的完整流程。
+
+Step 1: 初始化项目
+
+/gsd:new-project
+
+系统会开始持续提问：
+
+> 你想构建什么？
+"我想为我的 Next.js 博客添加评论功能。支持匿名和登录评论、
+ Markdown 渲染、管理后台。技术栈用 Prisma + PostgreSQL。"
+
+提供的描述越详细，系统追问越少。TÂCHES 的建议是：准备一份粗略的愿景文档，描述你想要什么——不需要知道技术细节。
+
+系统完成后会产出四个文件，并要求你审批路线图。审批后进入构建阶段。
+
+已有代码库？ 先运行 /gsd:map-codebase，系统会分析你的现有架构和约定，之后 new-project 就能基于已有代码进行规划。
+
+Step 2: 讨论阶段
+
+/gsd:discuss-phase 1
+
+系统会识别灰色地带并逐一提问：
+
+> 评论嵌套层级：支持多级嵌套还是只支持一级回复？
+> 匿名评论：需要验证码还是直接提交？
+> 管理后台：需要批量操作还是逐条审核？
+
+你在这里的每个决定都直接影响后续规划质量。如果不确定，可以让系统用默认值——但深入讨论能显著减少执行阶段的返工。
+
+Step 3: 计划阶段
+
+/gsd:plan-phase 1
+
+系统会：
+
+研究如何用 Prisma + PostgreSQL 实现评论系统
+
+创建 2-3 个原子任务计划（如：数据模型、API 路由、前端组件）
+
+自动验证计划是否覆盖所有需求
+
+每个计划都足够小，能在一个全新的上下文窗口中完成。
+
+Step 4: 执行阶段
+
+/gsd:execute-phase 1
+
+系统开始波次执行：
+
+Wave 1（无依赖）：数据库 schema、Prisma 模型——并行执行
+
+Wave 2（依赖 Wave 1）：API 路由、评论 CRUD——并行执行
+
+Wave 3（依赖 Wave 2）：前端评论组件——独立执行
+
+每个任务在全新的 200k tokens 上下文中执行，完成后独立 git commit。
+
+Step 5: 验证阶段
+
+/gsd:verify-work 1
+
+系统引导你逐一确认：
+
+> ✅ 数据库表已创建
+> ✅ API 路由返回正确状态码
+> ❓ 能在博客文章下方看到评论输入框吗？ [是/否/描述问题]
+> ❓ 提交评论后页面是否实时更新？ [是/否/描述问题]
+
+如果有失败项，系统会自动诊断并创建修复计划，再次运行 /gsd:execute-phase 1 即可执行修复。
+
+常见操作场景
+
+插入紧急阶段：需求变更，需要在当前阶段之前插入新工作。
+
+/gsd:insert-phase 2
+
+后续阶段自动重新编号（原来的 Phase 2 变成 Phase 3，依此类推）。
+
+暂停与恢复：需要中断工作去处理其他事情。
+
+/gsd:pause-work    # 保存当前状态
+# ... 处理其他事情 ...
+/gsd:resume-work   # 恢复到上次中断的位置
+
+回滚不满意的结果：
+
+git reset --hard HEAD~3    # 回到执行前的状态
+
+/gsd:remove-phase 2        # 级联删除该阶段的所有产出文件
+
+TÂCHES 在直播中多次演示这个操作——不喜欢就回滚，干脆利落。
+
+调试工作流
+
+当验证发现问题，或者你在开发过程中遇到 bug 时，GSD 提供了专用调试流程。
+
+/gsd:debug 评论提交后页面没有实时更新
+
+系统会启动一个隔离的调试子代理，它的工作流程是：
+
+假设 — 基于问题描述生成多个可能的根因假设
+
+取证 — 逐一验证假设，检查代码、日志、网络请求
+
+解决 — 定位根因后创建修复方案
+
+关键特性：
+
+上下文隔离：调试代理有自己的上下文窗口，不会污染主开发上下文
+
+文档追踪：创建独立的调试文档记录整个调查过程
+
+修复计划：诊断完成后产出可直接执行的修复计划
+
+这比直接在主上下文中调试要高效得多——调试信息不会累积在你的主窗口中。
+
+实战经验
+
+综合 TÂCHES 的直播和 Chase AI 的使用体验，以下是一些实战建议。
+
+放慢才能加快
+
+TÂCHES 坦言自己早期使用 GSD 时也是"快快快"的心态，但后来发现在研究和讨论阶段多花时间，执行阶段的返工反而更少。新版 GSD 增加了 research-project 和 define-requirements 步骤，就是为了在动手前把方向搞对。
+
+"I was definitely when I first started doing things with GSD, I was very much like move fast, move fast, move fast. But I'm just finding that taking these extra steps... I think you're going to really really love to see the results."
+
+—— TÂCHES
+
+阶段之间清上下文
+
+TÂCHES 的习惯是每个阶段之间运行 clear，保持主上下文精简。他使用 Warp 终端，每个窗口全屏（Command+Shift+Enter），在一个窗口执行当前阶段的同时，在另一个窗口研究下一个阶段。
+
+Token 成本的权衡
+
+GSD 的子代理方式确实比直接使用 Claude Code 消耗更多 token。但 Chase AI 提出了一个有力的论点："plan twice, prompt once"（计划两次，提示一次）比"提示一次，然后修修补补"长远来看更省 token。 因为在新鲜上下文中做对一次，比在退化上下文中反复修复要高效得多。
+
+不如意时的处理
+
+如果你对某个阶段的结果不满意，可以 git reset --hard 然后用 /gsd:remove-phase 级联删除该阶段的所有产出文件。TÂCHES 在直播中实际演示了这个操作——他不喜欢某个视觉效果，直接回滚到上一个满意的状态，干脆利落。
+
+To-Do 系统
+
+/gsd:add-todo 可以随时记录想法到待办列表，而不需要修改路线图。这些想法可以在 /gsd:discuss-milestone 时被拉出来，作为下一个里程碑的输入。TÂCHES 的策略是"先做功能，milestone 2 再打磨 UI"。
+
+常见问题与最佳实践
+
+最佳实践
+
+提供详细的初始描述。/gsd:new-project 的质量取决于你的输入质量。准备一份粗略的愿景文档——描述目标、用户、核心功能、已知约束。描述越精确，系统追问越少，规划越准。
+
+阶段之间清理上下文。每完成一个阶段，运行 clear 或 /compact 保持主上下文窗口精简。TÂCHES 的习惯是保持主上下文在 30-40%。
+
+先用 Quick Mode 测试。对于不确定的小功能，先用 /gsd:quick 试水。如果效果好，再在正式路线图中纳入。
+
+对已有项目先 map-codebase。在已有代码库上使用 GSD 前，先运行 /gsd:map-codebase。系统会分析技术栈、架构和约定，之后的规划会更贴合现有代码。
+
+FAQ
+
+Q: GSD 支持哪些运行时？
+
+A: Claude Code、OpenCode 和 Gemini CLI。安装时可以选择单个或全部。
+
+Q: Quick Mode 和完整模式有什么区别？
+
+A: Quick Mode 提供 GSD 的基础保障（原子提交、状态跟踪），但跳过研究、计划检查和验证步骤。适合 bug 修复、小功能、配置变更等不需要完整规划的任务。
+
+Q: 执行过程中可以暂停吗？
+
+A: 可以。/gsd:pause-work 会将当前状态保存到 STATE.md。下次 /gsd:resume-work 时，系统会从上次中断的位置继续。
+
+Q: 如何控制 token 成本？
+
+A: 三种方式——(1) 切换到 budget 配置：/gsd:set-profile budget；(2) 关闭 research 或 plan_check 代理；(3) 对简单任务使用 /gsd:quick。
+
+Q: GSD 可以和 Ralph 一起用吗？
+
+A: 可以。GSD 和 Ralph 解决不同的问题——GSD 负责规划和结构化执行，Ralph 负责自主循环执行。你可以用 GSD 的 new-project 和 plan-phase 生成完整规划，然后用 Ralph 循环来执行那些不需要人类介入的阶段。
+
+Q: 多人协作怎么办？
+
+A: .planning/ 目录可以提交到 Git。多人可以各自运行不同阶段，通过 Git 合并结果。但建议避免同时运行同一阶段。
+
+小结
+
+GSD 的核心价值在于把复杂性藏在系统里，把简单性留给用户。你只需要几个命令——new-project、discuss-phase、plan-phase、execute-phase、verify-work——系统在背后处理所有的上下文管理、子代理编排和质量验证。
+
+从安装到交付，GSD 提供了一条清晰的路径：描述你想要什么 → 讨论实现细节 → 生成原子计划 → 并行执行 → 验证交付物。每一步都有你介入的机会，每一步都有文件记录。
+
+这不是"按一个按钮就搞定"的魔法。这是一个需要你参与但帮你承担大部分认知负担的系统。正如 TÂCHES 所说：你是高层项目经理，GSD 是你的执行团队。
+
+延伸阅读：
+
+GSD 深度解析 — 核心原理、工作流与技术架构
+
+Ralph Wiggum 深度解析 — Context Rot 和 Ralph 方法论
+
+snarktank/ralph 实战指南 — Ralph 的安装、PRD 编写与实战
+
+规格驱动开发是什么 — 从 Vibe Coding 到规格驱动开发
+
+Speckit 实践指南 — Speckit 命令详解与完整案例
+
+GSD - 把事情搞定
+一个轻量级且强大的元提示、上下文工程和规格驱动开发系统，支持 Claude Code、OpenCode 和 Gemini CLI。
+
+TÂCHES (glittercowboy)GitHub
+EN前往
+
+评论
+
+概念介绍
+
+理解 GSD 的核心原理：一个让 Claude Code 可靠地完成复杂项目的上下文工程系统
+gstack 概念篇
+
+Garry Tan 开源的 gstack 是什么、解决什么问题、核心工作流和工具生态定位
+
+目录
+
+引言安装与配置安装推荐：跳过权限模式更新完整命令参考核心工作流命令里程碑管理阶段管理Quick Mode 与工具Session 与配置管理配置详解模型配置核心设置工作流开关产出文件结构项目级文件阶段级文件目录结构示例实战工作流演示Step 1: 初始化项目Step 2: 讨论阶段Step 3: 计划阶段Step 4: 执行阶段Step 5: 验证阶段常见操作场景调试工作流实战经验放慢才能加快阶段之间清上下文Token 成本的权衡不如意时的处理To-Do 系统常见问题与最佳实践最佳实践FAQ小结
+
+GSD 实践指南 | Yu的赛博工位

@@ -1,0 +1,534 @@
+跳转到主要内容
+Yu的赛博工位
+
+笔记收录独立开发博客关于🇨🇳
+
+文档Claude Code 相关
+Claude Code 隐藏技巧
+
+系统架构全解析工具调用系统Worktree 指南Agent Teams 指南Claude Skills
+
+Claude Code Plugin
+
+Claude Code Subagent
+
+Agent 与工作流
+Agent 记忆系统
+
+Pi Agent概念介绍实践指南
+
+规格驱动开发
+
+Ralph Wiggum
+
+GSD
+
+gstack
+
+Matt Pocock 的 Claude Code 技能集
+
+工程实践
+AI 时代的 TDD
+
+Tmux 入门
+
+Yu的赛博工位
+
+搜索⌘K
+笔记收录独立开发博客关于🇨🇳
+
+概念介绍
+
+Pi Agent
+
+下载
+
+Pi Agent 是什么
+Copy page
+
+AI 辅助写的
+用一篇笔记讲清 Pi Agent 的核心定位：它不是新模型，也不是功能更全的 IDE，而是一个极简、透明、可扩展的 coding agent harness。
+引言
+
+如果只看功能，Pi Agent 很容易被低估：它在终端里运行，能读文件、改文件、执行命令、保存会话，也能切换模型。听起来像另一个 Claude Code 或 Codex。
+
+但我觉得 Pi 真正有意思的地方，不是它多做了什么，而是它少做了什么。它把 AI 编程工具最核心的那层保留下来：模型、上下文、工具、会话、扩展，然后尽量不把用户的工作流提前写死。
+
+所以我更愿意这样理解 Pi：
+
+Pi Agent 不是一个“更全”的 AI 编程产品，而是一个更薄、更透明的 coding agent harness。
+
+这个判断比功能清单更重要。因为它决定了你应该怎么学习 Pi：不是先背命令，而是先理解一个 coding agent 到底由哪几层组成。
+
+先把 Pi 放对位置
+
+Agent Harness
+让模型进入真实工作环境的运行时外壳。它决定模型能看到什么上下文、能调用什么工具、工具结果如何回到对话、会话如何保存，以及用户如何扩展整套流程。
+
+一个 AI 编程工具通常可以先粗略分成三层：模型、harness、工程环境。但如果只画这三层，还是太抽象。Pi 真正值得看的，是中间这层 harness 里面又拆成了哪些模块：
+
+Pi Agent 的整体结构
+重点不是三块粗略相连，而是看清 Pi runtime 里面到底有哪些模块在工作。
+
+输入入口
+CLI / TUI
+pi、交互模式、slash command、键盘输入
+
+Print / JSON / RPC / SDK
+非交互调用，把 Pi 接进脚本或其他应用
+
+用户任务
+目标、约束、@ 文件引用、后续 steering message
+
+进入当前 cwd，创建或恢复 session↓
+Pi Coding Agent Runtime
+AgentSessionRuntime
+维护当前 cwd、当前 session，并负责切换、fork、teardown
+
+AgentSession
+会话生命周期：模型、thinking、compaction、bash、事件订阅
+
+加载资源并构建 prompt↓
+ResourceLoader
+读取 AGENTS.md / CLAUDE.md、skills、extensions、prompt templates、themes
+
+SystemPrompt Builder
+把工具说明、项目规则、skills 摘要、当前日期和 cwd 放进系统提示词
+
+交给 harness 执行↓
+AgentHarness
+保存 messages、resources、tools、activeToolNames、hooks、follow-up 队列
+
+AgentLoop
+模型响应 -> tool call -> tool result -> 继续下一轮，直到没有更多工具调用
+
+扩展和状态在循环旁边介入↓
+ExtensionRunner
+注册工具、命令、快捷键、UI、生命周期 hook
+
+Tool Registry
+read、edit、write、bash、grep、find、ls 和自定义工具
+
+SessionManager
+保存历史、分支、compact 记录、token 和成本信息
+
+向外部系统请求模型，或在真实项目里执行工具↓
+外部系统
+Model Provider
+Claude / OpenAI / Gemini / OpenRouter / 本地兼容端点
+
+项目环境
+文件系统、Shell、Git、测试命令、依赖和数据库
+
+用户自定义资源
+packages、skills、extensions、个人全局 AGENTS.md
+
+Pi 的核心不是单个 UI，而是这套 runtime：入口收任务，资源层组上下文，harness 驱动模型和工具循环，扩展与会话系统在旁边持续介入。
+这张图里有三个重点。
+
+第一，Pi 不是只有一个“聊天 UI”。CLI、交互 TUI、print/JSON、RPC、SDK 都只是入口，真正承接任务的是 AgentSessionRuntime 和 AgentSession。
+
+第二，Pi 在请求模型之前会先做资源加载。ResourceLoader 会把 AGENTS.md、CLAUDE.md、skills、extensions、prompt templates 这些东西整理出来，再交给 SystemPrompt Builder 组装成模型真正看到的上下文。
+
+第三，模型调用工具时，并不是模型直接控制文件系统。AgentHarness 和 AgentLoop 负责校验工具、执行工具、接住结果、继续下一轮。Extensions、Tool Registry、SessionManager 则在旁边扩展能力和保存状态。
+
+所以 Pi 站在中间，但这个“中间”不是一句空话。它具体控制的是：哪些上下文进入模型，哪些工具可以被调用，工具结果如何回到会话，哪些能力由扩展补进来。
+
+这也是为什么很多介绍 Pi 的文章都会强调 minimal、transparent、extensible。它们其实在说同一件事：Pi 试图把 agent 的核心运行层做小，让用户能看见，也能改。
+
+一次工作是怎么流动的
+
+Pi 的一次请求不是“问模型一句话，模型回一句话”。更准确地说，它是一段带分支的时序：
+
+一次请求的详细时序
+这里要看的不是“模型回答了什么”，而是 Pi 怎样控制模型、工具和项目环境之间的信息流。
+
+1. 输入任务
+Pi Runtime
+创建/恢复 AgentSession，合并当前 cwd 与历史消息
+
+模型
+等待请求
+
+项目环境 / 工具
+项目尚未被触达
+
+2. 引用文件或规则
+Pi Runtime
+ResourceLoader 读取 AGENTS.md、skills、extensions、prompt templates
+
+模型
+收到 system prompt + messages + tools
+
+项目环境 / 工具
+暴露为上下文，而不是直接交给模型任意访问
+
+3. 等待 agent 行动
+Pi Runtime
+AgentLoop 调用 streamAssistantResponse
+
+模型
+返回文本，或返回 tool_call
+
+项目环境 / 工具
+仍未执行真实操作
+
+4. 观察工具调用
+Pi Runtime
+Harness 校验工具名和参数，并触发 extension hooks
+
+模型
+暂停，等待工具结果
+
+项目环境 / 工具
+read / edit / write / bash / 自定义工具开始执行
+
+5. 继续或插话
+Pi Runtime
+tool_result 追加进 messages，follow-up / steering message 可插入
+
+模型
+带工具结果继续下一轮判断
+
+项目环境 / 工具
+文件改动、命令输出、测试结果回到上下文
+
+6. 得到结论
+Pi Runtime
+没有更多 tool_call 后结束 turn，SessionManager 保存记录
+
+模型
+输出最终解释或下一步建议
+
+项目环境 / 工具
+保留真实 diff、命令结果和会话分支
+
+这张图对应源码里的 agent-loop：只要模型继续返回 tool_call，Pi 就会执行工具、追加结果、再次请求模型；扩展 hook 和 session 保存贯穿整个过程。
+这里最关键的是第四步到第五步之间的来回。模型不直接碰你的文件系统，它只提出 tool_call；Pi 接住这个调用，校验工具名和参数，触发可能存在的 extension hooks，执行真实操作，再把 tool_result 放回上下文。模型再根据新的上下文判断下一步。
+
+这就是 coding agent 和普通聊天机器人的区别。聊天机器人主要在文本里完成任务；coding agent 要进入工程系统，所以它必须有 harness 来管理工具、上下文和状态。
+
+Pi 的默认工具很少：
+
+工具含义
+read
+读取文件
+
+edit
+修改已有文件
+
+write
+创建或覆盖文件
+
+bash
+执行 shell 命令
+
+还有 grep、find、ls 这类只读工具可以被启用或限制。这个工具集看起来克制，但已经形成了编程闭环：读代码、改代码、跑测试、根据错误继续修。
+
+这套设计背后的问题不是“Pi 会不会做更多”，而是“更多东西是否应该默认进核心”。Pi 的回答很明确：不一定。
+
+为什么它不急着内置很多功能
+
+很多 AI 编程产品会把计划模式、todo、子代理、MCP、权限弹窗、后台任务、浏览器工具都做进产品里。这样上手快，但也带来一个代价：你很难知道模型实际收到了什么上下文，也很难把产品工作流改成自己的工作流。
+
+Pi 的路线相反。它把核心保持得很小，然后把工作流放到外面：
+
+你想改变什么Pi 交给哪里
+项目规则
+AGENTS.md / CLAUDE.md
+
+专门任务方法
+Skills
+
+自定义工具和 UI
+Extensions
+
+一组可分享能力
+Pi Packages
+
+模型选择
+Provider / Model 配置
+
+这不是“功能不够”，而是一种产品取舍：核心只管 agent loop，具体工作流交给用户和团队自己组合。
+
+举个例子，Pi 没有默认内置 DeepSearch。但这并不意味着它不能做深度搜索。更符合 Pi 思路的做法，是写一个 extension：注册一个 deep_search 工具，把 Tavily、Exa、Brave Search 或公司内部搜索接进去，再让模型在需要时调用它。
+
+这和把“搜索按钮”硬编码进产品不同。前者是你在扩展 agent 的能力，后者是产品替你决定工作流。
+
+重点：怎么扩展自己的工作流
+
+如果要真正用 Pi，而不只是“体验一下”，重点一定是扩展自己的工作流。
+
+这里容易混淆的是，Pi 不是只有“插件”这一种扩展方式。它更像给你四层入口：项目规则、任务方法、真实工具、可分享包。你要先判断自己想沉淀的到底是哪一种东西。
+
+你要沉淀的东西用什么适合什么场景
+项目习惯和约束
+AGENTS.md / CLAUDE.md
+告诉 agent 怎么改代码、跑什么检查、哪些目录不能碰
+
+一套可复用方法
+Skill
+代码审查、写文章、发版、生成文档、图片处理这类“步骤和经验”
+
+一个真实能力
+Extension
+注册工具、拦截工具调用、加 slash command、加 UI、接外部 API
+
+一组可分发能力
+Pi Package
+把 extensions、skills、prompt templates、themes 打包给自己或团队复用
+
+我的理解是：Skill 是工作手册，Extension 是可执行插件，Package 是分发容器。
+
+比如我现在这个博客工作流，可以这样拆：
+
+工作流需求放进哪里
+“写内容只写中文，图片必须用 BlogImage，改 MDX 后跑 pnpm types:check”
+AGENTS.md
+
+“写概念文章时按误解、定义、机制、例子、边界来组织”
+article-writing Skill
+
+“给 Pi 增加一个 deep_search 工具，能查 Tavily / Exa / Brave Search”
+Extension
+
+“把写作 Skill、DeepSearch Extension、微信发布命令打包给多个项目用”
+Pi Package
+
+这就比单纯说“装插件”更准确。因为很多工作流不需要写代码，只需要一份好的规则或 Skill；但只要你希望 agent 真的多一个能力，比如查外部搜索、查数据库、调用 CI、拦截危险命令，就应该写 Extension。
+
+Extension：真正的插件层
+
+Pi 的 Extension 是 TypeScript 模块。它可以做几类事：
+
+能力例子
+注册工具
+deep_search、query_logs、open_issue
+
+注册命令
+/review、/publish、/checkpoint
+
+拦截事件
+在 bash 执行 rm -rf、sudo、写 .env 前要求确认
+
+改 UI
+在 TUI 里显示状态、选择框、确认框、任务面板
+
+保存状态
+记录 todo、连接池、上次搜索结果、任务阶段
+
+接外部系统
+CI、GitHub、日志系统、公司内部 API
+
+Extension 可以放在全局，也可以放在项目里：
+
+~/.pi/agent/extensions/      # 全局扩展，所有项目可用
+.pi/extensions/              # 项目扩展，只在当前项目里用
+
+测试一个临时扩展，可以用：
+
+pi -e ./my-extension.ts
+
+放到自动发现目录后，可以在 Pi 里用：
+
+/reload
+
+重新加载 extensions、skills、prompts 和 context files。
+
+这就是我觉得 Pi 最有价值的地方：你不只是“让模型帮你写代码”，而是在给模型设计一个可控的工作环境。Extension 决定模型能调用什么能力，hooks 决定哪些行为要被拦截，commands 决定你自己的工作流如何被触发。
+
+Skill：不要把所有东西都写成插件
+
+如果一个能力主要是“怎么做”，而不是“调用一个真实 API 或执行一段程序”，那它更适合写成 Skill。
+
+Skill 的结构通常是：
+
+my-skill/
+  SKILL.md
+  scripts/
+  templates/
+  references/
+
+Pi 启动时不会把完整 skill 全塞进上下文。它会先加载 skill 的名字和描述；当任务匹配时，再让模型读取完整的 SKILL.md。这叫渐进式披露。好处是：你可以保存复杂方法论，但不用每次都污染上下文。
+
+比如“写一篇好文章”“发布到公众号”“做一次浏览器 QA”，这些都更像 Skill。它们的价值主要在步骤、判断标准和参考材料，不一定需要注册一个 LLM 可调用工具。
+
+Package：把自己的工作流打包
+
+当你已经有一组稳定能力，就可以考虑把它做成 Pi Package。
+
+Package 可以包含：
+
+内容作用
+extensions
+可执行插件、工具、命令、hooks
+
+skills
+工作方法和任务手册
+
+prompt templates
+常用 prompt 模板
+
+themes
+TUI 主题
+
+安装方式大概是：
+
+pi install npm:@scope/my-pi-package
+pi install git:github.com/user/repo@v1
+pi install ./relative/path/to/package
+pi list
+pi remove npm:@scope/my-pi-package
+pi update --extensions
+
+默认安装会写到个人设置里。如果你想让团队项目共享，可以用项目级设置，让包记录在 .pi/settings.json。这样别人进入项目启动 Pi 时，也能自动补齐缺失的 package。
+
+但这里也要非常谨慎：Package、Extension、Skill 都可能影响 agent 的行为。第三方 package 不是浏览器插件那种低权限装饰，它可能运行代码，也可能指导模型执行命令。安装前应该看源码。
+
+所以我会按这个顺序学习 Pi 的扩展：
+
+先用 AGENTS.md 写清项目规则。
+
+再把重复方法做成 Skill。
+
+需要真实工具能力时，再写 Extension。
+
+多项目复用时，最后再打成 Package。
+
+这样学习比较稳。你不是一上来就写插件，而是先把工作流拆成“规则、方法、工具、分发”四类，再决定每一类放到 Pi 的哪一层。
+
+从源码里能看到什么
+
+我看 Pi 源码时，最有帮助的不是追每个函数，而是看几个文件各自代表哪层设计：
+
+源码位置说明
+packages/agent/src/agent-loop.ts
+核心循环：把用户消息、模型响应、工具调用和工具结果串起来
+
+packages/agent/src/harness/agent-harness.ts
+Harness 状态：管理 session、system prompt、tools、hooks 和消息队列
+
+packages/coding-agent/src/core/tools/index.ts
+内置工具集合：默认 coding tools 是 read、bash、edit、write
+
+packages/coding-agent/src/core/resource-loader.ts
+资源加载：读取项目指令、extensions、skills、prompt templates 和 themes
+
+packages/coding-agent/src/core/system-prompt.ts
+系统提示词构建：把工具说明、项目上下文、skills 和当前目录放进 prompt
+
+packages/coding-agent/src/core/extensions/types.ts
+扩展系统：允许扩展注册工具、命令、快捷键、UI 和生命周期事件
+
+这几块合起来，基本就是 Pi 的心脏：它先组装上下文和工具，再把请求交给模型；模型如果要调用工具，Pi 执行工具；结果回来后，循环继续。
+
+所以 Pi 的“极简”不是空口号。源码结构本身也在表达这个想法：把 agent loop、harness、coding tools、资源加载、扩展系统分开，每层都相对清楚。
+
+Pi 的边界
+
+Pi 的自由度很高，但自由度不等于安全。
+
+Pi packages 和 extensions 可以运行代码；skills 也可能指导模型执行脚本；bash 能触达你的真实系统。官方文档和安全分析都提醒过：第三方 package、extension、skill 需要自己审查。
+
+我会把 Pi 的边界理解成三点：
+
+它不是沙箱：不要把它当成天然隔离环境。危险项目最好放进容器、临时目录或干净 worktree。
+
+它不替你判断权限：Pi 的核心哲学不是靠一堆弹窗管理风险，而是让你控制工具、上下文和扩展。
+
+它适合懂工程边界的人：你需要知道什么时候让 agent 跑命令，什么时候只给 read-only 工具，什么时候先建 git checkpoint。
+
+这也是 Pi 和一些更产品化 agent 的差异。产品化工具会替你包装更多安全和交互细节；Pi 给你更直接的控制权，同时也把更多责任还给你。
+
+应该怎么学习 Pi
+
+学习 Pi，我不建议从“有哪些命令”开始。命令很快能查到，真正值得学的是这几个问题：
+
+问题为什么重要
+Pi 怎么组装上下文
+决定模型实际知道什么
+
+Pi 的工具面为什么这么小
+决定 agent 的行为是否可观察
+
+Extension 怎么注册工具
+决定你能不能把自己的工作流接进去
+
+Skill 和 Extension 有什么区别
+决定什么时候写说明，什么时候写代码
+
+Session 怎么保存和分叉
+决定一次工程探索能不能恢复、回看和继续
+
+如果你已经用过 Claude Code 或 Codex，可以把 Pi 当成一次“拆开看”的机会：同样是让模型写代码，为什么有的工具像黑箱产品，有的工具像可改造的运行时？
+
+这个问题比“Pi 能不能替代某个工具”更值得问。
+
+写在最后
+
+Pi Agent 最有价值的地方，是它把 AI 编程工具的中间层暴露出来了。
+
+它提醒我们：一个 coding agent 的能力，不只来自模型，也来自 harness 的设计。模型负责想，harness 负责让模型在真实工程环境中行动。上下文怎么进来，工具怎么出去，结果怎么回来，扩展怎么插入，这些细节共同决定了 agent 是否可靠、透明、可控。
+
+所以我不会把 Pi 简单看成“Claude Code 平替”。它更像一个适合开发者研究和改造的 agent runtime。你可以直接用它写代码，也可以用它学习怎样设计自己的 agent 工作流。
+
+下一篇实战我会按这个思路继续：不写一个普通教程，而是用 Pi Extension 做一个 deep_search 工具，看看怎样把外部搜索能力接进 agent loop。
+
+延伸阅读
+
+Pi 官方使用文档
+官方使用文档，包含交互模式、会话、工具、资源加载和设计原则。
+
+Earendil Inc. & ContributorsPi Docs
+EN前往
+
+Pi Extensions 官方文档
+Pi 扩展系统文档，说明如何用 TypeScript 注册工具、命令、UI 和生命周期 hook。
+
+Earendil Inc. & ContributorsPi Docs
+EN前往
+
+Pi Skills 官方文档
+Pi Skills 官方文档，介绍 skill 位置、渐进式加载、命令、结构和校验方式。
+
+Earendil Inc. & ContributorsPi Docs
+EN前往
+
+Pi Packages 官方文档
+Pi Packages 官方文档，说明如何把 extensions、skills、prompt templates 和 themes 通过 npm、git 或本地路径打包安装。
+
+Earendil Inc. & ContributorsPi Docs
+EN前往
+
+构建一个极简、带观点的 coding agent 学到什么
+Pi 作者的设计文章，重点解释为什么选择小工具集、短提示词、可观察性和可扩展性。
+
+Mario ZechnerMario Zechner
+EN前往
+
+Pi：OpenClaw 背后的极简 Agent
+Armin Ronacher 对 Pi 的介绍，重点讨论小核心、扩展系统以及它和 OpenClaw 的关系。
+
+Armin RonacherArmin Ronacher's Blog
+EN前往
+
+Pi Coding Agent 安全与沙箱分析
+从安全角度分析 Pi 的沙箱能力和使用风险。
+
+Agent SafehouseAgent Safehouse
+EN前往
+
+评论
+
+从 Cognee / LightRAG 看懂知识记忆
+
+以 Cognee 和 LightRAG 为样本，分析 GraphRAG 型长期记忆：remember / recall、三层存储、实体关系抽取、图检索、向量检索，以及它和交互型 Agent 记忆的差异。
+实践指南
+
+用 Pi Extension 实现一个 DeepSearch 能力：让 Pi 可以拆解问题、检索资料、整理证据，并生成带来源的研究结论
+
+目录
+
+引言先把 Pi 放对位置一次工作是怎么流动的为什么它不急着内置很多功能重点：怎么扩展自己的工作流Extension：真正的插件层Skill：不要把所有东西都写成插件Package：把自己的工作流打包从源码里能看到什么Pi 的边界应该怎么学习 Pi写在最后延伸阅读
+
+Pi Agent 是什么 | Yu的赛博工位

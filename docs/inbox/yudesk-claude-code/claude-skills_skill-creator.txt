@@ -1,0 +1,350 @@
+跳转到主要内容
+Yu的赛博工位
+
+笔记收录独立开发博客关于🇨🇳
+
+文档Claude Code 相关
+Claude Code 隐藏技巧
+
+系统架构全解析工具调用系统Worktree 指南Agent Teams 指南Claude Skills概念介绍实践指南Skill-Creator 解析
+
+Claude Code Plugin
+
+Claude Code Subagent
+
+Agent 与工作流
+Agent 记忆系统
+
+Pi Agent
+
+规格驱动开发
+
+Ralph Wiggum
+
+GSD
+
+gstack
+
+Matt Pocock 的 Claude Code 技能集
+
+工程实践
+AI 时代的 TDD
+
+Tmux 入门
+
+Yu的赛博工位
+
+搜索⌘K
+笔记收录独立开发博客关于🇨🇳
+
+Skill-Creator 解析
+
+Claude Skills
+
+下载
+
+Skill-Creator 深度解析：用数据驱动你的技能开发
+Copy page
+
+AI 辅助写的
+深入解析 Anthropic 官方「元技能」Skill-Creator——如何系统性地创建、测试、评估和优化 Claude Code 技能，将技能开发从直觉驱动转向数据驱动
+引言
+
+本文基于 2026 年 3 月的信息撰写，对应 Claude Code v2.1+ 版本。
+
+如果你已经读过概念篇和实践篇，你应该已经知道如何手动编写一个 SKILL.md 文件了——定义 frontmatter、写一段指令、保存到 .claude/skills/ 目录，完事。
+
+但这里有一个根本性的问题：你怎么知道你的技能真的好用？
+
+你可能改了一段措辞觉得效果更好了，但那只是你的主观感受。也许换一个不同的提示词，新版本反而更差。也许你的技能和不加技能相比根本没有提升——Claude 本身就能做得一样好。
+
+在概念篇和实践篇中，技能开发的流程是这样的：写了 → 试了 → 感觉还行 → 上线。整个过程依赖直觉，没有量化，也无法回答"这个技能到底比不加技能好多少"。而 Skill-Creator 把这件事变成了工程：写了 → 并行测试有/无技能 → 盲测 A/B 对比 → 量化评分 → 反馈迭代 → 数据验证。
+
+Skill-Creator 将技能创建从艺术变为工程——你现在可以测试、度量、系统性地改进你的技能，而不再只是依靠直觉。
+
+Anthropic改进 Skill-Creator：测试、度量和优化 Agent Skills
+EN前往
+
+这就是 Skill-Creator 存在的意义。它不只是帮你"生成一个 SKILL.md"，而是提供了一套完整的创建 → 测试 → 评估 → 优化循环，让你用数据说话。
+
+什么是 Skill-Creator
+
+Skill-Creator
+Anthropic 官方提供的「元技能」（meta skill）——一个专门用来创建、测试和优化其他技能的技能。它内置了评估框架、盲测对比、描述优化等能力，将技能开发从「写了试试看」升级为「数据驱动的迭代工程」。
+
+来源: Anthropic前往
+
+改进 Skill-Creator：测试、度量和优化 Agent Skills
+官方博客文章，宣布 Skill-Creator 的评估、改进和基准测试能力。
+
+AnthropicAnthropic Blog
+EN前往
+
+Skill-Creator 本身也是一个 Skill——一个 33KB 的 SKILL.md 文件加上配套的子代理指导文件、Python 脚本和 HTML 查看器。它的目录结构长这样：
+
+skill-creator/
+├── SKILL.md                    # 主指令文件（486 行）
+├── agents/                     # 子代理指导
+│   ├── grader.md              # 评分代理
+│   ├── comparator.md          # 盲测对比代理
+│   └── analyzer.md            # 分析代理
+├── eval-viewer/               # 评估结果查看器
+│   ├── generate_review.py
+│   └── viewer.html
+├── assets/
+│   └── eval_review.html       # 触发评估审查界面
+├── scripts/                   # Python 工具脚本
+│   ├── run_eval.py            # 运行触发评估
+│   ├── run_loop.py            # 优化循环
+│   ├── improve_description.py # 描述优化
+│   ├── aggregate_benchmark.py # 聚合基准测试
+│   ├── package_skill.py       # 打包为 .skill 文件
+│   └── quick_validate.py      # 快速校验
+└── references/
+    └── schemas.md             # JSON Schema 定义
+
+安装也很简单：
+
+# 通过 Claude Code 插件市场
+/plugins  # 然后搜索 skill-creator 安装
+
+# 或通过 skills.sh
+npx skills add anthropics/skills -- skill skill-creator
+
+跟着做一遍：评估并优化一个已有技能
+
+下面用我自己实际在用的技能走完 Skill-Creator 的完整流程。我维护了一个 Claude Code 插件市场 yux-claude-hub，其中 yux-video-summary 技能用于将视频字幕转为结构化摘要——支持中英文语言检测、DUAL_FILE/SINGLE_FILE 两种输出模式、filler 词清理等。技能的 SKILL.md 长这样：
+
+---
+name: yux-video-summary
+description: Transform a video transcript file into a structured,
+  organized summary with key points, timeline, and cleaned transcript.
+  Use when the user has a transcript file and wants it summarized.
+allowed-tools: Read, Write, Glob, Grep
+---
+
+技能已经写好了，但怎么知道它真的好用？ 这就是 Skill-Creator 登场的时候。
+
+Skill-Creator 源码中有一条重要的写作原则："Try hard to explain the why behind everything. If you find yourself writing ALWAYS or NEVER in all caps, that's a yellow flag — reframe and explain the reasoning." 意思是：好的技能应该解释为什么，而不是堆砌死板的规则。
+
+第 1 步：创建测试用例并运行评估
+
+核心问题：这个技能和不用技能比，真的更好吗？
+
+打开 Claude Code，直接输入：
+
+Use the skill creator to create evals for the yux-video-summary skill
+
+Skill-Creator 会先读取技能定义和 schemas，然后自动生成测试用例和量化断言。我的这次运行生成了 3 个测试用例和 39 条 assertions：
+
+评估概览：3 个测试用例 × 39 条 assertions，覆盖两种输出模式和多个质量维度
+注意它不是随便编测试用例的——它读懂了技能中定义的 DUAL_FILE 和 SINGLE_FILE 两种输出模式，针对性地设计了覆盖不同视频类型（教程、播客采访、技术分享）和语言组合的场景。Assertions 的设计也很讲究，从语言检测、输出模式选择到内容质量和中英文 filler 词清理，比我自己想测试维度要全面得多。
+
+Eval（评估）
+在 Skill-Creator 的语境中，Eval 指的是对技能的系统性测试。每个 Eval 包含一个测试提示（prompt）、预期输出描述和量化断言（assertions）。系统会同时运行有技能和无技能两个版本，然后对比结果。
+
+接着，系统对每个测试用例同时启动两个独立的子代理——with_skill（加载技能）和 without_skill（基线，不加载任何技能）。一次性启动了 6 个并行代理（3 个测试用例 × 2 个版本），每个在独立的 worktree 中运行，互不干扰。
+
+Anthropic 的 PDF 技能之前在处理非可填写表单时有问题——Claude 需要在没有定义字段的情况下在精确坐标放置文本。通过 Eval 隔离出了这个失败点，团队随后修复了定位逻辑。这就是 Eval 的价值——把"感觉不太对"变成"这里具体出了什么问题"。
+
+第 2 步：三个子代理接力评分
+
+所有运行完成后，三个专业子代理自动依次登场：
+
+Grader（评分器） 逐条检验断言。它会检查 with_skill 版本的摘要是否包含了 Overview 表格、是否正确选择了 DUAL_FILE 模式、filler 词是否已清理，然后记录每条的通过/失败和证据，生成 grading.json：
+
+{
+  "expectations": [
+    { "text": "摘要包含 Overview 表格", "passed": true, "evidence": "Found overview table with Type, Duration, Language fields" },
+    { "text": "正确选择 DUAL_FILE 模式", "passed": true, "evidence": "Generated separate summary and transcript files" },
+    { "text": "filler 词已清理", "passed": false, "evidence": "Found 'you know' in transcript line 42" }
+  ],
+  "summary": { "passed": 2, "failed": 1, "total": 3, "pass_rate": 0.67 }
+}
+
+Comparator（比较器） 做盲测 A/B 对比——它收到两份摘要，但不知道哪个是技能版、哪个是基线版。它只看到"输出 A"和"输出 B"，根据自己的质量标准独立评判，确定赢家。
+
+Blind A/B Testing（盲测对比）
+Comparator 子代理在对比两个输出时，不知道哪个来自技能版本、哪个来自基线版本。它只看到「输出 A」和「输出 B」，根据自己生成的质量标准独立评判，最终确定赢家或平局。这种设计消除了评估偏见。
+
+Analyzer（分析器） 综合上面的结果做诊断：哪些断言不管有没有技能都通过了（说明这个断言没有区分度，该换更好的断言）、哪些结果方差很高（测试不稳定）、时间和 token 的权衡如何。最终给出改进建议。
+
+第 3 步：在 Eval Viewer 中审查结果
+
+评分完成后，Skill-Creator 会自动在浏览器中打开一个 HTML 查看器。
+
+Outputs 选项卡 可以逐个查看每个测试用例的输出，底部有反馈文本框——写下你觉得哪里不够好，比如"摘要缺少时间线"、"filler 词没清理干净"。看完所有用例后点击 Submit All Reviews，反馈保存到 feedback.json。
+
+Eval Viewer：逐个审查输出，在底部留下反馈，最后一键提交
+Benchmark Results 选项卡 可以看到量化对比：with_skill 和 without_skill 的通过率、耗时、token 消耗，以及每条 assertion 的逐项对比。
+
+Benchmark Results：with_skill vs without_skill 的通过率和逐条 assertion 对比
+第 4 步：迭代改进，直到满意
+
+回到 Claude Code 告诉它你反馈完了，Skill-Creator 会读取 feedback.json，综合 benchmark 数据给出分析和改进建议：
+
+反馈分析：综合 benchmark 数据和你的反馈，给出具体的改进方向
+我的 skill 在 97% 通过率下表现已经不错，Skill-Creator 精准定位到了一个小问题——采访类视频缺少 Notable Quotes 段落，并提出了修复建议。
+
+关键在于它不会针对单个测试用例打补丁——它会泛化你的反馈，理解背后的需求并调整技能的整体结构，然后改写 SKILL.md，重新运行所有测试到 iteration-2/ 目录，打开新的 Eval Viewer 方便你对比两轮的输出。这个循环一直持续，直到你满意。
+
+Skill-Creator 源码中一段值得注意的改进哲学："We're trying to create skills that can be used a million times across many different prompts. Rather than put in fiddly overfitty changes, or oppressively constrictive MUSTs, if there's some stubborn issue, try branching out and using different metaphors." 核心思想：避免过拟合到测试用例上，追求泛化能力。
+
+第 5 步（可选）：优化描述，让技能在正确的时候触发
+
+技能质量验证了，但还有一个容易被忽视的问题：技能的 description 字段决定了 Claude 什么时候会调用它。
+
+输入：
+
+Use the skill creator to optimize the description for yux-video-summary
+
+Skill-Creator 自动生成约 20 个评估查询（一半应该触发、一半不应该触发），在浏览器中打开审查界面：
+
+Eval Set Review：审查正向和反向触发查询，确保技能在对的时候被调用
+注意这些查询既有中文也有英文，覆盖了各种真实表达方式。"不该触发"的查询不能太离谱——好的反例是"帮我总结这份会议纪要"，它和视频摘要共享了"总结"这个关键词，但实际需要的是文档处理技能而不是视频摘要。
+
+你可以直接在页面里编辑查询文本、点击 + Add Query 添加新的、用 Delete 按钮删除不合适的，还可以切换每条查询的 Should Trigger 开关。确认无误后点击 Export Eval Set 导出 JSON 文件，回到 Claude Code 告诉它你导出好了，系统就会在后台自动跑优化循环：
+
+优化循环：60/40 训练/测试集划分，最多 5 轮迭代，选出得分最高的 description
+整个过程全自动——将查询按 60/40 分为训练集和测试集，在训练集上迭代优化描述（最多 5 轮），用测试集成绩选最佳版本以避免过拟合。跑完后会输出优化前后的 description 对比：
+
+优化结果：Before/After 对比，新 description 更精确地匹配了文件类型和处理模式
+优化后的 description 变得更具体——明确了支持的文件类型（.vtt/.srt）、强调了 pipeline 特性（filler 清理、DUAL/SINGLE_FILE 逻辑），同时用 MUST USE 排除了不该触发的场景。Anthropic 内部用这套优化器跑了自己的文档创建类技能，结果 6 个公共技能中有 5 个的触发精度得到了提升。
+
+进阶用法：动态上下文注入
+
+如果你想让技能在加载时自动注入上下文，可以用 Skills 2.0 的 ! 语法在 SKILL.md 中嵌入 Shell 命令：
+
+## Project Context
+File tree: !`find . -type f -not -path '*/node_modules/*' | head -50`
+Package info: !`cat package.json 2>/dev/null || echo "No package.json"`
+Recent commits: !`git log --oneline -10`
+
+这些命令在 Claude 看到技能之前就已经执行完毕，数据直接嵌入了提示。相比让 Claude 自己去一个个探索文件，省下了大量时间和 token。
+
+两类技能：你该创建哪种？
+
+在使用 Skill-Creator 之前，有必要了解 Anthropic 定义的两种技能类型：
+
+能力提升型——让模型做到原本做不到或做不好的事。比如：
+
+图片生成技能：Claude 原生不能生成图片，但可以通过技能调用 nanobanner 等工具实现
+
+前端设计技能：默认的 AI 设计往往很"AI 味"，好的设计技能可以大幅提升质量
+
+偏好编码型——将你的特定工作流固化下来。模型已经具备各个单项能力，但你需要一个精确的执行顺序。比如：
+
+PR 审查技能：按固定流程检查代码安全性，输出风险等级报告
+
+视频摘要技能：按特定模板结构输出，自动做语言检测和 filler 词清理
+
+这两类技能需要测试的原因不同：能力提升型可能随着模型进化而变得不必要——如果基线（without_skill）也能通过所有断言，说明模型原生就够了，这个技能可以退役；偏好编码型更持久，但需要验证它是否真的忠实于你的工作流。
+
+Skill-Creator 的评估能力让你可以持续验证技能是否仍有价值，而不是盲目使用一个可能已经过时的技能。
+
+社区怎么说
+
+Skill-Creator 更新后引发了不少讨论，从 X/Twitter 到 Reddit 到独立博客，真实反馈比官方文档更有参考价值。
+
+真的有用吗？数据说话
+
+最直接的问题：加了技能真的比不加好吗？ 几个实测给出了明确答案。
+
+Reddit u/hashpanak 对标题生成技能跑了 eval，with_skill 通过率 100%，without_skill 只有 60%。被问到 token 开销值不值，他回复："绝对值，优化之后重复任务可以转成脚本，反而省 token。" u/spences10 更极端——跑了 250 次沙盒 eval，把技能激活率从 84% 拉到了 100%。评论区 u/Manfluencer10kultra 说："这应该成为标准做法。"
+
+博主 Nathan Onn 对 WordPress 安全技能做了 benchmark：21 条断言全部通过（基线只有 90.5%），速度还快了 9.9%。他的总结："之前 Skills 是艺术，现在是工程。"
+
+@0zhuxiaofeng 从实际工作流角度给出了更具体的数字："用了一个月了，最大变化是 run_eval 让 skill 可以自我打分了。我跑内容运营的 agent 现在每次发布后自动评估效果，差的 skill 直接淘汰重写。人工干预从每天 3 小时降到半小时。"
+
+被忽视的盲点：触发 ≠ 质量
+
+博主 Mager 指出了一个没人提的盲点：技能可以通过质量评估却在触发评估上挂掉——输出质量很好，但永远不会被调用。他经过三轮 run_loop.py 优化后触发 eval 达到 13/13。核心洞察："技能的 description 不是元数据，而是一个可学习的参数——你需要对真实的路由行为做优化。"
+
+这一点和 @DrWang5257 的建议不谋而合："别一上来整套重写，先拆成触发条件、输入模板、失败回退三段，逐段迭代。这样更新速度快，翻车率也低。"
+
+真实痛点
+
+效果虽好，坑也不少：
+
+token 消耗巨大。@konghao10 直言"耗 token 巨凶"——6 个并行代理同时跑确实不便宜。Reddit u/munkymead 也说"要正经测一轮很贵"。
+
+技能多了会打架。RoboRhythms 博主 Noah Albert 发现技能到 8-10 个时开始出问题：Claude 会自我质疑输出、生成更啰嗦的前言、偶尔出现技能间指令冲突。不过 Reddit u/Specialist_Solid523 反驳："写得差的技能才吃上下文。写得好的技能几乎总是让你的 token 使用更高效。"
+
+SKILL.md 越迭代越长。Reddit u/IulianHI 指出一个矛盾：随着迭代改进，技能文件不断膨胀，反而挤占了真正做事的上下文窗口。测试用例只覆盖 happy path 也会漏掉关键的 5%。
+
+版本管理缺失。@fengqve 吐槽"为什么 Skill 没有版本的概念，更新多了描述哪次更新都说不清楚"——这在多轮迭代后尤其痛苦。
+
+无头模式有 bug。GitHub 上有一个关键问题：claude -p 模式下技能永远不触发，导致描述优化循环的 recall 恒为 0%（#36570）。
+
+更远的思考：递归自我改进
+
+@vista8 分享了一篇相关论文 Memento-Skills: Let Agents Design Agents，评论区有人精准总结："Skill 的核心瓶颈就在迭代——写第一版容易，但让它在真实场景里越用越好很难。如果能自动化这个'用→评估→改进'的循环，等于给 Agent 装了个自我进化引擎。"
+
+Reddit r/ClaudeAI 上一个 104 赞的帖子也在讨论这个方向。但最高赞评论泼了一盆冷水——u/Tatrions 说："递归循环能跑，但难的是知道什么时候该信任改进。我们发现必须做证据门控——除非一个失败出现至少两次，否则不要提交修改。不然每轮循环都在'修复'本来没坏的东西，最终反而更差。"
+
+安装与生态
+
+Skill-Creator 作为 Anthropic 官方维护的技能之一，收录在 anthropics/skills 仓库中，该仓库包含 17+ 个生产级技能。
+
+更广泛的 Skills 生态也在快速增长：skills.sh 市场提供了便捷的发现和安装体验，社区已维护 1,234+ 个代理技能。
+
+Claude 技能构建完整指南
+33 页的完整指南，涵盖技能基础、规划、测试、分发和 YAML frontmatter 参考。
+
+AnthropicAnthropic Resources
+EN前往
+
+Claude Code Agent Skills 2.0：从自定义指令到可编程代理
+深度解析 Skills 2.0 架构、Context Fork 和可编程代理范式。
+
+Richard HightowerTowards AI (Medium)
+EN前往
+
+写在最后
+
+Skill-Creator 解决的核心问题是：如何知道你的技能真的有效？
+
+在没有它的时候，技能开发靠的是"写了 → 试了 → 感觉还行"。有了 Skill-Creator，你可以：
+
+用并行代理同时测试有技能和无技能的效果
+
+用盲测 A/B 对比消除评估偏见
+
+用 Eval Viewer 直观查看结果并留下反馈
+
+用描述优化器精确控制技能的触发时机
+
+用迭代循环持续改进直到满意
+
+这和软件工程中测试驱动开发的理念一脉相承——不是"写完代码觉得能跑就行"，而是"用测试证明它确实按预期工作"。
+
+Anthropic 在官方博客中提出了一个有趣的展望：随着模型能力的提升，SKILL.md 可能从"实现计划"（告诉 Claude 怎么做）演变为"规格描述"（告诉 Claude 做什么，让模型自己想办法）。而 Eval 框架正是这个方向的第一步——Eval 描述的就是"做什么"，如果有一天这个描述本身就足以成为技能，那 Skill-Creator 建立的测试体系将变得更加重要。
+
+如果你已经在用 Skills，试试用 /skill-creator 对你最常用的技能做一次评估。你可能会惊讶地发现，有些技能其实并没有比不用技能好多少——而这正是优化的起点。
+
+用 Skills 扩展 Claude
+Claude Code Skills 官方文档——结构、frontmatter 字段和最佳实践。
+
+AnthropicClaude Code Docs
+EN前往
+
+相关阅读：
+
+Claude Skills 是什么 — 理解 Skills 的核心原理
+
+实践指南 — 动手创建你的第一个 Skill
+
+评论
+
+实践指南
+
+从零开始创建自定义 Skill：对比 MCP、Subagents 的区别，掌握启用、安装和创建 Skills 的最佳实践
+概念介绍
+
+深入理解 Claude Code 插件机制：如何通过 Plugin 打包分发工作流，实现团队协作与社区共享
+
+目录
+
+引言什么是 Skill-Creator跟着做一遍：评估并优化一个已有技能第 1 步：创建测试用例并运行评估第 2 步：三个子代理接力评分第 3 步：在 Eval Viewer 中审查结果第 4 步：迭代改进，直到满意第 5 步（可选）：优化描述，让技能在正确的时候触发进阶用法：动态上下文注入两类技能：你该创建哪种？社区怎么说真的有用吗？数据说话被忽视的盲点：触发 ≠ 质量真实痛点更远的思考：递归自我改进安装与生态写在最后
+
+Skill-Creator 深度解析：用数据驱动你的技能开发 | Yu的赛博工位

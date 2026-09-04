@@ -1,0 +1,469 @@
+跳转到主要内容
+Yu的赛博工位
+
+笔记收录独立开发博客关于🇨🇳
+
+文档Claude Code 相关
+Claude Code 隐藏技巧
+
+系统架构全解析工具调用系统Worktree 指南Agent Teams 指南Claude Skills
+
+Claude Code Plugin
+
+Claude Code Subagent
+
+Agent 与工作流
+Agent 记忆系统
+
+Pi Agent
+
+规格驱动开发
+
+Ralph Wiggum
+
+GSD
+
+gstack
+
+Matt Pocock 的 Claude Code 技能集
+
+工程实践
+AI 时代的 TDD
+
+Tmux 入门
+
+Yu的赛博工位
+
+搜索⌘K
+笔记收录独立开发博客关于🇨🇳
+
+Worktree 指南
+
+下载
+
+Claude Worktree 完全指南
+Copy page
+
+AI 辅助写的
+掌握 Claude Code 的 Worktree 功能：如何运行多个并行 Agent 而不发生冲突，实现真正的并行开发工作流
+引言
+
+Worktrees are our #1 productivity tip. Run up to 5 parallel terminal instances plus additional web sessions.
+
+Boris ChernyClaude Code Tips from the Creator
+中文前往
+
+用 Claude Code 处理复杂任务时，你可能遇到过这样的困境：手上有三个独立的任务需要处理，但在同一个目录里运行多个 Claude 实例会导致代码冲突——一个 Agent 在修改文件，另一个也在动同样的文件，最后合并时一团糟。
+
+2025 年 2 月，Anthropic 发布了 --worktree 命令，彻底改变了这一局面。现在，你可以在三个终端里分别运行 claude -w feature-1、claude -w feature-2、claude -w bugfix-1，三个 Agent 各自在隔离的环境中工作，互不干扰。
+
+理解 Worktree
+
+Worktree 让多个 Agent 在隔离的工作目录中并行开发
+想象你是一个建筑师，同时在设计三个不同的房间。传统方式是在同一张图纸上画，改来改去容易弄乱。Worktree 的做法是给你三张独立的图纸，每张专门用于一个房间的设计，最后再合并到主图纸上。
+
+从技术角度来说，Worktree 是 Git 的原生功能。Claude Code 的 --worktree 命令将这个功能封装得更加简单易用——一条命令就能创建隔离环境、启动 Claude 实例、完成后自动清理。
+
+为什么不直接多次 Clone
+
+你可能会问：为什么不直接 clone 多份代码？
+
+方案磁盘占用同步难度清理复杂度多次 Clone每份都是完整仓库需要手动 pull/push需要手动删除目录Git Worktree只复制工作文件，共享 .git自动共享历史git worktree removeClaude --worktree只复制工作文件，共享 .git自动共享历史退出时自动清理
+
+Worktree 共享同一个 .git 数据库，所有的提交历史、分支信息都是共享的。这意味着在一个 worktree 里创建的 commit，其他 worktree 立刻可见。
+
+什么时候该用 Worktree
+
+在动手之前，先判断一下你的任务是否适合用 worktree。
+
+经验法则：如果任务需要超过 30 分钟，考虑用 worktree。短任务用 worktree 反而浪费时间——创建环境、安装依赖、最后合并，加起来可能比任务本身还久。但对于需要深度工作的任务，worktree 的隔离性就非常有价值了。
+
+适合用 Worktree不太适合独立的功能开发10 分钟就能完成的小改动不同模块的并行重构需要频繁交互的任务长时间运行的任务强依赖其他正在进行的修改需要隔离测试的实验性改动简单的 bug fix
+
+前置条件
+
+使用 worktree 之前，确保满足以下条件：
+
+条件说明Git 已初始化必须在 Git 仓库目录中（有 .git 目录）至少有一个 commit空仓库无法创建 worktree远程分支可用默认从远程分支检出（如 origin/main）
+
+完整工作流：从创建到清理
+
+下面按实际开发顺序，走一遍从创建 Worktree 到最终清理的完整流程。
+
+第一步：创建 Worktree
+
+从远端默认分支创建
+
+使用 -w 或 --worktree 参数启动 Claude：
+
+# 创建名为 "feature-auth" 的 worktree 并启动 Claude
+claude -w feature-auth
+
+# 自动生成随机名称（如 "bright-running-fox"）
+claude -w
+
+通过 git log 和 git branch 确认：worktree 是基于 origin/master 创建的，而非当前分支
+这条命令实际上做了四件事：
+
+在 <repo>/.claude/worktrees/feature-auth/ 创建新的工作目录
+
+创建名为 worktree-feature-auth 的新分支
+
+从远端默认分支（如 origin/main 或 origin/master）检出代码——注意，不是你当前所在的分支
+
+在新目录中启动 Claude Code
+
+所有 worktree 都在 .claude/worktrees/ 目录下：
+
+your-project/
+├── .claude/
+│   └── worktrees/
+│       ├── feature-auth/      ← 第一个 worktree
+│       ├── bugfix-123/        ← 第二个 worktree
+│       └── refactor-api/      ← 第三个 worktree
+├── src/
+└── package.json
+
+建议将这个路径添加到 .gitignore：
+
+# .gitignore
+.claude/worktrees/
+
+从当前/特定分支创建
+
+-w 总是从远端默认分支检出，目前不支持指定基础分支。如果你想基于当前分支（或某个特定分支）创建 worktree，有三种方式：
+
+方式一：手动 Git 创建
+
+# 基于当前 HEAD 创建 worktree
+git worktree add -b my-feature .claude/worktrees/my-feature HEAD
+
+# 或者基于某个特定分支
+git worktree add -b hotfix .claude/worktrees/hotfix origin/release-v2
+
+# 然后在该目录中启动 Claude
+cd .claude/worktrees/my-feature && claude
+
+这种方式给你完全的控制权——可以基于任意分支、任意 commit 创建 worktree，工作目录从一开始就在正确的分支上。官方文档也建议："如果需要更多分支和位置控制，直接使用 Git 创建 worktree，然后在该目录中运行 Claude。"
+
+方式二：在对话中创建（推荐）
+
+在会话中让 Claude 从当前分支创建 worktree，并通过 git log 确认分支来源
+在已有的 Claude 会话中，直接让 Claude 创建 worktree：
+
+> 从当前分支开启一个worktree
+> start a worktree
+
+与 -w 命令不同，在对话中创建的 worktree 会自动基于当前分支，而不是远端默认分支。Claude 会自动完成 worktree 创建并切换过去，整个过程不需要你手动操作任何 Git 命令。如果你已经在某个 feature 分支上工作，这是最便捷的方式——一句话就能开出一个基于当前分支的隔离环境。
+
+方式三：先用 -w 创建，在会话中切换分支
+
+在 worktree 中尝试切换到已被占用的分支时，Claude 会自动创建新分支作为替代
+先用 claude -w 创建 worktree，进入会话后再让 Claude 切换到目标分支。这种方式的缺点是会先拉取远端默认分支，再切换——多一步操作，不如前两种方式干净。而且如果目标分支已被其他 worktree 占用，会遇到分支冲突：
+
+如截图所示，Claude 会检测到分支冲突并提供两个选择：回到主目录操作，或基于目标分支创建一个新的工作分支。虽然最终也能工作，但整个过程不如方式一和方式二直接。
+
+进阶：用 Makefile 封装成一键命令
+
+如果你经常需要从当前分支创建 worktree，可以在项目根目录的 Makefile 中添加一个快捷命令，把创建 + 打开编辑器 + 启动 Claude 串成一条确定性的流水线：
+
+# 从当前分支创建 worktree 并启动开发环境
+# 用法: make worktree name=my-feature
+worktree:
+	@if [ -z "$(name)" ]; then \
+		echo "用法: make worktree name=<worktree-name>"; \
+		echo "示例: make worktree name=fix-login-bug"; \
+		exit 1; \
+	fi
+	@echo "→ 从 $$(git branch --show-current) 创建 worktree: $(name)"
+	git worktree add -b $(name) .claude/worktrees/$(name) HEAD
+	@echo "→ 初始化环境"
+	cd .claude/worktrees/$(name) && npm install
+	@echo "→ 在 Zed 中打开"
+	zed .claude/worktrees/$(name)
+	@echo "→ 启动 Claude"
+	cd .claude/worktrees/$(name) && claude
+
+使用起来非常简洁：
+
+# 基于当前分支创建 worktree，用 Zed 打开，启动 Claude
+make worktree name=fix-login-bug
+
+# 多开几个并行任务
+make worktree name=feature-search
+make worktree name=refactor-api
+
+相比手动输入多条 Git/cd/claude 命令，make worktree name=xxx 只需一行，而且每次执行的流程完全一致——不会忘记某个步骤，也不会打错路径。需要注意的是，因为 Makefile 使用的是原生 git worktree add，Claude Code 的 WorktreeCreate Hook 不会触发（该 Hook 只在 claude -w 或对话中创建 worktree 时生效）。所以环境初始化步骤（安装依赖、复制 .env 等）需要直接写在 Makefile 里，如上面示例中的 npm install。
+
+第二步：初始化环境
+
+Worktree 创建完成后，第一件事就是初始化开发环境。每个新 worktree 都是一个独立的目录，node_modules、虚拟环境、.env 文件等不会自动带过来。
+
+Claude Code 提供了 WorktreeCreate Hook 来自动化环境设置：
+
+{
+  "hooks": {
+    "WorktreeCreate": [
+      {
+        "command": "npm install && cp ../.env .env"
+      }
+    ]
+  }
+}
+
+这样每次创建 worktree 时，依赖会自动安装，环境变量文件会自动复制。常见的初始化步骤：
+
+项目类型初始化命令Node.jsnpm install 或 yarnPythonpip install -r requirements.txt 或激活虚拟环境Gogo mod download通用复制 .env 文件、设置环境变量
+
+如果没有配置 Hook，也可以在每个 worktree 会话开始时运行 /init，确保 Claude 正确理解当前工作目录的上下文，重新读取项目结构和 CLAUDE.md 配置。
+
+第三步：提交与合并
+
+环境就绪、开发完成后，下一步是把改动合并回目标分支。
+
+合并回 main 分支
+
+最常见的情况——worktree 从 origin/main 分出，改动也要合并回 main。在 worktree 的 Claude 会话中直接说：
+
+> 提交所有改动，推送到远端，然后创建一个 PR 到 main
+
+Claude 会自动完成 commit → push → gh pr create 的全流程。
+
+合并回 feature 分支
+
+如果你在 feature-x 分支上开发，worktree 的改动需要合并回 feature-x 而不是 main：
+
+> 提交改动并推送，然后创建一个 PR 合并到 feature-x 分支
+
+Claude 会执行 gh pr create --base feature-x，直接创建指向 feature 分支的 PR。
+
+也可以退出 worktree 会话后（选择保留 worktree），回到主目录启动 Claude：
+
+> 把 worktree-my-task 分支的改动合并到当前分支
+
+如果 worktree 中有些 commit 你不想要，可以选择性地 cherry-pick：
+
+> 帮我查看 worktree-my-task 分支的 commit 历史，然后把其中关于认证模块的那几个 commit cherry-pick 到当前分支
+
+提示：所有 worktree 共享同一个 .git 数据库，worktree 中创建的 commit 在主目录中立刻可见，不需要额外的 push/pull 操作。
+
+第四步：退出与清理
+
+代码合并完成后，就可以退出 worktree 会话了。
+
+退出 worktree 会话时，Claude 会根据情况自动处理：
+
+退出 worktree 会话时，Claude 会提示你选择保留或删除
+状态处理方式无更改自动删除 worktree 和分支有更改或提交提示你选择保留或删除
+
+保留的 worktree 会一直存在，方便你稍后继续工作。
+
+你也可以配置 WorktreeRemove Hook 来自动化清理：
+
+{
+  "hooks": {
+    "WorktreeRemove": [
+      {
+        "command": "echo 'Worktree cleaned up'"
+      }
+    ]
+  }
+}
+
+手动管理命令
+
+如果需要手动管理 worktree，可以使用标准的 Git 命令：
+
+# 列出所有 worktree
+git worktree list
+
+# 手动删除某个 worktree
+git worktree remove .claude/worktrees/feature-auth
+
+# 清理过时的 worktree 引用
+git worktree prune
+
+注意：不要直接 rm -rf 删除 worktree 目录。正确做法是使用 git worktree remove，或者如果已经误删了，运行 git worktree prune 来清理残留的引用。
+
+并行开发模式
+
+掌握了基本工作流后，来看看如何利用 worktree 实现并行开发。
+
+多终端并行
+
+最常见的用法是在多个终端标签页中同时运行：
+
+# 终端 1：处理用户认证功能
+claude -w feature-auth
+
+# 终端 2：修复支付 bug
+claude -w bugfix-payment
+
+# 终端 3：重构 API 模块
+claude -w refactor-api
+
+每个 Claude 实例都在自己的 worktree 中工作，修改不会相互影响。你可以：
+
+在一个终端里让 Claude 开发新功能
+
+在另一个终端里让 Claude 修 bug
+
+在第三个终端里继续你自己的代码审查
+
+竞争性实现
+
+一个高效的用法是让多个 Agent 独立实现同一个功能：
+
+# 三个终端分别运行
+claude -w feature-search-v1
+claude -w feature-search-v2
+claude -w feature-search-v3
+
+给它们相同的需求说明，让它们各自实现。最后比较三个方案，选择最好的那个合并。这利用了 LLM 的非确定性——相同的输入可能产生不同的输出，有时候第二个版本反而更好。
+
+UI 设计探索也非常适合这种模式。假设你想重新设计应用的界面，但不确定哪种风格更好：
+
+# 让三个 Agent 分别实现不同风格
+claude -w ui-minimal    # 极简风格
+claude -w ui-colorful   # 鲜艳配色
+claude -w ui-glassmorphism  # 毛玻璃风格
+
+完成后同时运行三个版本的开发服务器（不同端口），并排比较效果，选择最满意的方案合并到主分支——比传统的"改一版、看效果、不满意再改"的流程高效得多。
+
+Subagent 隔离
+
+Worktree 不仅适用于主 Claude 实例，还可以用于 Subagent。在自定义 Subagent 的 frontmatter 中添加 isolation: worktree：
+
+---
+name: code-migrator
+description: Handles large-scale code migrations. Use for batch refactoring.
+tools: Read, Write, Edit, Bash, Grep, Glob
+isolation: worktree
+---
+
+You are a code migration specialist...
+
+也可以在对话中直接告诉 Claude：
+
+> 使用 worktree 来隔离你的 agents
+> use worktrees for your agents
+
+当 Subagent 配置了 worktree 隔离：
+
+主 Agent（主目录）
+│
+├── 启动 Migration Agent 1 ──→ worktree-migration-1/
+│   └── 处理 src/auth/ 目录
+│
+├── 启动 Migration Agent 2 ──→ worktree-migration-2/
+│   └── 处理 src/api/ 目录
+│
+└── 启动 Migration Agent 3 ──→ worktree-migration-3/
+    └── 处理 src/utils/ 目录
+
+每个 Subagent 在自己的 worktree 中独立工作，互不干扰。完成后，worktree 会自动清理（如果没有未提交的更改）。
+
+This is especially powerful for large batched changes and code migrations.
+
+Boris ChernyClaude Code Worktree Announcement
+中文前往
+
+结合 Tmux 和 IDE
+
+配合 --tmux 参数可以自动在新的 Tmux 会话中启动，即使关闭终端，Claude 也会在后台继续运行：
+
+claude -w feature-auth --tmux
+
+如果你使用 VS Code 或 Cursor，源代码控制面板会自动识别所有 worktree——主仓库显示为一个 repo，每个 worktree 显示为独立的 repo，可以直接在 IDE 中切换、提交、推送。Worktree 也可以和 Ralph 循环结合，每个 Ralph 循环在自己的 worktree 中运行，即使循环失败也不会影响主分支。
+
+注意事项与最佳实践
+
+常见陷阱
+
+分支来源容易搞错：-w 创建的 worktree 是从远端默认分支检出的，不是你当前所在的分支。如果你在 feature-x 分支上运行 claude -w my-task，新 worktree 的代码来自 origin/main，不会包含 feature-x 的改动。想基于当前分支工作，参考从当前/特定分支创建。
+
+未提交的改动不会带过去：创建 worktree 时，主目录中未暂存或未提交的修改不会出现在新 worktree 中。Worktree 只基于 commit 历史创建，所以确保重要改动已经提交。
+
+同一分支不能被多个 Worktree 使用：Git 不允许两个 worktree 同时检出同一个分支。如果你在主目录已经在 feature-x 分支上，尝试在 worktree 中也检出 feature-x 会报错。每个 worktree 必须在不同的分支上。
+
+环境需要重新初始化：每个新 worktree 不包含 node_modules 等运行时依赖，建议配置 WorktreeCreate Hook 来自动化（参考第二步：初始化环境）。
+
+使用建议
+
+For best results, stick to 3-4 active worktrees per team. Too many worktrees can become hard to manage, cause memory bloat in Claude sessions, and reduce focus.
+
+Claude Code Best PracticesClaude Code Worktree Guide
+中文前往
+
+不要贪多。虽然技术上可以开很多 worktree，但每个 Claude 实例消耗 API 额度，太多并行任务难以追踪，最终合并时冲突也更复杂。
+
+命名规范：养成良好的命名习惯，方便后续管理：
+
+# 好的命名
+claude -w feature-user-auth
+claude -w bugfix-payment-123
+claude -w refactor-api-v2
+
+# 不好的命名
+claude -w test
+claude -w temp
+claude -w 1
+
+非 Git 版本控制
+
+如果你使用 SVN、Perforce 或 Mercurial，可以通过配置 WorktreeCreate 和 WorktreeRemove Hook 来实现类似的隔离效果。配置这些 Hook 后，使用 --worktree 时会调用你自定义的命令，而不是默认的 Git 行为。
+
+写在最后
+
+Worktree 是 Claude Code 团队自己每天都在用的功能，Boris Cherny 称它为"排名第一的生产力技巧"。核心价值很简单：让多个 Agent 能够并行工作而不互相干扰。
+
+开始很简单，只需要：
+
+claude -w your-task-name
+
+相关阅读：
+
+Claude Subagent 完全指南 — 理解 Subagent 与 Worktree 的配合
+
+Ralph Wiggum 深度解析 — 另一种提升 AI 编程效率的方法
+
+Claude 系统架构全解析 — 理解 Worktree 在整体架构中的位置
+
+参考资料：
+
+Claude Code 官方文档 - Common Workflows
+
+Boris Cherny 的 Worktree 发布公告
+
+Git Worktree 官方文档
+
+incident.io - Shipping faster with Claude Code and Git Worktrees
+
+Dev.to - Git worktree + Claude Code: My Secret to 10x Developer Productivity
+
+视频教程：
+
+I'm using claude --worktree for everything now — 实战演示 worktree 完整工作流
+
+Git Worktrees: The secret sauce to Claude Code! — 手动创建 worktree 的方法
+
+Native Worktrees Just Killed Traditional Claude Code Workflows — 原生 worktree 功能详解
+
+Claude Code Worktrees in 7 Minutes — 快速上手教程，包含 Subagent 用法
+
+Stop Using Claude Code on One Branch — 多 worktree 并行开发的优势
+
+评论
+
+工具调用系统
+
+很多人把 Claude Code 理解成“模型加一堆工具”。真正值得学的是它如何把工具发现、权限、hooks、sandbox 和结果回流组织成一条可验证的 agent loop。
+Agent Teams 指南
+
+掌握 Claude Code 的 Agent Teams 功能：如何协调多个 Claude 实例组成团队，实现真正的多智能体协作开发
+
+目录
+
+引言理解 Worktree为什么不直接多次 Clone什么时候该用 Worktree前置条件完整工作流：从创建到清理第一步：创建 Worktree从远端默认分支创建从当前/特定分支创建第二步：初始化环境第三步：提交与合并第四步：退出与清理并行开发模式多终端并行竞争性实现Subagent 隔离结合 Tmux 和 IDE注意事项与最佳实践常见陷阱使用建议非 Git 版本控制写在最后
+
+Claude Worktree 完全指南 | Yu的赛博工位

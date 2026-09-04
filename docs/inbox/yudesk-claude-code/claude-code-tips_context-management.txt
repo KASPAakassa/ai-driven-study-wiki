@@ -1,0 +1,151 @@
+跳转到主要内容
+Yu的赛博工位
+
+笔记收录独立开发博客关于🇨🇳
+
+文档Claude Code 相关
+Claude Code 隐藏技巧Claude Code 隐藏技巧快捷键篇输入与交互篇思考与模型控制篇会话管理篇上下文管理篇实用命令与自动化篇配置与诊断篇进阶篇
+
+系统架构全解析工具调用系统Worktree 指南Agent Teams 指南Claude Skills
+
+Claude Code Plugin
+
+Claude Code Subagent
+
+Agent 与工作流
+Agent 记忆系统
+
+Pi Agent
+
+规格驱动开发
+
+Ralph Wiggum
+
+GSD
+
+gstack
+
+Matt Pocock 的 Claude Code 技能集
+
+工程实践
+AI 时代的 TDD
+
+Tmux 入门
+
+Yu的赛博工位
+
+搜索⌘K
+笔记收录独立开发博客关于🇨🇳
+
+上下文管理篇
+
+Claude Code 隐藏技巧
+
+下载
+
+上下文管理篇
+Copy page
+
+AI 辅助写的
+Claude Code 上下文管理：/compact 带参数压缩、Compact Instructions、防止 token 预算放弃、Handoff 协议、MCP 工具懒加载
+/compact 可以带参数
+
+很多人知道 /compact 可以压缩上下文，但不知道它可以带参数来指定保留什么：
+
+/compact 保留所有关于数据库 schema 的讨论，以及当前的重构方案
+
+这样压缩的时候会优先保留你指定的内容，不至于丢失关键上下文。
+
+在 CLAUDE.md 中写压缩存活指令
+
+在 CLAUDE.md 中加一个 ## Compact Instructions 部分，告诉 Claude 压缩时必须保留什么：
+
+## Compact Instructions
+When summarizing, preserve all TypeScript type changes, error patterns encountered, and the current refactoring plan.
+
+这样即使自动压缩也不会丢失关键信息。
+
+防止 Claude 因为 token 预算提前放弃
+
+在 CLAUDE.md 中加上这段：
+
+Your context window will be automatically compacted as it approaches its limit.
+Never stop tasks early due to token budget concerns.
+Always complete tasks fully, even if the end of your budget is approaching.
+
+有时候 Claude 会在上下文快满时主动停下来说「上下文快满了」，加上这段可以防止它提前放弃。
+
+Handoff 协议：会话交接
+
+当上下文快满但任务还没完成时，让 Claude 写一份交接文档：
+
+把剩余的计划写到 HANDOFF.md 里，说明你尝试了什么、什么有效、什么没效。
+
+然后新开一个会话，只需要 @HANDOFF.md 就能恢复完整上下文。从 10K+ tokens 的上下文压缩到不到 2K，远比 /compact 精确。
+
+在 70-80% 时主动压缩
+
+一个容易忽略的点：当上下文接近上限时，Claude 会自动触发压缩。但自动压缩发生在任务中途时，可能会丢失关键信息导致后续响应质量下降。
+
+更好的做法是主动管理：在上下文达到 70-80% 时手动 /compact，效果比等自动压缩好得多。完成一个任务后立刻 /clear，不要让上下文无限膨胀。
+
+你也可以通过环境变量提前触发自动压缩：
+
+{
+  "env": {
+    "CLAUDE_AUTOCOMPACT_PCT_OVERRIDE": "50"
+  }
+}
+
+/context：上下文诊断
+
+不确定上下文窗口还剩多少空间？/context 会告诉你：
+
+哪些工具或 MCP 服务占用了最多上下文
+
+当前容量使用百分比
+
+针对性的优化建议
+
+我发现有时候光是注册了某些 MCP 服务（即使没使用），就能吃掉 30% 以上的上下文窗口。用 /context 查一下，清理掉不用的 MCP 能释放不少空间。
+
+MCP 工具自动懒加载
+
+当 MCP 工具定义超过上下文的 10% 时，Claude Code 会自动启用 Tool Search——加载一个轻量级搜索索引代替完整的工具定义。这能减少 85% 以上的 MCP 上下文消耗（比如从 77K tokens 降到 8.7K）。这个功能默认就是开启的，不需要手动配置。
+
+需要注意：Tool Search 仅支持 Sonnet 4+ 和 Opus 4+ 模型，不支持 Haiku。如果你的 ANTHROPIC_BASE_URL 指向非官方代理，Tool Search 会被自动禁用（因为大多数代理不转发 tool_reference 块）。
+
+如果想自定义行为，可以在 settings.json 中设置：
+
+{
+  "env": {
+    "ENABLE_TOOL_SEARCH": "auto:5"
+  }
+}
+
+支持的配置值：
+
+不设置：默认启用
+
+true：强制启用（包括非官方代理场景）
+
+auto：超过 10% 上下文时激活（等同默认行为）
+
+auto:<N>：自定义阈值，如 auto:5 表示超过 5% 就激活
+
+false：禁用，所有 MCP 工具预先加载
+
+评论
+
+会话管理篇
+
+Claude Code 会话管理：/rename 命名会话、/branch 对话分支、/color 窗口上色、命令行会话管理、远程控制
+实用命令与自动化篇
+
+Claude Code 实用命令：/diff 交互式查看器、/simplify 多代理审查、/batch 并行重构、/loop 定时任务、Headless 模式参数
+
+目录
+
+/compact 可以带参数在 CLAUDE.md 中写压缩存活指令防止 Claude 因为 token 预算提前放弃Handoff 协议：会话交接在 70-80% 时主动压缩/context：上下文诊断MCP 工具自动懒加载
+
+上下文管理篇 | Yu的赛博工位

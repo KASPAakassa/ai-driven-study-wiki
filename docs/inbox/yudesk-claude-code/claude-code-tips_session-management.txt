@@ -1,0 +1,117 @@
+跳转到主要内容
+Yu的赛博工位
+
+笔记收录独立开发博客关于🇨🇳
+
+文档Claude Code 相关
+Claude Code 隐藏技巧Claude Code 隐藏技巧快捷键篇输入与交互篇思考与模型控制篇会话管理篇上下文管理篇实用命令与自动化篇配置与诊断篇进阶篇
+
+系统架构全解析工具调用系统Worktree 指南Agent Teams 指南Claude Skills
+
+Claude Code Plugin
+
+Claude Code Subagent
+
+Agent 与工作流
+Agent 记忆系统
+
+Pi Agent
+
+规格驱动开发
+
+Ralph Wiggum
+
+GSD
+
+gstack
+
+Matt Pocock 的 Claude Code 技能集
+
+工程实践
+AI 时代的 TDD
+
+Tmux 入门
+
+Yu的赛博工位
+
+搜索⌘K
+笔记收录独立开发博客关于🇨🇳
+
+会话管理篇
+
+Claude Code 隐藏技巧
+
+下载
+
+会话管理篇
+Copy page
+
+AI 辅助写的
+Claude Code 会话管理：/rename 命名会话、/branch 对话分支、/color 窗口上色、命令行会话管理、远程控制
+/rename：给会话命名
+
+/rename my-auth-refactor
+
+命名后的会话在 resume 列表中可以直接选中恢复
+给当前会话取个名字。命名的好处是：在交互式会话选择器（claude --resume）里，已命名的会话可以直接选中恢复，不需要再按回车确认；也可以在终端里用 claude --resume my-auth-refactor 一步到位启动。
+
+在选择器中直接输入文字即可搜索过滤，还支持这些快捷键：Ctrl+V 预览会话、Ctrl+R 重命名、Ctrl+A 切换显示所有项目、Ctrl+B 按分支筛选。
+
+/branch：给对话开分支
+
+用 /branch 在当前对话点创建分支，可以用 claude -r 回到原来的会话
+就像 git 的分支一样，/branch 会在当前对话点创建一个分叉。你可以在分叉里尝试不同的方案，不影响原来的对话。试完不满意就回到原来的分支继续。
+
+/color：给窗口上色
+
+用 /color 给会话设置颜色，同时开多个窗口时一目了然
+给当前会话的提示栏设置颜色，支持 red、blue、green、yellow、purple、orange、pink、cyan。
+
+命令行会话管理全家桶
+
+# 恢复当前目录最近的会话
+claude --continue
+
+# 打开会话选择器，或按名称恢复
+claude --resume
+claude --resume my-auth-refactor
+
+# 启动时直接命名会话
+claude -n "auth-refactor"
+
+# Fork 上一次会话（保留上下文，创建新分支）
+claude -c --fork-session
+
+# 恢复与特定 PR 关联的会话
+claude --from-pr 123
+
+# 在隔离的 git worktree 中启动
+claude -w
+
+Claude Code 的会话是自动保存的（所以不需要 Ctrl+S），每次打开终端用 --continue 就能恢复上次工作。
+
+claude --remote：跨设备继续
+
+claude --remote "your task description"
+
+启动一个 Web 会话，可以在 claude.ai 或手机 App 上继续操作。
+
+/remote-control：手机遥控本地 Claude
+
+运行 /remote-control 后等待远程连接
+在电脑上的 Claude Code 里输入 /remote-control，它会生成一个连接码。然后在手机上的 Claude App 里输入这个连接码，就能远程控制本地的 Claude Code 会话——用手机给电脑上的 Claude 下达指令。
+
+评论
+
+思考与模型控制篇
+
+Claude Code 思考与模型控制：think/ultrathink 关键词触发思考深度、/effort 命令、subagents 并行、opusplan 模型方案
+上下文管理篇
+
+Claude Code 上下文管理：/compact 带参数压缩、Compact Instructions、防止 token 预算放弃、Handoff 协议、MCP 工具懒加载
+
+目录
+
+/rename：给会话命名/branch：给对话开分支/color：给窗口上色命令行会话管理全家桶claude --remote：跨设备继续/remote-control：手机遥控本地 Claude
+
+会话管理篇 | Yu的赛博工位

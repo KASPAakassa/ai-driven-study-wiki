@@ -1,0 +1,397 @@
+跳转到主要内容
+Yu的赛博工位
+
+笔记收录独立开发博客关于🇨🇳
+
+文档Claude Code 相关
+Claude Code 隐藏技巧
+
+系统架构全解析工具调用系统Worktree 指南Agent Teams 指南Claude Skills
+
+Claude Code Plugin
+
+Claude Code Subagent
+
+Agent 与工作流
+Agent 记忆系统
+
+Pi Agent
+
+规格驱动开发
+
+Ralph Wiggum
+
+GSD
+
+gstack
+
+Matt Pocock 的 Claude Code 技能集概览初始化配置Grill MeBatch Grill MeGrill With DocsPRD 与 Issues诊断与分诊TDDZoom OutPrototype深化代码架构其他 Skills
+
+工程实践
+AI 时代的 TDD
+
+Tmux 入门
+
+Yu的赛博工位
+
+搜索⌘K
+笔记收录独立开发博客关于🇨🇳
+
+Grill With Docs
+
+Matt Pocock 的 Claude Code 技能集
+
+下载
+
+Grill With Docs：用领域语言和 ADR 给 AI 装上项目记忆
+Copy page
+
+AI 辅助写的
+grill-me 的进阶版——在拷问需求的同时，自动维护 CONTEXT.md（项目术语表）和 ADR（架构决策记录），把 DDD 的 ubiquitous language 思想翻译成 LLM 能直接执行的工作流
+核心结论
+
+Grill With Docs 是 grill-me 的项目化版本：它不仅会在写代码前拷问需求，还会把你的计划和项目里的 CONTEXT.md、docs/adr/ 对照起来，发现术语冲突、代码事实冲突和架构决策缺口。
+
+它最适合有长期维护价值的真实项目。简单项目用 /grill-me 就够了；一旦项目里出现领域术语、历史架构决策、多人协作或跨会话上下文丢失，/grill-with-docs 的价值就开始超过普通需求拷问。
+
+在统一语言下，开发者之间的对话、代码本身的表达、与领域专家的对话，全部源自同一个领域模型。
+
+Eric Evans《领域驱动设计》
+EN前往
+
+失败模式：「AI 太啰嗦」
+
+Matt 演讲里的第二个失败模式：
+
+AI 用一堆冗长的话表达一件简单的事。它和你像在用两种语言。
+
+这事跟代码量没关系，是词汇错位。AI 默认会用泛化术语（"item"、"data"、"handler"），而你脑子里项目内的真正术语可能是「Course」、「Draft Version」、「Ghost Lesson」。AI 不知道这些词在你项目里有特定含义，就会绕开它们造一堆同义新词，结果是：
+
+思考过程啰嗦（要绕开你的专有词）
+
+实现和你脑子里的设计错位（因为不在同一个语义空间）
+
+跨会话不可复用（每次对话都得重新建立一遍上下文）
+
+经典理论：DDD 的 Ubiquitous Language
+
+Matt 引的是 Eric Evans 的《Domain-Driven Design》。这本书 2003 年出版，提出了 ubiquitous language（统一语言）这个概念：
+
+把领域专家、开发者、代码三者用同一套术语贯通。一个词在产品讨论里、代码注释里、变量名里、文档里——必须指同一个东西。
+
+DDD 的目标是让代码长得像领域专家的脑子。在 AI 时代，多了一个新角色：LLM 也得在这套语言里。LLM 不在 standup 会议里、看不到产品需求会、读不懂你们组的黑话——它只能从你给它的文档里学。
+
+Matt 把这件事变成了一个 skill：扫描代码库提取术语，生成一个 markdown 文件 CONTEXT.md，然后让人和 AI 都用它对齐。
+
+Skill 的进化：从 Ubiquitous Language 到 Grill With Docs
+
+最早这个 skill 叫 ubiquitous-language——只做一件事：扫描代码库生成术语表。但 Matt 后来发现单生成一份文档不够：
+
+文档会过时：今天生成、明天改了代码、术语表没跟上
+
+人不会主动看：放在那也是死的
+
+他把它重构成了 grill-with-docs，做了三件事的合并：
+
+拷问需求（继承自 grill-me 的全部能力）
+
+挑战已有术语表：你说的词和 CONTEXT.md 里写的不一致？立刻指出来
+
+决策时同步更新文档：拷问过程中达成的新结论，inline 写进 CONTEXT.md 或新建 ADR
+
+这是从「生成静态文档」到「对话即维护文档」的范式跃迁。
+
+Skill 全文
+
+engineering/grill-with-docs/SKILL.md 的核心结构：
+
+---
+name: grill-with-docs
+description: Grilling session that challenges your plan against the
+  existing domain model, sharpens terminology, and updates
+  documentation (CONTEXT.md, ADRs) inline as decisions crystallise.
+---
+
+<what-to-do>
+Interview me relentlessly about every aspect of this plan until we
+reach a shared understanding. Walk down each branch of the design
+tree, resolving dependencies between decisions one-by-one. For each
+question, provide your recommended answer.
+
+Ask the questions one at a time, waiting for feedback on each question
+before continuing.
+
+If a question can be answered by exploring the codebase, explore the
+codebase instead.
+</what-to-do>
+
+<supporting-info>
+
+## Domain awareness
+
+During codebase exploration, also look for existing documentation:
+
+### File structure
+
+Most repos have a single context:
+
+/
+├── CONTEXT.md
+├── docs/
+│   └── adr/
+│       ├── 0001-event-sourced-orders.md
+│       └── 0002-postgres-for-write-model.md
+└── src/
+
+If a CONTEXT-MAP.md exists at the root, the repo has multiple contexts.
+
+## During the session
+
+### Challenge against the glossary
+When the user uses a term that conflicts with the existing language in
+CONTEXT.md, call it out immediately.
+"Your glossary defines 'cancellation' as X, but you seem to mean Y —
+which is it?"
+
+### Sharpen fuzzy language
+When the user uses vague or overloaded terms, propose a precise
+canonical term.
+"You're saying 'account' — do you mean the Customer or the User?
+Those are different things."
+
+### Discuss concrete scenarios
+When domain relationships are being discussed, stress-test them with
+specific scenarios.
+
+### Cross-reference with code
+When the user states how something works, check whether the code
+agrees. If you find a contradiction, surface it.
+
+### Update CONTEXT.md inline
+When a term is resolved, update CONTEXT.md right there. Don't batch
+these up — capture them as they happen.
+
+### Offer ADRs sparingly
+Only offer to create an ADR when all three are true:
+1. Hard to reverse
+2. Surprising without context
+3. The result of a real trade-off
+
+</supporting-info>
+
+真实的 CONTEXT.md 长什么样
+
+Matt 自己的 course-video-manager 仓库给了一份完整的 CONTEXT.md 例子。摘几条术语感受一下：
+
+术语定义
+Course
+The primary domain entity: a structured collection of versions, sections, lessons, and videos
+
+Draft Version
+The single mutable CourseVersion that is currently being edited; always the latest by createdAt
+
+Published Version
+An immutable CourseVersion with a name and description, created by the Publish flow
+
+Ghost Lesson
+A lesson that exists in the database but not yet on the file system (fsStatus = "ghost")
+
+Export Hash
+A SHA256 hash derived from a video's clip filenames, timestamps, clip order
+
+Unexported Video
+A video whose current Export Hash does not match any file on disk; blocks publishing
+
+Materialization Cascade
+The chain reaction when materializing a lesson inside a ghost course
+
+Clip
+A timestamped segment of source footage within a video
+
+Fractional Index
+A string-based ordering value that allows inserting items between existing items
+
+Purge
+The deliberate deletion of an Exported Video's .mp4 file from disk
+
+注意几件事：
+
+每个术语都是动名词或专有名词——不是「订单的状态」这种描述性短语
+
+每个定义都引用了其他术语（Course → Version → Lesson → Video）形成本体网络
+
+代码字段直接出现（fsStatus = "ghost"）——文档和代码 1:1 映射
+
+包含决策描述（"blocks publishing"、"chain reaction"）——不只是名词，还有规则
+
+写代码时 AI 看到这份文档，就会用 "Ghost Lesson" 而不是 "lesson with no file"。代码、对话、commit message 全部统一。
+
+ADR：什么时候创建
+
+Skill 里有一段重要的克制：
+
+Only offer to create an ADR when all three are true:
+
+Hard to reverse — the cost of changing your mind later is meaningful
+
+Surprising without context — a future reader will wonder "why did they do it this way?"
+
+The result of a real trade-off — there were genuine alternatives
+
+ADR（Architecture Decision Record）这个文化从 Michael Nygard 2011 年那篇博客起源，但很多团队用着用着就什么决策都写成 ADR——20 条 ADR 里 18 条是流水账。Matt 这个三角校验是个好工具：只有同时满足三个条件，才值得 ADR。否则就让它消化在 CONTEXT.md 里、消化在代码里。
+
+怎么装、怎么用
+
+前置条件：先跑过 /setup-matt-pocock-skills（它会问你 CONTEXT.md 放哪、ADR 目录放哪）。
+
+调用：/grill-with-docs
+
+典型流程：
+
+描述想做的事
+
+/grill-with-docs
+
+Claude 先扫描 CONTEXT.md 和 docs/adr/，把现有术语和决策装进上下文
+
+开始拷问，过程中：
+
+你用的词和 CONTEXT.md 冲突 → 当场指出
+
+你用了模糊词（比如「账户」既可能是 Customer 也可能是 User）→ 让你二选一并落进文档
+
+你说的行为和现有代码矛盾 → 指出冲突
+
+决策达成时同步更新 CONTEXT.md（不积压、不批处理）
+
+关键的不可逆决策 → 询问是否生成 ADR
+
+如果项目里还没有 CONTEXT.md 和 docs/adr/——它会懒创建：直到第一个术语需要写、第一个 ADR 需要建，才生成文件。不会一上来给你铺满空模板。
+
+多上下文项目（CONTEXT-MAP.md）
+
+如果项目大到一个 CONTEXT.md 装不下（比如 ordering 和 billing 是两个独立的 bounded context），可以在根目录放 CONTEXT-MAP.md 当总目录：
+
+/
+├── CONTEXT-MAP.md                    ← 总目录
+├── docs/adr/                         ← 系统级决策
+├── src/
+│   ├── ordering/
+│   │   ├── CONTEXT.md
+│   │   └── docs/adr/                 ← 模块级决策
+│   └── billing/
+│       ├── CONTEXT.md
+│       └── docs/adr/
+
+/grill-with-docs 会自动识别 CONTEXT-MAP.md 的存在并跳到对应子目录。这是 DDD 里 bounded context 概念的直接落地——每个上下文里的「订单」可能含义不同，分开维护避免污染。
+
+和 grill-me 的差异
+
+维度/grill-me/grill-with-docs
+提问能力
+✅
+✅（继承全部）
+
+项目术语校验
+❌
+✅
+
+实时更新 CONTEXT.md
+❌
+✅
+
+ADR 触发判断
+❌
+✅
+
+适用阶段
+早期想法、个人项目
+有领域复杂度的真实项目
+
+启动成本
+0
+需要 setup + 项目里有/愿意建 CONTEXT.md
+
+简单粗暴的判断：
+
+个人脚本、写文章、教学课程 → /grill-me
+
+需要长期维护的真项目 → /grill-with-docs
+
+一个反直觉的好处：让 AI 学会「闭嘴」
+
+CONTEXT.md 不只是给 AI 用的——它给未来的 AI 会话用的。每次新对话开始，Claude 读一遍 CONTEXT.md 就能瞬间进入项目语境，省掉一个长 onboarding。
+
+更微妙的是：Matt 在演讲里说，加了 CONTEXT.md 之后他在 AI 的 thinking trace 里能看到——
+
+"It allows the AI to think in a less verbose way."（让 AI 思考时更简洁）
+
+为什么？因为没有 CONTEXT.md 时 AI 在思考时要不停自己定义术语——「the user, by which I mean the person who ordered the item, hereinafter referred to as...」。有了 CONTEXT.md 它直接说 "Customer"，思考链短了一大截，反应也快了。
+
+LLM 的 token 经济学决定了：缩短思考路径 = 输出更快、更准、更省钱。CONTEXT.md 是这个效率的隐藏杠杆。
+
+使用边界
+
+场景用 /grill-me 还是 /grill-with-docs原因
+写一次性脚本、小工具、文章大纲
+/grill-me
+没有长期项目语言，也不需要维护 ADR
+
+新增真实产品功能
+/grill-with-docs
+需要检查现有术语、代码事实和架构约束
+
+项目里已经有 CONTEXT.md 或 ADR
+/grill-with-docs
+它能边拷问边更新文档，不让决策只停留在对话里
+
+术语经常混乱，例如 User / Account / Customer 分不清
+/grill-with-docs
+它会把模糊词当场逼成 canonical term
+
+只是想快速确认实现方案
+/grill-me 或 Plan Mode
+/grill-with-docs 的文档维护成本可能太高
+
+第一次跑会大改 CONTEXT.md。如果项目里已经有手写的 CONTEXT.md，先 git stash 或者跑前让它 dry-run（你可以在 prompt 里加一句「先列出准备改的内容，不要直接写文件」）。
+
+ADR 节制是真的节制。不要一兴奋就让它每个决策都生成 ADR，6 个月后你的 docs/adr/ 会堆满垃圾。Matt 的三条标准要严格执行。
+
+CONTEXT.md 不要放实现细节。Skill 里有句话：「Don't couple CONTEXT.md to implementation details. Only include terms that are meaningful to domain experts.」 把 "PostgreSQL" 写进 CONTEXT.md 就是错——领域专家不关心数据库选型，那是 ADR 的事。
+
+参考资源
+
+grill-with-docs Skill 源文件
+完整 SKILL.md，包含领域感知、ADR 三条标准、多上下文处理等支撑信息。
+
+Matt PocockGitHub2026
+EN前往
+
+Matt 自己项目的真实 CONTEXT.md
+Matt 自己的视频编辑器项目里的真实 CONTEXT.md，可以作为「好领域语言文档长什么样」的参考模板。
+
+Matt PocockGitHub2026
+EN前往
+
+Skills 更新日志：从 ubiquitous-language 升级到 grill-with-docs
+Matt 写的为什么把独立的 ubiquitous-language skill 合并成对话型版本的演化记录。
+
+Matt Pocockaihero.dev2026
+EN前往
+
+下一篇：to-PRD + to-Issues：从对话到可执行 ticket——拷问完了，怎么把对话凝固成可执行的工作单元。
+
+评论
+
+Batch Grill Me
+
+Batch Grill Me 是 Matt Pocock 的分轮批量拷问 Skill。按 design tree 的 frontier 提问，问题不减、轮次减少，约把 13 轮压到 3 轮。
+PRD 与 Issues
+
+Matt Pocock 工作流的中段——/to-prd 把对话变 PRD，/to-issues 把 PRD 切成可独立领取的纵向切片 issue。深入解读「tracer bullet」「vertical slice」这两个老概念在 AI 时代的新作用
+
+目录
+
+核心结论失败模式：「AI 太啰嗦」经典理论：DDD 的 Ubiquitous LanguageSkill 的进化：从 Ubiquitous Language 到 Grill With DocsSkill 全文真实的 CONTEXT.md 长什么样ADR：什么时候创建怎么装、怎么用多上下文项目（CONTEXT-MAP.md）和 grill-me 的差异一个反直觉的好处：让 AI 学会「闭嘴」使用边界参考资源
+
+Grill With Docs：用领域语言和 ADR 给 AI 装上项目记忆 | Yu的赛博工位

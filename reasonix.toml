@@ -1,0 +1,2 @@
+[permissions]
+allow = ["Bash=cd /Users/bigo/Documents/AI‑Driven-Study-WIki && python3 -m venv .venv && .venv/bin/pip install --quiet --upgrade pip 2>&1 | tail -1; .venv/bin/pip install --quiet \"mkdocs-material\" 2>&1 | tail -2; .venv/bin/mkdocs --version", "Bash=cd /Users/bigo/Documents/AI‑Driven-Study-WIki && git init 2>&1 | head -2 && git config user.name 2>/dev/null; git config user.email 2>/dev/null; echo \"done\""]

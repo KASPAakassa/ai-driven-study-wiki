@@ -1,0 +1,120 @@
+跳转到主要内容
+Yu的赛博工位
+
+笔记收录独立开发博客关于🇨🇳
+
+文档Claude Code 相关
+Claude Code 隐藏技巧Claude Code 隐藏技巧快捷键篇输入与交互篇思考与模型控制篇会话管理篇上下文管理篇实用命令与自动化篇配置与诊断篇进阶篇
+
+系统架构全解析工具调用系统Worktree 指南Agent Teams 指南Claude Skills
+
+Claude Code Plugin
+
+Claude Code Subagent
+
+Agent 与工作流
+Agent 记忆系统
+
+Pi Agent
+
+规格驱动开发
+
+Ralph Wiggum
+
+GSD
+
+gstack
+
+Matt Pocock 的 Claude Code 技能集
+
+工程实践
+AI 时代的 TDD
+
+Tmux 入门
+
+Yu的赛博工位
+
+搜索⌘K
+笔记收录独立开发博客关于🇨🇳
+
+思考与模型控制篇
+
+Claude Code 隐藏技巧
+
+下载
+
+思考与模型控制篇
+Copy page
+
+AI 辅助写的
+Claude Code 思考与模型控制：think/ultrathink 关键词触发思考深度、/effort 命令、subagents 并行、opusplan 模型方案
+用关键词控制思考深度
+
+在提示词中加入特定关键词可以触发不同级别的思考预算，这是 Claude Code 独有的功能（claude.ai 网页端没有）：
+
+通过关键词 think / think hard / ultrathink 触发不同级别的思考预算
+关键词思考预算适用场景
+think
+~4,000 tokens
+日常编码问题
+
+think hard / megathink
+~10,000 tokens
+复杂逻辑、多文件关联
+
+think harder / ultrathink
+~31,999 tokens
+架构设计、疑难 bug
+
+实际使用中，我一般在遇到 Claude 给出浅层回答时，加上 think hard 重新提问。对于特别复杂的问题（比如跨多个服务的 bug 排查），直接上 ultrathink。
+
+/effort：控制思考深度
+
+除了用关键词（think / ultrathink），还可以用 /effort 直接设置思考深度：
+
+/effort low    # 简单任务，跳过深度思考，更快更省
+/effort high   # 复杂任务，深度推理
+/effort max    # 最大思考预算（仅 Opus）
+/effort auto   # 让 Claude 自己判断
+
+设置后在整个会话中持续生效。对于简单的文件修改用 low，复杂架构设计用 max，这样既省钱又不牺牲质量。
+
+「use subagents」关键词
+
+在任何请求后面加上 use subagents，Claude 会把任务分解给多个子代理并行处理。这样不仅速度更快，还能保持主代理的上下文窗口干净。
+
+Boris 在推特上专门提到这一点：把单个任务卸载给子代理，让主代理的上下文保持聚焦。
+
+opusplan：最佳性价比模型方案
+
+设置 opusplan 后，Plan Mode 使用 Opus，执行时自动切换到 Sonnet
+一句话总结：Opus 想，Sonnet 做。
+
+/model：切换模型
+
+用 /model 可以在会话中随时切换使用的模型。比如日常用 Sonnet，遇到复杂问题临时切到 Opus，处理完再切回来。
+
+输出风格控制
+
+在 /config 里选择 "Output style"，有两个不常见但很有用的模式：
+
+Explanatory 模式：Claude 在完成任务之间会插入「知识点」，解释相关的框架和代码模式，适合学习新项目
+
+Learning 模式：协作学习模式，Claude 会在代码中添加 TODO(human) 标记让你自己实现，而不是直接给答案
+
+你也可以在 ~/.claude/output-styles/ 创建自定义的输出风格文件（Markdown 格式），直接修改系统提示词。注意：自定义输出风格会完全替换默认的编程系统提示词，除非设置 keep-coding-instructions: true。
+
+评论
+
+输入与交互篇
+
+Claude Code 输入与交互技巧：! 终端命令、@ 文件注入、URL 粘贴、/btw 插嘴、Vim 模式、语音模式
+会话管理篇
+
+Claude Code 会话管理：/rename 命名会话、/branch 对话分支、/color 窗口上色、命令行会话管理、远程控制
+
+目录
+
+用关键词控制思考深度/effort：控制思考深度「use subagents」关键词opusplan：最佳性价比模型方案/model：切换模型输出风格控制
+
+思考与模型控制篇 | Yu的赛博工位

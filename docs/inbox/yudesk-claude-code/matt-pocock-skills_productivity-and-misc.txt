@@ -1,0 +1,352 @@
+跳转到主要内容
+Yu的赛博工位
+
+笔记收录独立开发博客关于🇨🇳
+
+文档Claude Code 相关
+Claude Code 隐藏技巧
+
+系统架构全解析工具调用系统Worktree 指南Agent Teams 指南Claude Skills
+
+Claude Code Plugin
+
+Claude Code Subagent
+
+Agent 与工作流
+Agent 记忆系统
+
+Pi Agent
+
+规格驱动开发
+
+Ralph Wiggum
+
+GSD
+
+gstack
+
+Matt Pocock 的 Claude Code 技能集概览初始化配置Grill MeBatch Grill MeGrill With DocsPRD 与 Issues诊断与分诊TDDZoom OutPrototype深化代码架构其他 Skills
+
+工程实践
+AI 时代的 TDD
+
+Tmux 入门
+
+Yu的赛博工位
+
+搜索⌘K
+笔记收录独立开发博客关于🇨🇳
+
+其他 Skills
+
+Matt Pocock 的 Claude Code 技能集
+
+下载
+
+其他 Skills：压缩沟通、交接、教学、写 Skill 与安全护栏
+Copy page
+
+AI 辅助写的
+汇总 mattpocock/skills 里非主线但值得知道的一组小工具：caveman、handoff、teach、write-a-skill，以及 git guardrails、setup-pre-commit、migrate-to-shoehorn、scaffold-exercises
+为什么不逐个展开
+
+Matt 的 README 把 skills 分成三类：
+
+Engineering：每天写真实代码用
+
+Productivity：通用工作流工具
+
+Misc：他自己留着备用的小工具
+
+前面几篇已经覆盖了主线 engineering skill。这一篇把剩下的 productivity 和 misc 合在一起讲，因为它们多数不是完整研发流程，而是在特定场景下很好用的小开关。
+
+如果你只装 5 个，我仍然建议优先装：
+
+/grill-me
+
+/grill-with-docs
+
+/to-prd + /to-issues
+
+/tdd
+
+/improve-codebase-architecture
+
+但如果你已经把主线跑起来，下面这些会让日常体验更顺。
+
+Productivity Skills
+
+caveman：极限压缩沟通
+
+/caveman 是一个「少 token 模式」。它要求 agent 去掉寒暄、填充词、过度解释和模糊缓冲，只保留技术信息。
+
+它适合：
+
+你已经在高频迭代，不想读长回复
+
+debug 时只要事实、原因、下一步
+
+长上下文快满了，需要压缩输出
+
+你想强制 AI 少说漂亮话
+
+它不是让 AI 变粗鲁，而是让它用更短的语法保留完整技术精度。注意它会持续生效，直到你说退出。
+
+我会把它当作一个临时档位，而不是长期默认。对于高风险操作、安全警告、复杂多步骤指令，太短反而容易误读。
+
+handoff：把当前会话交给下一个 agent
+
+/handoff 的目标是把当前会话压缩成一个交接文档，并保存到系统临时目录，而不是污染当前 workspace。
+
+它会包含：
+
+当前目标
+
+已做决策
+
+关键路径和文件
+
+剩余任务
+
+建议下个 agent 调用哪些 skill
+
+敏感信息脱敏
+
+它特别适合长任务中断、上下文快满、或你想换一个 agent 继续做的时候。
+
+关键点是：不要复制已经存在于 PRD、issue、ADR、commit、diff 里的内容，只引用路径或 URL。交接文档的价值是把散在对话里的状态补齐，不是再造一份项目文档。
+
+teach：把当前目录变成学习工作区
+
+/teach 是这组里最重的一个。它把当前目录当作一个长期学习 workspace，维护：
+
+MISSION.md：你为什么要学这个主题
+
+RESOURCES.md：高质量资源列表
+
+learning-records/*.md：学习记录，类似 ADR
+
+lessons/*.html：每次一节的互动课程
+
+reference/*.html：速查资料
+
+NOTES.md：教学偏好和工作笔记
+
+它的亮点是把学习看成长期系统，而不是一次问答。尤其强调：
+
+mission 先行：为什么学，比学什么更重要
+
+retrieval practice：用回忆练习建立长期记忆
+
+spacing / interleaving：不要被短期流畅感骗了
+
+高信任资源：先找资料，不凭模型记忆硬讲
+
+如果你只是问「解释一下 X」，不需要它；如果你想连续几周学一个主题，它就很合适。
+
+write-a-skill：写新 skill 的脚手架
+
+/write-a-skill 是 Matt 对 skill 结构本身的抽象。
+
+它要求一个 skill 至少有：
+
+skill-name/
+├── SKILL.md
+├── REFERENCE.md
+├── EXAMPLES.md
+└── scripts/
+
+当然后三个不是必需，只有内容太长、示例有价值、或操作可脚本化时才加。
+
+它最重要的判断是：description 是 agent 决定是否加载 skill 时唯一先看到的信息。因此 description 不能写成「帮助处理文档」这种空话，必须说明：
+
+它提供什么能力
+
+什么时候触发
+
+触发词或上下文是什么
+
+这和我自己写 skill 的经验一致：很多 skill 失效不是因为正文写得差，而是 description 写得太泛，agent 根本不知道该加载它。
+
+Misc Skills
+
+git-guardrails-claude-code：拦危险 git 命令
+
+这个 skill 会给 Claude Code 配一个 PreToolUse hook，在执行 Bash 前拦截危险 git 命令。
+
+默认会挡：
+
+git push
+
+git reset --hard
+
+git clean -f / git clean -fd
+
+git branch -D
+
+git checkout . / git restore .
+
+它的价值很直接：防止 agent 在你没授权时推送、硬重置、清掉未跟踪文件。
+
+如果你经常让 AI 在真实仓库里工作，这个 skill 很值得装。它不是不信任 AI，而是把高破坏性操作放到工具层拦截，而不是靠 prompt 祈祷。
+
+setup-pre-commit：给项目加提交前检查
+
+/setup-pre-commit 会设置：
+
+Husky pre-commit hook
+
+lint-staged + Prettier
+
+typecheck
+
+test
+
+它会先检测包管理器，再按项目已有 script 决定 pre-commit 里该跑什么。没有 typecheck 或 test 时不会硬造，而是省略并告诉你。
+
+这个 skill 的价值不在配置本身，而在 Matt 的质量观：不要只让 AI 自己说代码没问题，要让它过确定性检查。
+
+migrate-to-shoehorn：测试里少写 as
+
+这是一个很 Total TypeScript 风格的小工具。它把测试里的 TypeScript as 类型断言迁移到 @total-typescript/shoehorn。
+
+典型替换：
+
+旧写法新写法场景
+obj as Request
+fromPartial(obj)
+测试里只关心大对象的几个字段
+
+obj as unknown as Request
+fromAny(obj)
+故意传错类型测错误路径
+
+完整对象假数据
+fromExact(obj)
+需要强制完整形状
+
+它明确只用于测试代码，不用于生产代码。
+
+这个 skill 很窄，但很符合 Matt 的工程品味：不要为了类型系统在测试里造 20 个无意义字段，也不要用裸 as 把类型安全完全关掉。
+
+scaffold-exercises：给课程仓库生成练习目录
+
+这个 skill 明显来自 Matt 自己做课程的工作流。它会按规范创建：
+
+exercises/
+└── 05-memory-skill-building/
+    └── 05.02-short-term-memory/
+        ├── explainer/
+        ├── problem/
+        └── solution/
+
+每个子目录至少有非空 readme.md，必要时有 main.ts，并且要通过 pnpm ai-hero-cli internal lint。
+
+它对大多数工程项目没用，但对课程、训练营、练习仓库非常实用。更重要的是，它展示了一个好 skill 的特征：把重复、机械、容易漏细节的格式工作交给 agent。
+
+不建议现在写进主线的目录
+
+上游仓库里还有 deprecated/、in-progress/、personal/。
+
+我建议暂时不要把它们写成正式使用指南：
+
+目录为什么不放主线
+deprecated/
+已废弃，容易误导读者继续采用旧流程
+
+in-progress/
+还在实验，行为和命名都可能变
+
+personal/
+更像 Matt 自己的私人工作区，不一定适合通用读者
+
+如果以后要写，可以单独做一篇「Matt Pocock skills 仓库考古」，而不是混在稳定推荐里。
+
+这组小工具的共同点
+
+这些 skill 看起来很散，但背后有同一个原则：
+
+把 agent 容易漂移的事情，变成小而明确的工作模式。
+
+caveman 防止沟通漂移
+
+handoff 防止上下文丢失
+
+teach 防止学习变成一次性问答
+
+write-a-skill 防止 skill 结构随手写
+
+git-guardrails 防止危险命令靠自觉
+
+setup-pre-commit 防止质量检查靠 AI 自述
+
+migrate-to-shoehorn 防止测试类型断言失控
+
+scaffold-exercises 防止课程结构手工漏项
+
+这也是 Matt 这套 repo 最值得学习的地方：skill 不需要宏大。一个高频小偏差，如果能被 20 行指令稳定纠正，就值得写成 skill。
+
+参考资源
+
+caveman 源文件
+极限压缩沟通模式，减少 token 和废话。
+
+Matt PocockGitHub2026
+EN前往
+
+handoff 源文件
+把当前对话压缩成下一个 agent 可接手的交接文档。
+
+Matt PocockGitHub2026
+EN前往
+
+write-a-skill 源文件
+按正确结构和渐进披露原则创建新的 agent skill。
+
+Matt PocockGitHub2026
+EN前往
+
+teach 源文件
+在一个有状态的学习工作区里持续教授新技能或新概念。
+
+Matt PocockGitHub2026
+EN前往
+
+git-guardrails-claude-code 源文件
+配置 Claude Code hook，拦截危险 git 命令。
+
+Matt PocockGitHub2026
+EN前往
+
+setup-pre-commit 源文件
+为项目配置 Husky、lint-staged、Prettier、类型检查和测试的提交前检查。
+
+Matt PocockGitHub2026
+EN前往
+
+migrate-to-shoehorn 源文件
+把测试文件里的 TypeScript `as` 断言迁移到 @total-typescript/shoehorn。
+
+Matt PocockGitHub2026
+EN前往
+
+scaffold-exercises 源文件
+按课程仓库规范生成练习目录结构，并通过课程 lint。
+
+Matt PocockGitHub2026
+EN前往
+
+评论
+
+深化代码架构
+
+Matt Pocock 工作流的最后一步——周期性扫描代码库找「deepening opportunities」。深入理解 John Ousterhout 的 deep modules 理论、Matt 独创的 deletion test，以及为什么 AI 时代特别需要这个 skill
+概念介绍
+
+AI 编程里为什么还需要 TDD。重点不是形式上的“先写测试”，而是先制造一个可验证的失败，再让实现从红变绿。
+
+目录
+
+为什么不逐个展开Productivity Skillscaveman：极限压缩沟通handoff：把当前会话交给下一个 agentteach：把当前目录变成学习工作区write-a-skill：写新 skill 的脚手架Misc Skillsgit-guardrails-claude-code：拦危险 git 命令setup-pre-commit：给项目加提交前检查migrate-to-shoehorn：测试里少写 asscaffold-exercises：给课程仓库生成练习目录不建议现在写进主线的目录这组小工具的共同点参考资源
+
+其他 Skills：压缩沟通、交接、教学、写 Skill 与安全护栏 | Yu的赛博工位

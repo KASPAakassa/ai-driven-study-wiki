@@ -1,0 +1,119 @@
+跳转到主要内容
+Yu的赛博工位
+
+笔记收录独立开发博客关于🇨🇳
+
+文档Claude Code 相关
+Claude Code 隐藏技巧Claude Code 隐藏技巧快捷键篇输入与交互篇思考与模型控制篇会话管理篇上下文管理篇实用命令与自动化篇配置与诊断篇进阶篇
+
+系统架构全解析工具调用系统Worktree 指南Agent Teams 指南Claude Skills
+
+Claude Code Plugin
+
+Claude Code Subagent
+
+Agent 与工作流
+Agent 记忆系统
+
+Pi Agent
+
+规格驱动开发
+
+Ralph Wiggum
+
+GSD
+
+gstack
+
+Matt Pocock 的 Claude Code 技能集
+
+工程实践
+AI 时代的 TDD
+
+Tmux 入门
+
+Yu的赛博工位
+
+搜索⌘K
+笔记收录独立开发博客关于🇨🇳
+
+输入与交互篇
+
+Claude Code 隐藏技巧
+
+下载
+
+输入与交互篇
+Copy page
+
+AI 辅助写的
+Claude Code 输入与交互技巧：! 终端命令、@ 文件注入、URL 粘贴、/btw 插嘴、Vim 模式、语音模式
+!：直接运行终端命令
+
+在输入框以 ! 开头，可以直接在 Claude Code 内执行终端命令，不需要切换到另一个终端窗口：
+
+! git status
+! npm run build
+! docker ps
+
+输入 ! 加命令前缀后按 Tab 还能自动补全历史命令。
+
+@ + 文件路径：注入文件上下文
+
+在输入时用 @ 加文件路径，可以把文件内容直接注入到上下文中：
+
+帮我看看 @src/auth/login.ts 和 @src/auth/middleware.ts 之间的逻辑有没有问题
+
+支持 Tab 键自动补全路径，不需要手动输入完整路径。比让 Claude 自己去读文件更快，因为省去了工具调用的开销。
+
+直接粘贴 URL
+
+直接把 URL 粘贴到输入中，Claude 会自动抓取网页内容作为上下文：
+
+参考这个 API 文档 https://docs.example.com/api/v2 来写客户端代码
+
+喂 /llms-full.txt 让 Claude 自己查文档
+
+很多开源项目的文档站点会提供 /llms-full.txt 文件（LLM 友好的完整文档）。遇到某个库的问题时，把这个文件的 URL 粘贴给 Claude，它能自己查文档解决绝大部分问题：
+
+参考 https://docs.astro.build/llms-full.txt 帮我解决这个路由问题
+
+/btw：在 Claude 工作时插嘴
+
+/btw 命令示例
+这是 2026 年 3 月刚加的新功能。当 Claude 正在执行任务时，你可以用 /btw 发起一个旁路对话——问问它在想什么、给它补充信息，而不需要打断当前任务。
+
+正如 Anthropic 工程师 @trq212 在推特上说的：「没人会用 Ctrl+C 打断同事，你只需要说一句 'btw'，他们就会抬头看你。」
+
+Vim 模式
+
+输入 /vim 开启 Vim 模式，支持：
+
+模式切换（Normal/Insert）
+
+导航（h/j/k/l, w/b/e, 0/$）
+
+编辑操作（d, c, y, p）
+
+文本对象（iw, aw, i", a()）
+
+如果你是 Vim 用户，这比默认的输入体验好太多。用 /config 可以设置为永久开启。
+
+语音模式
+
+输入 /voice 激活语音模式，长按空格键说话，松开发送。适合不想打字但又需要给 Claude 交代任务的时候。按键可以在 keybindings.json 中自定义。
+
+评论
+
+快捷键篇
+
+Claude Code 快捷键全指南：Shift+Tab 模式切换、Esc+Esc 回溯、Ctrl+S 暂存、Ctrl+B 后台任务、Readline 快捷键等
+思考与模型控制篇
+
+Claude Code 思考与模型控制：think/ultrathink 关键词触发思考深度、/effort 命令、subagents 并行、opusplan 模型方案
+
+目录
+
+!：直接运行终端命令@ + 文件路径：注入文件上下文直接粘贴 URL喂 /llms-full.txt 让 Claude 自己查文档/btw：在 Claude 工作时插嘴Vim 模式语音模式
+
+输入与交互篇 | Yu的赛博工位

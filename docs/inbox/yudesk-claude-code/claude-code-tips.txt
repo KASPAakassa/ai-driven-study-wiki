@@ -1,0 +1,96 @@
+跳转到主要内容
+Yu的赛博工位
+
+笔记收录独立开发博客关于🇨🇳
+
+文档Claude Code 相关
+Claude Code 隐藏技巧Claude Code 隐藏技巧快捷键篇输入与交互篇思考与模型控制篇会话管理篇上下文管理篇实用命令与自动化篇配置与诊断篇进阶篇
+
+系统架构全解析工具调用系统Worktree 指南Agent Teams 指南Claude Skills
+
+Claude Code Plugin
+
+Claude Code Subagent
+
+Agent 与工作流
+Agent 记忆系统
+
+Pi Agent
+
+规格驱动开发
+
+Ralph Wiggum
+
+GSD
+
+gstack
+
+Matt Pocock 的 Claude Code 技能集
+
+工程实践
+AI 时代的 TDD
+
+Tmux 入门
+
+Yu的赛博工位
+
+搜索⌘K
+笔记收录独立开发博客关于🇨🇳
+
+Claude Code 隐藏技巧
+
+Claude Code 隐藏技巧
+
+下载
+
+Claude Code 隐藏技巧
+Copy page
+
+AI 辅助写的
+从创始人 Boris Cherny 推特、社区和 changelog 中整理的 Claude Code 实用技巧，涵盖快捷键、隐藏命令、提示词技巧、上下文管理等
+核心结论
+
+这是一份 Claude Code 隐藏技巧索引，整理快捷键、输入交互、模型控制、上下文管理、自动化命令、配置诊断和进阶用法。它适合已经会用 Claude Code、但想减少重复操作和上下文浪费的人。
+
+如果你只想先看最实用的部分，优先读三篇：快捷键篇、上下文管理篇、实用命令与自动化篇。前者提升操作速度，后两者决定 Claude Code 在长任务里是否稳定。
+
+从创始人 Boris Cherny 推特、社区和 changelog 中整理的 Claude Code 实用技巧。很多是「藏在角落里」的实用操作——快捷键、隐藏功能、命令行技巧等等，用了之后确实回不去了。
+
+目录
+
+快捷键篇 — Shift+Tab 模式切换、Esc+Esc 回溯、Ctrl+S 暂存等
+
+输入与交互篇 — ! 终端命令、@ 文件注入、URL 粘贴、/btw 插嘴、Vim 模式
+
+思考与模型控制篇 — think/ultrathink 关键词、/effort、subagents、opusplan
+
+会话管理篇 — /rename、/branch、/color、远程控制
+
+上下文管理篇 — /compact 参数、压缩指令、Handoff 协议、MCP 懒加载
+
+实用命令与自动化篇 — /diff、/simplify、/batch、/loop、Headless 模式
+
+配置与诊断篇 — statusline、settings.json、/stats、/doctor
+
+进阶篇 — Hooks 进阶、插件生态、Agent Teams、提示词心法
+
+延伸阅读
+
+Claude 系统架构全解析 — 理解 MCP、Skills、Subagents、Hooks 等组件
+
+Claude Subagent 完全指南 — 子代理的概念与实践
+
+评论
+
+文档
+
+AI 编程与开发工具学习笔记：Claude Code、Pi Agent、Skills、Plugin、Subagent 和规格驱动开发，从概念到实践掌握最新范式
+快捷键篇
+
+Claude Code 快捷键全指南：Shift+Tab 模式切换、Esc+Esc 回溯、Ctrl+S 暂存、Ctrl+B 后台任务、Readline 快捷键等
+
+目录
+
+核心结论目录延伸阅读
+
+Claude Code 隐藏技巧 | Yu的赛博工位

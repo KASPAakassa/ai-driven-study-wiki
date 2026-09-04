@@ -1,0 +1,12 @@
+# 原始资料:给 Coding Agent 立规矩的正确姿势
+
+> 来源:微信公众号《给 Coding Agent 立规矩的正确姿势》(#AI编程 #ClaudeCode #CodingAgent)
+> 原文链接:https://mp.weixin.qq.com/s/YkgkhSBCZw5tz7TpF7U8Rw
+> 抓取日期:2026-08-09;状态:已整理为正式文章 docs/07-agent-coding/experience/agent-rules-agents-md.md
+> 说明:本文为图片版文章,正文以图片形式发布,以下仅存档官方摘要(og:description)。
+
+---
+
+## 官方摘要
+
+team 里三个人分别用 Cursor、Claude Code、Codex CLI，同一个 repo 跑出来的 PR 风格越来越乱——命名不一致、测试写不写全看心情。想统一规则，翻一圈才发现 AGENTS.md / CLAUDE.md / .cursorrules 到底谁管谁根本没人说清楚。\x0a\x0a把三份官方文档和几十个开源项目过一遍后想通了：它们不是三选一，而是三种正交能力。AGENTS.md 是最大公约数，OpenAI 主导、Linux Foundation 维护，20+ 工具原生支持、60000+ 项目采用。CLAUDE.md 多了作用域分层（Managed→User→Project→Local）和 @import 语法。.cursor/rules/*.mdc 有 glob 精细激活。\x0a\x0a真正的工程解法：根目录写一份 AGENTS.md 作为源文件，CLAUDE.md 只用一行 @AGENTS.md 引入，只有需要 glob 精细激活的规则才拆到 .cursor/rules/。一份内容三消费，不用维护三份、更不用担心不同步，团队 code review 只需盯一个文件。\x0a\x0a最反直觉的洞察是：规则不是越多越好。Claude 官方文档明写 CLAUDE.md 越简短越有效，超过 200 行就掉遵循度；Cursor 的 alwaysApply 超过 2 条就会显著吃 context，模型开始输出「同时满足所有规则的平均态」——什么都对、什么都没做。\x0a\x0a最后一层：CLAUDE.md 只是软约束，模型仍可能违反。真要硬拦截得用 PreToolUse hook 或 CI 检查。规则文件是让 Agent 知道，工程约束才是让它做不到。\x0a\x0a\x26lt;a class=\x26quot;wx_topic_link\x26quot; topic-id=\x26quot;mrutshyr-v0om95\x26quot; style=\x26quot;color: #576B95 !important;\x26quot; data-topic=\x26quot;1\x26quot; data-recommend=\x26quot;\x26quot;\x26gt;#AI编程\x26lt;/a\x26gt;  \x26lt;a class=\x26quot;wx_topic_link\x26quot; topic-id=\x26quot;mrutshze-o4i00o\x26quot; style=\x26quot;color: #576B95 !important;\x26quot; data-topic=\x26quot;1\x26quot; data-recommend=\x26quot;\x26quot;\x26gt;#ClaudeCode\x26lt;/a\x26gt;  \x26lt;a class=\x26quot;wx_topic_link\x26quot; topic-id=\x26quot;mrutsi0b-cxdb74\x26quot; style=\x26quot;color: #576B95 !important;\x26quot; data-topic=\x26quot;1\x26quot; data-recommend=\x26quot;\x26quot;\x26gt;#Cursor\x26lt;/a\x26gt;  \x26lt;a class=\x26quot;wx_topic_link\x26quot; topic-id=\x26quot;mrutsi0x-axn4mk\x26quot; style=\x26quot;color: #576B95 !important;\x26quot; data-topic=\x26quot;1\x26quot; data-recommend=\x26quot;\x26quot;\x26gt;#CodingAgent\x26lt;/a\x26gt;  \x26lt;a class=\x26quot;wx_topic_link\x26quot; topic-id=\x26quot;mrutsi1u-0t1kgu\x26quot; style=\x26quot;color: #576B95 !important;\x26quot; data-topic=\x26quot;1\x26quot; data-recommend=\x26quot;\x26quot;\x26gt;#AGENTSmd\x26lt;/a\x26gt;

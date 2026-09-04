@@ -1,0 +1,608 @@
+跳转到主要内容
+Yu的赛博工位
+
+笔记收录独立开发博客关于🇨🇳
+
+文档Claude Code 相关
+Claude Code 隐藏技巧
+
+系统架构全解析工具调用系统Worktree 指南Agent Teams 指南Claude Skills
+
+Claude Code Plugin
+
+Claude Code Subagent
+
+Agent 与工作流
+Agent 记忆系统
+
+Pi Agent概念介绍实践指南
+
+规格驱动开发
+
+Ralph Wiggum
+
+GSD
+
+gstack
+
+Matt Pocock 的 Claude Code 技能集
+
+工程实践
+AI 时代的 TDD
+
+Tmux 入门
+
+Yu的赛博工位
+
+搜索⌘K
+笔记收录独立开发博客关于🇨🇳
+
+实践指南
+
+Pi Agent
+
+下载
+
+Pi Agent 实践指南
+Copy page
+
+AI 辅助写的
+用 Pi Extension 实现一个 DeepSearch 能力：让 Pi 可以拆解问题、检索资料、整理证据，并生成带来源的研究结论
+快速回顾
+
+在概念篇里，我把 Pi Agent 理解成一个极简的 Agent Harness：它连接模型、终端、文件系统、shell、会话和扩展系统，但不替你预设一整套厚重工作流。
+
+所以实践篇我不想再做一个普通的"让 Pi 改文件"案例。那个案例能说明基础闭环，但不够体现 Pi 的可扩展性。
+
+更适合 Pi 的实战案例，是给它补一个它默认没有、但很多人真实需要的能力：DeepSearch。
+
+这里的 DeepSearch 不是简单的联网搜索，而是一套研究型工作流：
+
+阶段要做什么
+问题拆解
+把一个模糊问题拆成几个可检索子问题
+
+多轮检索
+分别搜索官方文档、代码仓库、博客、讨论区或论文
+
+来源筛选
+去重、排除低质量结果、优先保留一手来源
+
+证据整理
+摘出关键事实、链接、时间、版本和不确定性
+
+综合回答
+给出结论，同时说明依据和限制
+
+我的判断是：DeepSearch 不应该写进 Pi 本体，也不应该只靠 prompt 硬凑。它更适合做成一个 Pi Extension。
+
+原因很简单：DeepSearch 涉及网络请求、第三方搜索 API、来源过滤、结果截断、引用格式和安全边界。这些都属于工作流能力，而不是 coding agent 的最小核心。
+
+设计目标
+
+这个案例要实现的不是一个完美的研究系统，而是一个可跑通的最小版本。
+
+目标如下：
+
+给 Pi 增加一个 deep_search 工具。
+
+它接收：
+- query：用户要研究的问题
+- depth：检索深度
+- maxResults：最多返回多少条候选资料
+
+它输出：
+- 结构化搜索结果
+- 每条结果的标题、URL、摘要、相关性
+- 给模型使用的证据提示
+
+Pi 拿到这些证据后，再由当前模型生成最终结论。
+
+我会刻意把"检索"和"综合"拆开：
+
+部分由谁负责原因
+搜索 API 调用
+DeepSearch extension
+这是确定性的外部能力
+
+结果去重和截断
+DeepSearch extension
+避免上下文被噪声塞满
+
+判断哪些证据重要
+Pi 当前模型
+需要推理和上下文理解
+
+最终答案写作
+Pi 当前模型
+需要结合用户问题和项目语境
+
+这样做更稳。Extension 不需要自己再调用一个模型，也不需要变成一个嵌套 agent。它只提供高质量证据，让 Pi 原本的模型继续推理。
+
+准备工作
+
+Pi extension 可以放在全局目录，也可以放在项目目录。这里我建议先放项目目录：
+
+.pi/extensions/deepsearch/
+  package.json
+  index.ts
+
+项目本地 extension 的好处是边界清楚。这个 DeepSearch 能力只在当前项目里启用，不会影响所有 Pi 会话。
+
+搜索服务可以选 Tavily、Exa、Brave Search、SerpAPI，甚至你自己的搜索后端。第一版不要纠结服务商，先抽象成一个 searchWeb() 函数。
+
+例如用环境变量保存 API Key：
+
+export TAVILY_API_KEY=tvly-...
+
+如果你不想接第三方搜索 API，也可以先用本地 mock 数据把 extension 跑通。等工具注册、参数传递和结果格式都稳定后，再接真实搜索服务。
+
+Step 1: 创建 Extension 目录
+
+先创建目录：
+
+mkdir -p .pi/extensions/deepsearch
+
+如果 extension 需要依赖，可以放一个 package.json：
+
+{
+  "name": "pi-deepsearch-extension",
+  "private": true,
+  "dependencies": {
+    "typebox": "*",
+    "@earendil-works/pi-ai": "*",
+    "@earendil-works/pi-coding-agent": "*"
+  },
+  "pi": {
+    "extensions": ["./index.ts"]
+  }
+}
+
+然后安装依赖：
+
+cd .pi/extensions/deepsearch
+npm install
+
+Pi 的 extension 是 TypeScript 模块，不需要你先手动编译。这个体验很适合快速做工具实验。
+
+Step 2: 注册 deep_search 工具
+
+核心文件是 .pi/extensions/deepsearch/index.ts。
+
+第一版可以这样写：
+
+import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
+import { StringEnum } from "@earendil-works/pi-ai";
+import { Type } from "typebox";
+
+type SearchResult = {
+  title: string;
+  url: string;
+  snippet: string;
+  score?: number;
+};
+
+export default function (pi: ExtensionAPI) {
+  pi.registerTool({
+    name: "deep_search",
+    label: "DeepSearch",
+    description: "Search the web for source-backed evidence about a question.",
+    promptSnippet: "Research a question with web search and return source-backed evidence.",
+    promptGuidelines: [
+      "Use deep_search when the user asks for current facts, external sources, comparison, investigation, or source-backed research.",
+      "After deep_search returns results, synthesize an answer with citations and clearly separate facts, inference, and uncertainty.",
+      "Do not treat deep_search results as final truth; inspect source quality and mention gaps."
+    ],
+    parameters: Type.Object({
+      query: Type.String({
+        description: "The research question or search query."
+      }),
+      depth: Type.Optional(StringEnum(["quick", "normal", "deep"] as const)),
+      maxResults: Type.Optional(Type.Number({
+        minimum: 3,
+        maximum: 10,
+        default: 6
+      }))
+    }),
+    async execute(_toolCallId, params, signal) {
+      const depth = params.depth ?? "normal";
+      const maxResults = params.maxResults ?? 6;
+      const results = await searchWeb(params.query, depth, maxResults, signal);
+
+      return {
+        content: [
+          {
+            type: "text",
+            text: formatResultsForModel(params.query, results)
+          }
+        ],
+        details: {
+          query: params.query,
+          depth,
+          results
+        }
+      };
+    }
+  });
+}
+
+async function searchWeb(
+  query: string,
+  depth: "quick" | "normal" | "deep",
+  maxResults: number,
+  signal: AbortSignal
+): Promise<SearchResult[]> {
+  const apiKey = process.env.TAVILY_API_KEY;
+  if (!apiKey) {
+    throw new Error("Missing TAVILY_API_KEY. Set it before starting pi.");
+  }
+
+  const response = await fetch("https://api.tavily.com/search", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      api_key: apiKey,
+      query,
+      search_depth: depth === "quick" ? "basic" : "advanced",
+      max_results: maxResults,
+      include_answer: false,
+      include_raw_content: depth === "deep"
+    }),
+    signal
+  });
+
+  if (!response.ok) {
+    throw new Error(`Search failed: ${response.status} ${response.statusText}`);
+  }
+
+  const data = await response.json() as {
+    results?: Array<{
+      title?: string;
+      url?: string;
+      content?: string;
+      score?: number;
+    }>;
+  };
+
+  return dedupeByUrl((data.results ?? []).map((item) => ({
+    title: item.title ?? "Untitled",
+    url: item.url ?? "",
+    snippet: item.content ?? "",
+    score: item.score
+  }))).filter((item) => item.url);
+}
+
+function dedupeByUrl(results: SearchResult[]): SearchResult[] {
+  const seen = new Set<string>();
+  const deduped: SearchResult[] = [];
+
+  for (const result of results) {
+    const key = normalizeUrl(result.url);
+    if (seen.has(key)) continue;
+    seen.add(key);
+    deduped.push(result);
+  }
+
+  return deduped;
+}
+
+function normalizeUrl(url: string): string {
+  try {
+    const parsed = new URL(url);
+    parsed.hash = "";
+    parsed.searchParams.delete("utm_source");
+    parsed.searchParams.delete("utm_medium");
+    parsed.searchParams.delete("utm_campaign");
+    return parsed.toString();
+  } catch {
+    return url;
+  }
+}
+
+function formatResultsForModel(query: string, results: SearchResult[]): string {
+  if (results.length === 0) {
+    return `DeepSearch found no results for: ${query}`;
+  }
+
+  const lines = results.map((result, index) => {
+    return [
+      `## Source ${index + 1}`,
+      `Title: ${result.title}`,
+      `URL: ${result.url}`,
+      result.score === undefined ? undefined : `Score: ${result.score}`,
+      `Snippet: ${result.snippet}`
+    ].filter(Boolean).join("\n");
+  });
+
+  return [
+    `DeepSearch query: ${query}`,
+    "",
+    "Use these sources as evidence. Cite URLs when making factual claims.",
+    "Separate confirmed facts from inference and uncertainty.",
+    "",
+    ...lines
+  ].join("\n\n");
+}
+
+这段代码只做最关键的事：
+
+代码位置作用
+pi.registerTool()
+把 deep_search 暴露给模型调用
+
+parameters
+告诉模型工具需要哪些参数
+
+promptGuidelines
+告诉模型什么时候用、用完后怎么处理
+
+searchWeb()
+调用真实搜索服务
+
+dedupeByUrl()
+去掉重复 URL
+
+formatResultsForModel()
+把搜索结果整理成模型容易引用的证据块
+
+第一版先不要做太复杂。DeepSearch 真正难的不是写一个搜索请求，而是把来源质量、上下文长度、引用格式和不确定性控制住。
+
+Step 3: 加一个 /deepsearch 命令
+
+工具是给模型调用的，但用户也需要一个直接入口。
+
+可以再注册一个命令，把用户输入改写成更明确的研究任务：
+
+export default function (pi: ExtensionAPI) {
+  pi.registerCommand("deepsearch", {
+    description: "Run a source-backed DeepSearch task",
+    handler: async (args, ctx) => {
+      const query = String(args ?? "").trim();
+
+      if (!query) {
+        ctx.ui.notify("Usage: /deepsearch <question>", "warning");
+        return;
+      }
+
+      pi.sendUserMessage(
+        [
+          "请对下面的问题做 DeepSearch。",
+          "",
+          `问题：${query}`,
+          "",
+          "要求：",
+          "1. 先判断是否需要调用 deep_search。",
+          "2. 如果问题较复杂，先拆成 2-4 个子问题分别检索。",
+          "3. 最终答案必须包含来源链接。",
+          "4. 区分事实、推断和仍不确定的部分。",
+          "5. 不要把搜索结果原样堆出来，要给出综合判断。"
+        ].join("\n"),
+        { deliverAs: "followUp" }
+      );
+    }
+  });
+
+  pi.registerTool({
+    // deep_search tool definition...
+  });
+}
+
+这样用户就可以直接输入：
+
+/deepsearch Pi Coding Agent 的 extension 机制适合做哪些能力？
+
+/deepsearch 不直接搜索，而是给 Pi 发送一条更完整的任务说明。模型会根据说明调用 deep_search，再基于结果完成综合。
+
+我更喜欢这种设计，因为它保留了 agent 的判断空间。搜索工具只是证据入口，不是最终答案生成器。
+
+Step 4: 启动和验证
+
+项目本地 extension 放好以后，可以直接在项目根目录启动 Pi：
+
+TAVILY_API_KEY=tvly-... pi
+
+如果你只是临时测试，也可以显式指定 extension：
+
+TAVILY_API_KEY=tvly-... pi -e ./.pi/extensions/deepsearch/index.ts
+
+进入 Pi 后，先问一个需要外部事实的问题：
+
+/deepsearch Pi Coding Agent 最新版本的 extension 系统支持哪些能力？
+
+一个可接受的输出不应该只是几条搜索结果，而应该包含：
+
+检查点合格表现
+是否调用工具
+能看到 deep_search 被调用
+
+来源是否清楚
+每个关键事实后面有 URL
+
+是否去重
+不重复引用同一个页面
+
+是否有判断
+不只罗列资料，还能归纳适用场景
+
+是否有不确定性
+对版本变化、第三方 API、社区扩展保持边界
+
+如果结果只是"搜索结果列表"，说明 promptGuidelines 不够强。可以把 guideline 改得更明确：
+
+promptGuidelines: [
+  "Use deep_search to gather evidence, not to produce the final answer.",
+  "After deep_search, write a concise research brief with citations.",
+  "Prefer official documentation, source code, release notes, and primary sources.",
+  "Mention when sources disagree or when the evidence is incomplete."
+]
+
+Step 5: 让 DeepSearch 更像研究工具
+
+跑通第一版以后，可以继续加三类能力。
+
+子问题拆解
+
+DeepSearch 最容易失败的地方，是把一个大问题直接丢给搜索 API。
+
+比如：
+
+Pi Agent 能不能替代 Claude Code？
+
+这不是一个好 search query。它至少可以拆成：
+
+子问题作用
+Pi Agent 的核心设计是什么
+找定位
+
+Pi Agent 支持哪些工具和扩展
+找能力边界
+
+Claude Code 的默认能力有哪些
+找对比对象
+
+两者在权限、安全、可扩展性上有什么区别
+形成判断
+
+第一版可以让模型自己拆；第二版可以让 /deepsearch 命令强制要求模型先列子问题，再逐个调用 deep_search。
+
+来源质量分层
+
+DeepSearch 的输出不能只按搜索 API 的分数排序。实际写技术文章时，我会优先看：
+
+优先级来源
+P0
+官方文档、源码、release note
+
+P1
+作者博客、维护者说明、issue / PR
+
+P2
+高质量教程、技术分析
+
+P3
+社区讨论、Reddit、X、论坛
+
+Extension 可以在 formatResultsForModel() 里先标注来源类型：
+
+function classifySource(url: string): "official" | "source" | "community" | "other" {
+  const host = new URL(url).hostname;
+  if (host === "pi.dev") return "official";
+  if (host === "github.com") return "source";
+  if (host.includes("reddit.com")) return "community";
+  return "other";
+}
+
+这样模型综合时就不会把社区传言和官方文档放在同一个证据等级上。
+
+上下文截断
+
+搜索结果很容易污染上下文。DeepSearch 的工具输出应该少而精。
+
+我的建议是：
+
+内容是否放进工具输出
+标题
+放
+
+URL
+放
+
+200-500 字摘要
+放
+
+页面全文
+默认不放
+
+原始 HTML
+不放
+
+搜索 API 原始 JSON
+放进 details，不要放进正文
+
+如果确实需要全文阅读，可以再做第二个工具：
+
+fetch_source(url)
+
+这样 DeepSearch 第一步负责找候选来源，第二步只抓最重要的 2-3 个页面。不要一上来把十几个网页全文都塞给模型。
+
+常见问题
+
+为什么不直接用 bash 跑搜索脚本？
+
+可以，但不如 extension 稳。
+
+用 bash 的问题是：模型每次都要重新决定命令、参数、输出格式和错误处理。Extension 把这些细节固定下来，模型只需要调用 deep_search。
+
+为什么不把总结也写在 extension 里？
+
+第一版不建议。
+
+如果 extension 自己再调用一个模型做总结，你就会遇到嵌套模型调用、成本统计、上下文漂移和引用责任的问题。更简单的方式是：extension 只返回证据，Pi 当前会话里的模型负责综合。
+
+这个 DeepSearch 算不算 MCP？
+
+不算。它是 Pi extension 注册出来的本地工具。
+
+如果你已经有成熟的 MCP 搜索服务器，也可以通过 Pi 的 MCP 相关 package 或 extension 接进来。但这个案例选择直接写 extension，是为了看清 Pi 本身的扩展机制。
+
+安全上要注意什么？
+
+至少注意四件事：
+
+风险做法
+API Key 泄露
+只从环境变量读取，不写进仓库
+
+不可信网页内容
+不把网页内容当系统指令，只当待核验证据
+
+搜索结果污染
+优先官方和源码，降低社区结果权重
+
+上下文爆炸
+限制结果数量和摘要长度
+
+DeepSearch 看起来是"搜索增强"，本质上是让外部网页进入 agent 上下文。只要外部内容进入上下文，就要把 prompt injection 当成真实风险。
+
+小结
+
+我会把 Pi Agent 的第一个实战案例定为 DeepSearch Extension，因为它能同时体现 Pi 的三个关键特点：
+
+Pi 的核心默认很小，不内置所有工作流。
+
+真正有用的能力可以通过 extension 补上。
+
+Extension 不只是加命令，更是在定义模型进入外部世界的边界。
+
+这个案例跑通以后，Pi 就不只是一个本地代码编辑 agent，而是有了一个可控的研究入口：遇到需要外部资料的问题，它可以先检索、再筛选、再带来源地回答。
+
+这比让模型凭记忆回答更可靠，也比每次手写搜索命令更可复用。
+
+参考文档
+
+Pi Extensions 文档
+官方扩展文档，介绍如何用 TypeScript 注册工具、命令、UI 和事件钩子。
+
+PiPi Docs
+EN前往
+
+Pi 使用文档
+官方使用文档，覆盖交互模式、斜杠命令、会话、上下文文件、CLI 参数和设计原则。
+
+PiPi Docs
+EN前往
+
+评论
+
+概念介绍
+
+用一篇笔记讲清 Pi Agent 的核心定位：它不是新模型，也不是功能更全的 IDE，而是一个极简、透明、可扩展的 coding agent harness。
+概念介绍
+
+从 Vibe Coding 到规格驱动开发：理解 AI 编程如何从「直觉」升级到「工程」，掌握先写规格再写代码的新范式
+
+目录
+
+快速回顾设计目标准备工作Step 1: 创建 Extension 目录Step 2: 注册 deep_search 工具Step 3: 加一个 /deepsearch 命令Step 4: 启动和验证Step 5: 让 DeepSearch 更像研究工具子问题拆解来源质量分层上下文截断常见问题为什么不直接用 bash 跑搜索脚本？为什么不把总结也写在 extension 里？这个 DeepSearch 算不算 MCP？安全上要注意什么？小结参考文档
+
+Pi Agent 实践指南 | Yu的赛博工位

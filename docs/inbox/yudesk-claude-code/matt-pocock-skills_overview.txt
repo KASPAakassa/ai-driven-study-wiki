@@ -1,0 +1,343 @@
+跳转到主要内容
+Yu的赛博工位
+
+笔记收录独立开发博客关于🇨🇳
+
+文档Claude Code 相关
+Claude Code 隐藏技巧
+
+系统架构全解析工具调用系统Worktree 指南Agent Teams 指南Claude Skills
+
+Claude Code Plugin
+
+Claude Code Subagent
+
+Agent 与工作流
+Agent 记忆系统
+
+Pi Agent
+
+规格驱动开发
+
+Ralph Wiggum
+
+GSD
+
+gstack
+
+Matt Pocock 的 Claude Code 技能集概览初始化配置Grill MeBatch Grill MeGrill With DocsPRD 与 Issues诊断与分诊TDDZoom OutPrototype深化代码架构其他 Skills
+
+工程实践
+AI 时代的 TDD
+
+Tmux 入门
+
+Yu的赛博工位
+
+搜索⌘K
+笔记收录独立开发博客关于🇨🇳
+
+概览
+
+Matt Pocock 的 Claude Code 技能集
+
+下载
+
+软件基本功比以往任何时候都更重要：Matt Pocock 的 Claude Code 技能集
+Copy page
+
+AI 辅助写的
+拆解 mattpocock/skills——这个 4 个月冲到 61k star 的仓库为什么火，以及它背后那场 18 分钟演讲讲了什么。从 5 个 AI 编程失败模式到 5 个可装可用的 Skill，给你一张完整的 Matt Pocock 工作流地图
+核心结论
+
+Matt Pocock 的 Claude Code skills 不是一套“让 AI 多写代码”的工具，而是一套把经典软件工程基本功翻译成 LLM 可执行流程的工作流。它的核心判断是：AI 时代代码生成更快了，但坏代码的返工成本也更高，所以更需要 design concept、ubiquitous language、TDD、deep modules 这些老方法。
+
+如果你只想理解这套 skills 的使用顺序，可以记住这条链路：/grill-me（或更快的 /batch-grill-me）先澄清需求，/to-prd 固化成 PRD，/to-issues 切成 vertical slice，/tdd 小步实现，最后用 /improve-codebase-architecture 周期性重构模块边界。
+
+软件基本功现在比以往任何时候都更重要。代码不便宜，坏代码现在比以往任何时候都贵。
+
+Matt Pocock软件基本功比以往任何时候都更重要（2026 年 AI Engineer 大会演讲）
+EN前往
+
+一个被 specs-to-code 浪潮淹没却仍冷静的人
+
+2026 年是 AI 编程「specs-to-code」叙事的高光年——写规约、跑编译器、不看代码、再写规约、再跑编译器。社区里冒出来的口号是「code is cheap」（代码很便宜），意思是：反正 AI 一秒能再生成一万行，要它干嘛在意。
+
+Matt Pocock 是少数公开站出来反驳这件事的人。他不否认 AI 写代码很猛，但他在自己开的课《Claude Code for Real Engineers》里实测了 specs-to-code，结论很扎心：每跑一次，代码反而越来越烂。这正是 Pragmatic Programmer 里早就讲过的「software entropy」——软件熵增。
+
+于是他做了两件事：
+
+把这个观察打包成一场 18 分钟的演讲：Software Fundamentals Matter More Than Ever。
+
+把对应的解药打包成一个 GitHub 仓库：mattpocock/skills ——「Skills for Real Engineers. Straight from my .claude directory.」
+
+仓库 2026 年 2 月 3 日上线，4 个月之内冲到 61.1k star、5.3k fork，是同期 AI 编程类仓库里增长最快的几个之一。
+
+软件基本功比以往任何时候都更重要
+18 分钟演讲，主张 AI 时代好代码库比以往任何时候都重要。把 5 个常见 AI 编程失败模式对应到 5 个可装的 Claude Code Skill，每个 Skill 背后都有一本经典软件工程书做理论支撑。
+
+Matt PocockYouTube2026
+EN前往
+
+mattpocock/skills GitHub 仓库
+给真工程师用的 Claude Code 技能集，直接从 Matt 的 .claude 目录里搬出来。4 个月 6.1 万 star。
+
+Matt PocockGitHub2026-02
+EN前往
+
+Matt Pocock 是谁
+
+如果你写过 TypeScript，大概率刷到过他。他是这几年中文圈和英文圈最高产的 TypeScript 教育者之一：
+
+TotalTypeScript.com 创办人，一系列付费课程在英文圈流传度极高
+
+aihero.dev Newsletter 6 万+ 订阅，主题从 TS 转到了 AI Coding
+
+Twitter @mattpocockuk、YouTube @mattpocockuk 上有大量短视频教程
+
+不是 OpenAI/Anthropic 的人，纯独立开发者+教育者背景
+
+他的人设很清晰：资深工程师视角看 AI Coding。不喊「AGI 来了」，也不喊「程序员要失业了」。喊的是「老一辈软件工程师那些招还很有用，只是需要翻译成 LLM 能执行的形式」。
+
+核心论点：代码不便宜
+
+整场演讲只有一个论点，每个 skill 都是它的注脚：
+
+如果你的代码库结构很烂，AI 在烂代码库里也只会写出烂代码。所以好代码库比以往任何时候都重要，软件基本功比以往任何时候都重要。
+
+Matt 用了一个军事类比把人和 AI 的角色定位讲得很直白：
+
+把 AI 想成一个非常优秀的地面程序员——一个战术程序员，地面上的中士，负责具体写代码。但你需要在他之上有一个人。你需要有人在战略层思考。那个人就是你。
+
+Matt Pocock同上
+EN前往
+
+战略层做什么？设计概念、统一语言、模块边界——这三件事都是「定义问题」而非「写代码」，恰好也是 LLM 最不擅长替你做的。
+
+五个失败模式 → 五本老书 → 五个 Skill
+
+Matt 演讲里把整套方法论压缩成一张映射表。你每碰到一个失败模式，他都给你指回 20 年前就解决了的经典理论，再给你一个 Markdown 格式的 Skill 文件：
+
+#AI 编程失败模式经典理论与出处对应 Skill
+1
+AI 没做你想要的东西
+The Design of Design（Brooks）—— design concept、design tree
+/grill-me
+
+2
+AI 用一堆冗长术语跟你说话
+Domain-Driven Design（Evans）—— ubiquitous language
+/grill-with-docs
+
+3
+AI 做对了但跑不起来
+The Pragmatic Programmer（Hunt & Thomas）—— "rate of feedback is your speed limit"
+/tdd
+
+4
+AI 在烂代码库里到处乱走
+A Philosophy of Software Design（Ousterhout）—— deep modules、deletion test
+/improve-codebase-architecture
+
+5
+你脑子跟不上 AI 产出
+Kent Beck —— invest in design every day
+"design the interface, delegate the implementation"
+
+第五条在 repo 里没有单独的 skill（曾有 design-an-interface 但已废弃），它的精神被吸收进了 /to-prd 和 /improve-codebase-architecture——两者都强迫你在写代码前先思考模块接口。
+
+真正每天用的 5 个 Skill
+
+演讲是哲学骨架，Matt 后来在 aihero.dev 上发了一篇《5 Agent Skills I Use Every Day》，把骨架翻译成日常工作流。这 5 个就是这个系列后续要逐个拆解的对象：
+
+/grill-me 或 /batch-grill-me    ← 先和 AI 谈清楚要做什么
+        ↓
+/to-prd                         ← 把对话凝固成 PRD
+        ↓
+/to-issues                      ← 把 PRD 切成可独立领取的 vertical slice
+        ↓
+/tdd                            ← 每个 slice 用红绿重构跑通
+        ↓
+/improve-codebase-architecture  ← 周期性检查，把 shallow 模块改成 deep
+
+这 5 个 skill 串起来就是 Matt 自己的完整研发流程。每一步对应的失败模式见上一节的表。
+
+每篇详细拆解（这个系列的后续页面）：
+
+Setup Matt Pocock Skills：先把项目规则写清楚
+
+Grill Me：让 AI 拷问你需求
+
+Batch Grill Me：按 frontier 分轮批量提问，把 13 轮压到约 3 轮
+
+Grill With Docs：维护项目语言和 ADR
+
+to-PRD + to-Issues：从对话到可执行 ticket
+
+Diagnose 与 Triage：先建立反馈回路，再决定交给谁
+
+TDD：用红绿重构强迫 AI 走小步
+
+Zoom Out：当你迷路时，让 AI 先画地图
+
+Prototype：用可丢弃代码回答一个设计问题
+
+Improve Codebase Architecture：把 shallow 重构成 deep modules
+
+其他 Skills：压缩沟通、交接、教学、写 Skill 与安全护栏
+
+怎么装
+
+仓库 README 里给了一行命令的安装方式：
+
+npx skills@latest add mattpocock/skills
+
+这条命令会：
+
+让你勾选要装哪些 skill
+
+让你勾选要装到哪些 agent（Claude Code、Codex、Cursor 等都支持）
+
+把对应的 SKILL.md 文件放进 .claude/skills/（或 agent 对应的目录）
+
+强烈建议同时勾选 /setup-matt-pocock-skills——这是一个一次性配置 skill，会问你三个问题：
+
+Issue tracker 用什么？（GitHub / GitLab / 本地 markdown / 其他）
+
+Triage label 用什么词？（needs-triage 还是其他）
+
+Domain doc 放哪？（CONTEXT.md / ADR 路径）
+
+跑一次 /setup-matt-pocock-skills，它会写到你项目根目录的 AGENTS.md 或 CLAUDE.md，之后所有 engineering 类 skill（to-prd、to-issues、triage、tdd 等）都会自动读取这份配置。这一步省了，后面每个 skill 都会反复问你同样的问题。
+
+如果你只想试 /grill-me（最轻量、纯 productivity 类），可以跳过 setup，因为它不依赖 issue tracker。
+
+这套 skill 和 BMAD / Spec-Kit / GSD 的区别
+
+如果你已经在用 BMAD、Spec-Kit、GSD 这类 spec-driven 框架，可能会问：「为啥还需要 Matt 这套？」
+
+Matt 在 README 里写得很直接：
+
+GSD、BMAD、Spec-Kit 这些框架想通过接管流程来帮你。但代价是它们拿走了你的控制权，流程里出 bug 时也难修。我这套 skill 的设计目标是小、易改、可组合。
+
+Matt Pocockmattpocock/skills 仓库 README
+EN前往
+
+核心差异：
+
+BMAD/Spec-Kit/GSD 是框架，规定了从 spec 到 code 的完整流水线，你要按它的流程走
+
+Matt 这套是散件，每个 skill 一个 markdown 文件，几行到几十行，你随时拆开改
+
+例子：grill-me 的实际全文只有这么短——
+
+Interview me relentlessly about every aspect of this plan until we reach
+a shared understanding. Walk down each branch of the design tree,
+resolving dependencies between decisions one-by-one. For each question,
+provide your recommended answer.
+
+Ask the questions one at a time.
+
+If a question can be answered by exploring the codebase, explore the
+codebase instead.
+
+整个 skill 7 行。但就是这 7 行让 Claude 在做决策前会问你 20、50 甚至 100 个问题。这种用极少文本撬动大行为变化的设计哲学，是这套 skill 流行的根本原因。
+
+这个系列怎么读
+
+如果你之前没接触过 Matt 这套，建议按 meta.json 里的顺序顺读：
+
+Overview（你现在在的这篇）—— 了解全貌
+
+Setup Matt Pocock Skills —— 先把 issue tracker、标签和领域文档位置写成项目契约
+
+Grill Me —— 单装一个先体验，门槛最低
+
+Batch Grill Me —— grill-me 觉得一次一问太慢时，改成按 frontier 分轮批量问
+
+Grill With Docs —— grill-me 的进阶版，开始引入 CONTEXT.md
+
+to-PRD + to-Issues —— 把对话变成可执行 ticket
+
+Diagnose 与 Triage —— 处理 bug 和 issue 状态流转
+
+TDD —— Matt 自己说「我用过的最稳定提升 agent 输出质量的方法」
+
+Zoom Out —— 陌生代码先画地图
+
+Prototype —— 用可丢弃代码回答设计问题
+
+Improve Codebase Architecture —— 周期性维护，让 AI 长期可用
+
+其他 Skills —— caveman、handoff、teach、write-a-skill 和几组安全/课程工具
+
+如果你已经在用 Claude Code 写真实项目，直接跳到 /grill-me 或 /batch-grill-me + /tdd，体感最强。一次一问太磨人时，优先试 Batch。
+
+如果你做的是教学或写作，只读 /grill-me 一篇就够了——它是个通用的「设计对话」工具，不限于代码。
+
+我的使用建议
+
+我自己装了这套 skill 之后，最大的几个体感变化：
+
+第一：不再急着开始写代码。以前 AI 接到「帮我加个登录」就开始铺 500 行，现在 /grill-me 会先问你 20 个问题——「要不要记住设备」「session 多久过期」「失败几次锁账号」。问题多到只想回 I agree 时，换 /batch-grill-me，按 frontier 一轮一批问。30 分钟后再让它写，省掉的是后续两小时的返工。
+
+第二：CLAUDE.md 不再臃肿。以前 CLAUDE.md 里写了一堆「请先理解需求再写代码」「不要过度抽象」之类的禁令，但 Claude 该犯还是犯。换成 Matt 这套之后，CLAUDE.md 只放领域知识（设计系统、组件规范、部署），通用方法论交给 skill。两边职责清晰。
+
+第三：deep module 思维比 skill 本身更值钱。即使你不装 /improve-codebase-architecture，光是读完它的 SKILL.md 里那条「deletion test」（如果删掉这个模块复杂度消失了，说明它本来就是 pass-through）就已经能让你在 PR review 时多看一眼。
+
+注意代价：
+
+装齐 5 个 skill 后，AI 会问话变多。习惯了「一句话生成 500 行」的人会觉得烦
+
+/tdd 严格执行后，简单脚本也会被它要求先写测试，对探索型代码不友好——可以告诉它「这次跳过 TDD」
+
+/grill-with-docs 会主动改你的 CONTEXT.md，第一次跑前最好让它进 dry-run
+
+参考资源
+
+我每天用的 5 个 Agent Skill
+Matt 本人写的「每天用的 5 个 skill」工作流详解：grill-me → to-prd → to-issues → tdd → improve-codebase-architecture，配大量真实案例，比如完整重建一个视频编辑器功能。
+
+Matt Pocockaihero.dev2026
+EN前往
+
+我的 Grill Me Skill 火了
+一个 7 行的 markdown 文件如何成为 2026 年最被复制的 AI 编程模式之一。
+
+Matt Pocockaihero.dev2026
+EN前往
+
+给真工程师的 Skill 集
+官方仓库，6.1 万 star。`skills/` 目录下是各个 SKILL.md 的真实内容。
+
+Matt PocockGitHub2026
+EN前往
+
+演讲里引用的 5 本书（按出现顺序）：
+
+A Philosophy of Software Design — John Ousterhout（complexity 定义、deep modules）
+
+The Pragmatic Programmer — David Thomas & Andrew Hunt（software entropy、outrunning headlights）
+
+The Design of Design — Frederick P. Brooks（design concept、design tree）
+
+Domain-Driven Design — Eric Evans（ubiquitous language）
+
+Test-Driven Development — Kent Beck（invest in design every day）
+
+每本都是 20 年以上的老书。Matt 演讲里多次重复一句话：「Go on Amazon, get it.」——这句话本身就是这场演讲的彩蛋。
+
+评论
+
+gstack 前端 Skill 篇
+
+系统梳理 gstack 中 25+ 前端/UI 相关 Skill，推荐开发工作流，附真实测试命题
+初始化配置
+
+解析 /setup-matt-pocock-skills 为什么是整套工程 skill 的入口：它不是安装脚本，而是把 issue tracker、triage 标签、CONTEXT.md 和 ADR 路径写成其他 skill 能稳定读取的项目契约
+
+目录
+
+核心结论一个被 specs-to-code 浪潮淹没却仍冷静的人Matt Pocock 是谁核心论点：代码不便宜五个失败模式 → 五本老书 → 五个 Skill真正每天用的 5 个 Skill怎么装这套 skill 和 BMAD / Spec-Kit / GSD 的区别这个系列怎么读我的使用建议参考资源
+
+软件基本功比以往任何时候都更重要：Matt Pocock 的 Claude Code 技能集 | Yu的赛博工位

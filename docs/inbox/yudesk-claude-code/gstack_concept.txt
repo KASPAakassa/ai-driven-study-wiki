@@ -1,0 +1,267 @@
+跳转到主要内容
+Yu的赛博工位
+
+笔记收录独立开发博客关于🇨🇳
+
+文档Claude Code 相关
+Claude Code 隐藏技巧
+
+系统架构全解析工具调用系统Worktree 指南Agent Teams 指南Claude Skills
+
+Claude Code Plugin
+
+Claude Code Subagent
+
+Agent 与工作流
+Agent 记忆系统
+
+Pi Agent
+
+规格驱动开发
+
+Ralph Wiggum
+
+GSD
+
+gstackgstack 概念篇gstack 实战篇gstack Skill 架构拆解gstack 前端 Skill 篇
+
+Matt Pocock 的 Claude Code 技能集
+
+工程实践
+AI 时代的 TDD
+
+Tmux 入门
+
+Yu的赛博工位
+
+搜索⌘K
+笔记收录独立开发博客关于🇨🇳
+
+gstack 概念篇
+
+gstack
+
+下载
+
+gstack：当 YC CEO 把创业经验装进 Claude Code
+Copy page
+
+AI 辅助写的
+Garry Tan 开源的 gstack 是什么、解决什么问题、核心工作流和工具生态定位
+核心结论
+
+gstack 是 Garry Tan 开源的一套 Claude Code 角色化技能集：它把一个通用 AI 编程助手拆成 CEO、工程经理、设计师、QA、安全官、发布工程师等多个角色，让 AI 在不同阶段用不同视角审查产品、架构、代码、测试和发布。
+
+它要解决的问题不是「怎么让 AI 写更多代码」，而是「怎么让 AI 编程从随机应变变成可靠交付」。Ralph Wiggum 依靠重启新进程避免上下文腐烂，GSD 依靠规格驱动管理复杂项目，而 gstack 的答案是：把开发流程拆给一支虚拟工程团队，由人来指挥角色切换。
+
+什么是 gstack
+
+gstack
+由 Y Combinator CEO Garry Tan 创建的开源角色化技能集，包含 23+ 个 Slash Commands，将 Claude Code 从单一 AI 助手转变为一支虚拟工程团队。每个 skill 对应一个专业角色——CEO、工程经理、设计师、QA Lead、安全官、发布工程师——赋予 AI 不同的思维模式和专业视角。
+
+来源: GitHub前往
+
+gstack 的创建者 Garry Tan 有着丰富的技术和创业背景——14 岁开始写代码，斯坦福计算机工程出身，Palantir 第 10 号员工，联合创办过 Posterous（后被 Twitter 收购），2023 年起担任 Y Combinator 的 President & CEO。
+
+他用 gstack 在 60 天内发布了超过 60 万行生产代码（35% 是测试），日均万行以上——同时还在全职运营 YC。其中一个项目 garylist.org，21 天上线、15 万行代码，35% 测试覆盖。按他自己的说法，代码质量超过了他之前花 500 万美元、两年时间、10 个工程师做出来的创业项目。
+
+项目自 2026 年 3 月 11 日开源以来，3 周内从 v0 迭代到 v0.15.1.0，GitHub 已获得 60,500+ stars。MIT 许可证，完全开源。
+
+gstack - Claude Code 角色化技能集
+23+ 个角色化技能，将 Claude Code 从单一 AI 助手转变为虚拟工程团队。
+
+Garry TanGitHub
+EN前往
+
+gstack 在工具生态中的位置
+
+维度原生 Claude CodeRalph WiggumGSDSpecKitSuperpowersgstack
+核心定位
+通用 AI 编码助手
+无限循环迭代
+上下文工程 + 规格驱动
+需求→规格→任务
+流程纪律 + TDD
+角色化虚拟团队
+
+核心模式
+对话式编程
+Bash 循环 + 新进程
+Phase-based Roadmap
+Spec → Plan → Tasks
+严格开发流水线
+Sprint 七步流程
+
+人类参与
+实时对话
+Hands-off (AFK)
+每阶段验证
+规格审批
+每步确认
+每阶段角色审查
+
+独特能力
+基础编码
+无限迭代
+Context Rot 管理
+需求追溯
+强制 TDD
+浏览器自动化 + 多角色审查
+
+适合场景
+简单任务
+持续迭代
+大型项目管理
+需求严谨的项目
+工程质量保障
+全流程产品开发
+
+从表中可以看出一个关键规律：这些工具并非互相竞争，而是在不同维度上解决 AI 编程的问题。
+
+Superpowers 用流程纪律保证代码质量（强制 TDD、结构化对话、实施计划）；GSD 用上下文工程管理复杂项目（阶段规划、子代理新鲜上下文、文件系统状态）；gstack 用角色分解提升决策质量（CEO 视角审产品、工程经理审架构、QA 跑真实浏览器）。
+
+简单来说，Superpowers 基于流程护栏，gstack 基于角色设计——前者适合从 1 到 N 的工程落地，后者适合从 0 到 1 的产品构建。两者互补而非竞品。
+
+核心工作流：The Sprint 七步走
+
+gstack 将整个开发过程组织为一个 Think → Plan → Build → Review → Test → Ship → Reflect 的循环，叫做"The Sprint"——不是敏捷 Sprint，而是一种"角色依次登场"的开发节奏。
+
+1. Think — 产品门诊
+
+/office-hours
+
+这是 gstack 最有特色的 skill。灵感直接来自 YC 的 Office Hours——创业者去见 YC 合伙人，接受灵魂拷问。AI 会问你 6 个逼迫性问题：
+
+谁具体需要这个？
+
+他们今天没有它怎么办？
+
+为什么这件事现在很紧迫？
+
+你怎么知道它能用？
+
+如果什么都不做会怎样？
+
+你能发布的最小版本是什么？
+
+目的不是帮你写代码，而是在写代码之前重新审视问题本身。
+
+2. Plan — 多角色审查
+
+/plan-ceo-review    # CEO 视角：寻找 10 星级产品
+/plan-eng-review    # 工程经理：锁定架构和边界
+/plan-design-review # 设计师：评分 0-10，说明如何做到 10 分
+/autoplan           # 自动依次运行三个审查
+
+CEO Review 本质上是"Founder Mode"——不是按字面意思执行需求，而是退后一步问"这个产品真正的目的是什么？"它支持四种模式：扩大范围、选择性扩展、保持范围、缩小范围。
+
+3. Build — 编码实现
+
+按审查通过的计划开始编码。这一步使用标准 Claude Code 能力。
+
+4. Review — 平行专家审查
+
+/review
+
+这个 skill 一次性派出 7 个并行子代理，分别从测试、可维护性、安全、性能、数据迁移、API 合约、红队攻击 7 个角度审查代码。遇到明显问题会自动修复。
+
+5. Test — 真实浏览器 QA
+
+/qa
+
+不是模拟测试。QA skill 启动一个真实的 headless Chromium 浏览器，打开你的应用、点击按钮、填表单、截图——和真人测试员做的一样。发现 bug 后自动修复、生成回归测试、重新验证。
+
+6. Ship — 一键发布
+
+/ship
+
+自动同步主分支、运行测试、审查 diff、更新版本号和 CHANGELOG、提交、推送、创建 PR。如果项目没有测试框架，它甚至会先搭建一个。
+
+7. Reflect — 回顾与学习
+
+/retro
+
+工程经理风格的周报：分析提交历史、测试比例、代码质量趋势。支持多人团队分析，跟踪"连续发布天数"等指标。
+
+为什么有效：技术原理
+
+Browse Daemon：给 AI 装上眼睛
+
+gstack 最独特的技术贡献是 Browse Daemon——一个长驻的 headless Chromium 实例，通过 localhost HTTP 通信。第一次调用启动浏览器（约 3 秒），之后每次命令只需 100-200ms。这意味着 AI 可以真正看到你的应用，而不是猜测 DOM 结构。
+
+它还引入了 Ref System（元素引用 @e1, @e2），通过 accessibility tree 定位元素，不需要写 CSS 选择器。这是被社区（包括批评者）普遍认可的"真正有技术含量的贡献"。
+
+角色分解：不是一个 agent，而是一支团队
+
+gstack 的做法是把所有角色拆解成独立的 prompt 文件，让 Claude Code 在不同阶段切换到不同角色的视角来审视代码。这本质上是一种精细化的 prompt engineering。
+
+核心洞察是：规划不等于审查，审查不等于发布，创始人品味和工程严谨是完全不同的思维模式。 与其让一个通用 agent 做所有事，不如在需要时切换"大脑模式"——founder thinking、engineering rigor、paranoid review、fast execution。
+
+三大哲学
+
+gstack 的 ETHOS.md 记录了三个核心理念：
+
+Boil the Lake（煮沸整个湖）：当 AI 让完整性的边际成本趋近零时，永远选择完整实现——100% 测试覆盖、所有边界情况、所有错误路径。"发布捷径"是旧时代的思维。
+
+Search Before Building（先搜索再构建）：三层知识——久经考验的模式、新且流行的方案、第一性原理。先理解所有人在做什么，质疑他们的假设，然后发现为什么常规方案是错的。
+
+User Sovereignty（用户主权）：AI 推荐，人类决定。即使两个 AI 模型达成共识，用户的判断仍然优先——因为用户有领域知识、战略视角和品味。
+
+gstack 的边界与争议
+
+gstack 的社区反应可能是 AI 编程工具中最两极化的。
+
+看好的一面：创始人和非技术构建者普遍认可，尤其是 /office-hours 和 /plan-ceo-review 这类"产品思维"类 skill，帮助很多独立开发者在动手编码之前重新审视了产品方向。工程审查（/review）也确实能发现一些隐蔽的安全漏洞，这种多角度并行审查的模式有实际价值。
+
+质疑的一面也很直接：
+
+LOC 指标意义不大：60 天 60 万行代码，代码行数从来不是质量指标，大量代码可能只是脚手架和样板。
+
+本质是 prompt 模板：每个 skill 就是一个 SKILL.md 文件，技术门槛并不高。真正的价值不在文件本身，而在 prompt 的设计质量。
+
+AI 自审代码的局限性：/review 让 AI 审查 AI 写的代码，相当于自己批改自己的作业。多角色并行能缓解这个问题，但根本上还是同一个模型。
+
+名人效应的加成：如果创建者不是 YC CEO，这个项目大概率不会获得这么高的关注度。
+
+我的看法：抛开争议不谈，gstack 真正有价值的部分是两个——Browse Daemon 的浏览器自动化技术，和角色分解的设计模式。这些不依赖于 Garry Tan 是谁。角色化的核心意义其实不在技术层面，而在行为层面——它帮助你更有意识地组织 AI 工作流，而不是一股脑把所有事丢给一个通用 agent。
+
+gstack 适合用来 fork 和定制，取你需要的 skill、改你想改的 prompt，而不是全盘照搬。
+
+视频资源
+
+Better Stack: The Toolkit from YC CEO That Makes Claude Code Amazing
+
+Better Stack 对 gstack 的综合介绍和实操演示。从安装到使用 /plan-ceo-review 完成一个真实功能的全过程，展示 CEO Review 如何从创始人视角重新审视需求，以及 gstack 如何组织多角色审查流程。7 分钟精炼内容，适合快速了解 gstack 的核心工作方式。YouTube
+
+YC CEO 50 天连发 100 个 PR——他的 8 个 Claude Code Skills
+
+系统拆解 gstack 的 8 个核心 skill：CEO Review（创始人产品思维）、Review（严格工程审查）、Browse（200ms 浏览器交互）、QA（自动化质量保障）、Ship（一键发布）等。包含 Garry Tan 对'AI 工具不应该只有一个模糊模式'的原始洞察引用。YouTube
+
+写在最后
+
+gstack 代表了 AI 编程工具的一个有趣方向：不是让 AI 更自主（Ralph 的路线），也不是让流程更严格（Superpowers 的路线），而是让 AI 扮演不同角色来提升决策质量。它的争议恰恰说明了 AI 编程生态的丰富性——没有一个方案适合所有人。
+
+如果你对 gstack 感兴趣，下一步可以看 实战篇——从安装到跑通完整工作流的手把手教程。
+
+相关阅读：
+
+GSD 概念介绍 — 另一种结构化 AI 编程方案
+
+Ralph Wiggum 深度解析 — 了解无限循环迭代的起点
+
+Claude Skills 概念篇 — 理解 Skills 的底层机制
+
+评论
+
+实践指南
+
+GSD 完整命令参考、配置详解、实战工作流演示与常见问题——从安装到项目交付的操作手册
+gstack 实战篇
+
+gstack 安装配置、完整命令参考、工作流演示和社区最佳实践
+
+目录
+
+核心结论什么是 gstackgstack 在工具生态中的位置核心工作流：The Sprint 七步走1. Think — 产品门诊2. Plan — 多角色审查3. Build — 编码实现4. Review — 平行专家审查5. Test — 真实浏览器 QA6. Ship — 一键发布7. Reflect — 回顾与学习为什么有效：技术原理Browse Daemon：给 AI 装上眼睛角色分解：不是一个 agent，而是一支团队三大哲学gstack 的边界与争议视频资源写在最后
+
+gstack：当 YC CEO 把创业经验装进 Claude Code | Yu的赛博工位

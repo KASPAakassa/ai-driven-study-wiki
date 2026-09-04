@@ -1,0 +1,395 @@
+跳转到主要内容
+Yu的赛博工位
+
+笔记收录独立开发博客关于🇨🇳
+
+文档Claude Code 相关
+Claude Code 隐藏技巧
+
+系统架构全解析工具调用系统Worktree 指南Agent Teams 指南Claude Skills
+
+Claude Code Plugin
+
+Claude Code Subagent
+
+Agent 与工作流
+Agent 记忆系统
+
+Pi Agent
+
+规格驱动开发
+
+Ralph Wiggum
+
+GSD
+
+gstackgstack 概念篇gstack 实战篇gstack Skill 架构拆解gstack 前端 Skill 篇
+
+Matt Pocock 的 Claude Code 技能集
+
+工程实践
+AI 时代的 TDD
+
+Tmux 入门
+
+Yu的赛博工位
+
+搜索⌘K
+笔记收录独立开发博客关于🇨🇳
+
+gstack 前端 Skill 篇
+
+gstack
+
+下载
+
+gstack 前端 Skill 全景：从设计到上线的 AI 工作流
+Copy page
+
+AI 辅助写的
+系统梳理 gstack 中 25+ 前端/UI 相关 Skill，推荐开发工作流，附真实测试命题
+引言
+
+在之前的笔记中，我们聊了 gstack 是什么、怎么跑通工作流、以及 Skill 的工程架构。但有一个问题一直没展开——gstack 安装后带来的 60+ 个 Skill 里，跟前端/UI 设计相关的有哪些？按什么顺序用？
+
+这篇笔记做两件事：先把前端相关的 ~27 个 Skill 按功能分类，然后用一个有趣的小项目——倒计时纪念日页面——从头到尾走一遍完整工作流，每个阶段配截图，让你看到实际效果。
+
+前端 Skill 套件全景
+
+gstack 的前端 Skill 可以分成 6 个功能层，从地基到屋顶，每一层解决不同阶段的问题。
+
+设计基建
+
+项目级的一次性设置，确定设计语言，后续所有 Skill 都会参照这些基准。
+
+Skill做什么什么时候用
+/design-consultation
+完整的设计系统咨询，产出配色、字体、间距、质感方向
+新项目启动时，或者想重新定义视觉风格
+
+/teach-impeccable
+一次性采集设计偏好，写入 AI 配置文件
+装完 gstack 后跑一次，让 AI 记住你的审美
+
+/brand-guidelines
+应用已有的品牌配色和字体规范
+有现成品牌手册时直接套用
+
+如果项目已经有 DESIGN.md，这一层可以跳过。
+
+设计探索
+
+不确定方向时，快速出多个方案对比选择。
+
+Skill做什么什么时候用
+/design-shotgun
+生成 3-5 个视觉方案，打开对比面板
+不确定要什么风格，想看看可能性
+
+/frontend-design
+生成有辨识度的、生产级前端界面代码
+方向明确后直接出活
+
+/canvas-design
+生成海报、视觉艺术（PNG/PDF）
+需要静态视觉设计而非网页组件
+
+设计实现
+
+把方案变成真正能跑的代码，处理排版、布局、响应式。
+
+Skill做什么什么时候用
+/design-html
+把确认的设计稿转成生产级 HTML/CSS
+有 mockup 想直接落地
+
+/mobile-responsiveness
+移动端优先的响应式布局、触摸交互
+从零开始做移动端适配
+
+/adapt
+跨设备、跨屏幕尺寸的断点适配
+已有桌面版，需要适配手机/平板
+
+/typeset
+字体选择、层级、大小、粗细、可读性优化
+文字排版看着"差点意思"
+
+/arrange
+布局间距、视觉节奏、对齐修复
+间距不一致、布局感觉挤或散
+
+设计增强
+
+在功能完成的基础上，注入动效、个性和情感化细节。
+
+Skill做什么什么时候用
+/animate
+添加有目的的微交互和动效
+页面功能 OK 但感觉"死板"
+
+/delight
+添加惊喜细节、个性化触感
+想让用户记住这个页面
+
+/bolder
+放大视觉冲击力
+设计太平淡、太安全
+
+/colorize
+给单调的界面加入策略性色彩
+页面太灰、太素、缺乏温度
+
+/overdrive
+技术炸裂级效果——shader、弹簧物理、滚动驱动动画
+某个区域想要 wow effect
+
+/onboard
+新用户引导流程、空状态设计
+做首次使用体验
+
+这四个增强 Skill 是递进关系：animate 是基础动效，delight 是情感化，bolder 是放大，overdrive 是炸裂。根据项目需要逐级叠加，不必全用。
+
+设计优化
+
+收敛和精炼——去掉多余的，对齐偏离的，打磨粗糙的。
+
+Skill做什么什么时候用
+/polish
+最终质量打磨：对齐、间距、一致性
+发布前的最后一遍检查
+
+/quieter
+降低视觉刺激强度
+设计太花哨、太吵
+
+/distill
+极简化，去除不必要的复杂度
+页面元素太多想做减法
+
+/normalize
+对齐设计系统标准（token、间距、颜色）
+样式偏离了 DESIGN.md 的规范
+
+/clarify
+改善 UX 文案、错误提示、标签措辞
+文案让人困惑、错误信息不友好
+
+设计审查与验证
+
+上线前的系统性检查，找问题、打分、修复。
+
+Skill做什么什么时候用
+/plan-design-review
+实现前的设计方案评审（0-10 打分）
+想让 AI 以设计师视角审视方案
+
+/design-review
+实现后的视觉 QA，自动截图对比并修复
+代码写完了，检查视觉还原度
+
+/critique
+UX 评估：视觉层级、认知负荷、情感共鸣
+想要一份结构化的设计评审报告
+
+/audit
+技术审查：可访问性、性能、主题、响应式
+上线前的系统性检查
+
+/benchmark
+性能基线测试，before/after 对比
+想量化改动对性能的影响
+
+前端 Skill Pipeline
+gstack 中前端相关 Skill 按功能分为 6 层——基建 → 探索 → 实现 → 增强 → 优化 → 审查，形成从设计到上线的完整流水线。不是每次都要跑全部，而是按需从中取用。
+
+来源: gstack前往
+
+实战演示：用倒计时纪念日页面走通全流程
+
+光看分类表太抽象。我们用一个小项目把上面的 Skill 串起来——做一个倒计时/纪念日单页：选一个有意义的日期，做一个带数字动画和背景效果的倒计时展示。
+
+这个项目小而完整，刚好能覆盖 6 层 Skill 中的大部分。完整流程是：
+
+基建 → 探索 → 构建 → 增强 → 调优 → 审查 → 发布
+
+不是每次都要跑全部 7 步。熟练后常用链路只有 /frontend-design → /animate → /polish → /ship 四步。这里为了展示完整能力，每步都走一遍。
+
+Stage 1：基建——确定设计语言
+
+Skill：/design-consultation + /teach-impeccable
+
+只需要在项目初期做一次。产出 DESIGN.md，让 AI 记住你的设计偏好。如果项目已有 DESIGN.md，直接跳过。
+
+> /design-consultation
+"我要做一个倒计时纪念日页面，风格偏好是深色背景、
+数字大而醒目、整体氛围温暖但克制"
+
+Stage 2：探索——多方案对比
+
+Skill：/design-shotgun
+
+不确定方向时，让 AI 生成 3-5 个视觉方案，打开对比面板挑选。
+
+> /design-shotgun
+"做一个倒计时/纪念日单页，展示距离某个日期的天/时/分/秒，
+要有数字翻牌动画，背景有微妙的粒子或渐变效果，
+整体氛围要温暖但不俗气。给我 3 个方向。"
+
+从 3 个方案中选一个方向。如果你很清楚要什么，跳过这步直接进 Stage 3。
+
+Stage 3：构建——出生产级代码
+
+Skill：/frontend-design + /adapt
+
+核心环节。出代码，同时确保响应式从一开始就到位。
+
+> /frontend-design
+"基于方案 2 实现倒计时页面。要求：
+- 实时倒计时（天/时/分/秒）
+- 响应式布局（桌面 + 手机）
+- 日期可配置"
+
+Stage 4：增强——注入动效和个性
+
+Skill：/animate → /delight（按需 /overdrive）
+
+这三个是递进关系：animate 是基础动效，delight 是情感化细节，overdrive 是炸裂级效果。根据需要逐级叠加。
+
+> /animate
+"给倒计时数字加翻牌动画效果，页面加载时有入场动画"
+
+> /delight
+"给页面加一些有趣的小细节，比如到达整点时的微庆祝效果"
+
+> /overdrive  （可选，想要 wow effect 的话）
+"给背景加粒子效果或流体动画，60fps"
+
+注意参照 DESIGN.md 的动效约束——如果设计系统只允许 150ms 的 hover 过渡，/overdrive 就不适用。这是一个很好的判断练习。
+
+Stage 5：调优——收敛和打磨
+
+Skill：/typeset + /polish（按需 /distill、/normalize）
+
+间距对齐、字体层级、视觉节奏。如果发现加了太多东西，用 /distill 做减法。
+
+> /typeset
+"检查数字字体的大小、粗细层级是否合理"
+
+> /polish
+"最终打磨，检查对齐、间距、暗色模式支持"
+
+Stage 6：审查——系统性检查
+
+Skill：/design-review + /audit
+
+视觉 QA + 技术审查。/design-review 会自动截图对比并修复问题，/audit 检查可访问性和性能。
+
+> /design-review
+"视觉 QA，截图对比桌面和手机端"
+
+> /audit
+"检查可访问性和性能"
+
+Stage 7：发布
+
+Skill：/ship
+
+标准的 gstack 发布流程——测试、diff review、创建 PR。
+
+> /ship
+
+预期成果：一个视觉精致的倒计时页面，过程中用到 8-10 个前端 Skill。更重要的是建立起"什么阶段用什么 Skill"的直觉。
+
+日常速查表
+
+上面是完整流程。日常开发中遇到具体问题，直接查这张表：
+
+我现在的问题用什么
+不知道想要什么风格
+/design-shotgun
+
+页面功能好了但感觉"差点意思"
+/polish
+
+觉得哪里不对但说不清
+/design-review
+
+字体/排版看着别扭
+/typeset
+
+间距乱、布局挤
+/arrange
+
+样式偏离了设计系统
+/normalize
+
+想提取公共组件
+/extract
+
+页面太复杂想做减法
+/distill
+
+设计太素太安全
+/bolder 或 /colorize
+
+设计太花哨太吵
+/quieter
+
+错误提示文案不友好
+/clarify
+
+手机端显示有问题
+/adapt
+
+想加动画效果
+/animate（基础）或 /overdrive（炸裂）
+
+上线前系统性检查
+/audit
+
+debug
+/investigate
+
+小结
+
+这篇笔记做了两件事：
+
+全景图——gstack 的 27 个前端 Skill 按 6 层分类（基建→探索→实现→增强→优化→审查）
+
+实战演示——用一个倒计时纪念日页面走通完整工作流，展示每个阶段用什么 Skill、为什么
+
+关键 takeaway：这些 Skill 最强大的用法不是单独调用，而是按流水线组合——探索方向、构建实现、增强打磨、审查发布，每个阶段有明确的 Skill 选择。
+
+但也别被流程绑住——熟练之后，大部分时候 /frontend-design → /animate → /polish → /ship 四步就够了。
+
+gstack - Claude Code 角色化技能集
+23+ 个角色化技能，将 Claude Code 从单一 AI 助手转变为虚拟工程团队。
+
+Garry TanGitHub
+EN前往
+
+相关阅读：
+
+gstack 概念篇 — gstack 是什么、解决什么问题
+
+gstack 实战篇 — 从安装到跑通完整工作流
+
+gstack Skill 架构拆解 — Skill 开发者能学到什么
+
+Claude Skills 概念篇 — 理解 Skills 的底层机制
+
+评论
+
+gstack Skill 架构拆解
+
+从 Skill 开发者视角系统拆解 gstack 的工程设计：模板生成、升级机制、学习系统、Preamble 注入、状态管理、Prompt 工程技巧
+概览
+
+拆解 mattpocock/skills——这个 4 个月冲到 61k star 的仓库为什么火，以及它背后那场 18 分钟演讲讲了什么。从 5 个 AI 编程失败模式到 5 个可装可用的 Skill，给你一张完整的 Matt Pocock 工作流地图
+
+目录
+
+引言前端 Skill 套件全景设计基建设计探索设计实现设计增强设计优化设计审查与验证实战演示：用倒计时纪念日页面走通全流程Stage 1：基建——确定设计语言Stage 2：探索——多方案对比Stage 3：构建——出生产级代码Stage 4：增强——注入动效和个性Stage 5：调优——收敛和打磨Stage 6：审查——系统性检查Stage 7：发布日常速查表小结
+
+gstack 前端 Skill 全景：从设计到上线的 AI 工作流 | Yu的赛博工位

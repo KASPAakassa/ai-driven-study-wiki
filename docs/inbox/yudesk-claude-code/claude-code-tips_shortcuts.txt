@@ -1,0 +1,236 @@
+跳转到主要内容
+Yu的赛博工位
+
+笔记收录独立开发博客关于🇨🇳
+
+文档Claude Code 相关
+Claude Code 隐藏技巧Claude Code 隐藏技巧快捷键篇输入与交互篇思考与模型控制篇会话管理篇上下文管理篇实用命令与自动化篇配置与诊断篇进阶篇
+
+系统架构全解析工具调用系统Worktree 指南Agent Teams 指南Claude Skills
+
+Claude Code Plugin
+
+Claude Code Subagent
+
+Agent 与工作流
+Agent 记忆系统
+
+Pi Agent
+
+规格驱动开发
+
+Ralph Wiggum
+
+GSD
+
+gstack
+
+Matt Pocock 的 Claude Code 技能集
+
+工程实践
+AI 时代的 TDD
+
+Tmux 入门
+
+Yu的赛博工位
+
+搜索⌘K
+笔记收录独立开发博客关于🇨🇳
+
+快捷键篇
+
+Claude Code 隐藏技巧
+
+下载
+
+快捷键篇
+Copy page
+
+AI 辅助写的
+Claude Code 快捷键全指南：Shift+Tab 模式切换、Esc+Esc 回溯、Ctrl+S 暂存、Ctrl+B 后台任务、Readline 快捷键等
+Claude Code 的快捷键体系比大多数人想象的要丰富得多，按 ? 可以查看当前环境下所有可用的快捷键。
+
+Shift+Tab：模式循环切换
+
+这可能是最重要的一个快捷键。按 Shift+Tab 可以在三种模式之间循环切换：
+
+Normal Mode → Auto-Accept Mode → Plan Mode → Normal Mode
+
+不需要手动输入 /plan 或者 /auto-accept，一个键搞定。我的习惯是：接到新任务先按两下切到 Plan Mode，确认方案后再按一下切到 Auto-Accept 让 Claude 自行执行。
+
+Esc + Esc：回溯时光机
+
+连按两次 Esc 弹出回溯菜单
+连按两次 Esc，会弹出回溯菜单（Rewind）：
+
+三种恢复方式：恢复代码和对话、只恢复对话、只恢复代码
+
+恢复代码和对话：回到之前某个检查点，代码和对话都回滚
+
+只恢复对话：回滚消息，但保留当前代码改动
+
+只恢复代码：撤销文件修改，但保留对话历史
+
+Claude 会自动跟踪每次文件编辑作为检查点。这比 git checkout . 精细得多，因为你可以选择回到任意一步，而不是只能回到上次提交。
+
+不过要注意：只有 Claude 通过工具直接编辑的文件会被追踪，你手动改的文件、git push 之类的外部操作没法回滚。
+
+Ctrl+S：提示词暂存（Prompt Stash）
+
+写了一半的提示词，突然需要先处理另一件事？按 Ctrl+S，当前输入会被暂存起来：
+
+按 Ctrl+S 后提示词被暂存，提交下一条消息后自动恢复
+然后你可以输入其他命令或指令。等你提交完那条消息后，之前暂存的内容会自动恢复到输入框里，继续写。
+
+这个功能就像 git stash 但用在提示词上。场景举例：你正在写一段很长的重构需求描述，突然想先让 Claude 看一下某个文件确认一下细节——按 Ctrl+S 暂存需求描述，先问文件相关的问题，回答完后你的需求描述自动回来。
+
+Ctrl+B：把任务丢到后台
+
+Claude 正在处理一个耗时任务（比如大规模重构），你突然想处理另一件事？按 Ctrl+B 把当前任务推到后台，终端立刻可以继续输入新的指令。
+
+用 Ctrl+T 可以查看后台任务列表，Ctrl+F 连按两次可以终止所有后台代理。
+
+tmux 用户注意：tmux 的前缀键默认也是 Ctrl+B，需要按两次才能触发 Claude 的后台功能。
+
+Ctrl+G：用编辑器写长提示词
+
+有时候需要给 Claude 一段很长的指令，在终端里打字体验很差。按 Ctrl+G 会打开你系统默认的 $EDITOR（比如 VS Code、Vim），在编辑器里写好提示词，保存退出后自动发送给 Claude。
+
+如果想切换默认编辑器，在 shell 配置文件（~/.zshrc 或 ~/.bashrc）中设置：
+
+# VS Code
+export EDITOR="code --wait"
+
+# Zed
+export EDITOR="zed --wait"
+
+# Vim
+export EDITOR="vim"
+
+--wait 参数很重要——它让编辑器等你关闭文件后再返回，否则 Claude 会立刻收到空内容。Vim 这类终端编辑器天然会阻塞，不需要加。
+
+写多段落的需求描述、粘贴大段参考内容的时候特别好用。在 Plan Mode 下用 Ctrl+G 还可以直接在编辑器里修改 Claude 生成的计划。
+
+Cmd+T：切换扩展思考
+
+官方默认快捷键是 Cmd+T（Windows/Linux 上是 Meta+T），用来开关扩展思考（Extended Thinking）模式。开启后 Claude 会在回答前进行更深入的推理，适合处理复杂的架构设计或 bug 排查。
+
+不过要注意：大多数终端（iTerm2、Terminal.app、Warp 等）会把 Cmd+T 拦截为「新建标签页」，导致这个快捷键实际上用不了。解决办法有两个：用 /keybindings 自定义一个不冲突的快捷键，或者直接用 /effort 命令来切换思考深度（效果一样，还能精确控制级别）。
+
+Readline 快捷键
+
+Claude Code 的输入框支持标准的 Readline 快捷键，终端老手会很熟悉：
+
+快捷键功能
+Ctrl+A
+跳到行首
+
+Ctrl+E
+跳到行尾
+
+Ctrl+W
+删除前一个单词
+
+Ctrl+U
+删除到行首
+
+Ctrl+K
+删除到行尾
+
+Ctrl+Y
+粘贴刚删除的内容
+
+Alt+Y
+循环浏览删除历史
+
+Option+Left/Right
+按单词跳转（Mac）
+
+审批快捷键：y/n/d/e
+
+当 Claude 提出文件修改等待你确认时，四个单键快捷键控制流程：
+
+y：接受
+
+n：拒绝
+
+d：查看完整 diff
+
+e：编辑后再接受
+
+e 是最容易被忽略但最有用的——它让你在 Claude 的修改基础上做微调，然后再应用。不满意 Claude 的某几行代码？不用拒绝重来，直接 e 改了就好。
+
+快捷键速查表
+
+快捷键功能
+Shift+Tab
+切换模式：Normal → Auto-Accept → Plan
+
+Esc+Esc
+打开回溯菜单
+
+Ctrl+S
+暂存当前输入，提交后自动恢复
+
+Ctrl+B
+把当前任务推到后台
+
+Ctrl+T
+查看后台任务列表
+
+Ctrl+F (x2)
+终止所有后台代理
+
+Ctrl+G
+用外部编辑器写提示词
+
+Ctrl+O
+切换详细工具输出视图
+
+Cmd+T
+切换扩展思考（可能被终端拦截，建议自定义或用 /effort）
+
+\ + Enter
+多行输入（无需配置）
+
+Shift+Enter
+多行输入（需先运行 /terminal-setup）
+
+Up / Down
+浏览输入历史
+
+Ctrl+R
+搜索命令历史
+
+Ctrl+L
+清屏（历史保留）
+
+Ctrl+C
+取消当前生成
+
+Ctrl+D
+退出 Claude Code
+
+?
+显示所有可用快捷键
+
+自定义快捷键
+
+如果默认的快捷键不合你的习惯，可以用 /keybindings 打开 ~/.claude/keybindings.json 进行自定义。改完自动生效，不需要重启。
+
+支持组合键语法（如 ctrl+shift+c）和 Chord 模式（如 ctrl+k ctrl+s，先按 Ctrl+K 松开，再按 Ctrl+S）。有 16 种不同的绑定上下文（Chat、Autocomplete、Confirmation、DiffDialog 等），每种上下文可以绑定不同的操作。
+
+评论
+
+Claude Code 隐藏技巧
+
+从创始人 Boris Cherny 推特、社区和 changelog 中整理的 Claude Code 实用技巧，涵盖快捷键、隐藏命令、提示词技巧、上下文管理等
+输入与交互篇
+
+Claude Code 输入与交互技巧：! 终端命令、@ 文件注入、URL 粘贴、/btw 插嘴、Vim 模式、语音模式
+
+目录
+
+Shift+Tab：模式循环切换Esc + Esc：回溯时光机Ctrl+S：提示词暂存（Prompt Stash）Ctrl+B：把任务丢到后台Ctrl+G：用编辑器写长提示词Cmd+T：切换扩展思考Readline 快捷键审批快捷键：y/n/d/e快捷键速查表自定义快捷键
+
+快捷键篇 | Yu的赛博工位

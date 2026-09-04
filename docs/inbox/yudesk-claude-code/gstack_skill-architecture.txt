@@ -1,0 +1,532 @@
+跳转到主要内容
+Yu的赛博工位
+
+笔记收录独立开发博客关于🇨🇳
+
+文档Claude Code 相关
+Claude Code 隐藏技巧
+
+系统架构全解析工具调用系统Worktree 指南Agent Teams 指南Claude Skills
+
+Claude Code Plugin
+
+Claude Code Subagent
+
+Agent 与工作流
+Agent 记忆系统
+
+Pi Agent
+
+规格驱动开发
+
+Ralph Wiggum
+
+GSD
+
+gstackgstack 概念篇gstack 实战篇gstack Skill 架构拆解gstack 前端 Skill 篇
+
+Matt Pocock 的 Claude Code 技能集
+
+工程实践
+AI 时代的 TDD
+
+Tmux 入门
+
+Yu的赛博工位
+
+搜索⌘K
+笔记收录独立开发博客关于🇨🇳
+
+gstack Skill 架构拆解
+
+gstack
+
+下载
+
+拆解 gstack：Skill 开发者能学到什么
+Copy page
+
+AI 辅助写的
+从 Skill 开发者视角系统拆解 gstack 的工程设计：模板生成、升级机制、学习系统、Preamble 注入、状态管理、Prompt 工程技巧
+引言
+
+在 概念篇 和 实战篇 中，我们从用户视角了解了 gstack 是什么、怎么用。这篇笔记换一个角度——作为 Skill 开发者，逐个文件读完 gstack 仓库后，哪些工程设计值得学习和借鉴。
+
+gstack 不只是 23 个 prompt 文件的集合。它背后有一套完整的工程体系：模板生成、自动升级、学习记忆、渐进式引导、多平台适配、分层测试——这些才是让一个 skill 项目从"能用"变成"好用"的关键。
+
+1. SKILL.md 不是手写的——模板生成系统
+
+gstack 最反直觉的设计：每个 SKILL.md 都是自动生成的，不能直接编辑。
+
+SKILL.md.tmpl (人写)  →  gen-skill-docs  →  SKILL.md (机生)
+
+人写的 .tmpl 模板中包含工作流逻辑和最佳实践，加上 {{PLACEHOLDER}} 占位符。构建脚本从源代码中提取命令参考、浏览器 flag 列表、preamble 启动代码等，填充到占位符中生成最终的 SKILL.md。
+
+{{PREAMBLE}}           ← 从 resolvers/preamble.ts 生成的启动代码
+{{BROWSE_SETUP}}       ← 浏览器初始化指令
+{{COMMAND_REFERENCE}}  ← 从 commands.ts 提取的命令文档
+{{SNAPSHOT_FLAGS}}     ← 从源代码常量提取的快照选项
+
+为什么这样做？
+
+文档和代码永远不会不同步——命令参考从源代码生成，源码改了文档自动更新
+
+23 个 skill 共享同一份 preamble（约 220 行），更新一次所有 skill 同步更新
+
+CI 可以 --dry-run 检查生成文件是否过期，防止忘记重新生成
+
+值得借鉴的点：如果你维护多个 skill，任何跨 skill 共享的内容都应该提取到模板，用构建步骤生成最终文件。手动同步多份相同内容迟早会出问题。
+
+2. 升级机制——从检测到执行的完整链路
+
+gstack 的升级系统设计得很精致，分三层：
+
+第一层：版本检测
+
+bin/gstack-update-check 是一个独立的 bash 脚本，做以下事情：
+
+读本地 VERSION 文件
+
+检查缓存 ~/.gstack/last-update-check（UP_TO_DATE 缓存 60 分钟，UPGRADE_AVAILABLE 缓存 720 分钟）
+
+缓存过期则 HTTP 请求 GitHub 的 raw.githubusercontent.com/.../VERSION
+
+比对版本号，输出 UPGRADE_AVAILABLE <旧> <新>
+
+第二层：Preamble 集成
+
+每个 skill 的 SKILL.md 启动代码的第一行就是版本检测：
+
+_UPD=$(~/.claude/skills/gstack/bin/gstack-update-check 2>/dev/null || true)
+[ -n "$_UPD" ] && echo "$_UPD" || true
+
+这意味着用户调用任何 skill 时都会自动检测更新——不需要专门跑升级命令，存在感为零但覆盖率 100%。
+
+第三层：渐进提醒 + 自动升级
+
+检测到新版本后不会立刻打扰用户，而是用**贪睡机制（Snooze）**做渐进退避：
+
+第 1 次提醒：24 小时后再提
+
+第 2 次提醒：48 小时后再提
+
+第 3 次及以后：7 天后再提
+
+新版本发布会重置贪睡计数器
+
+用户可以 gstack-config set auto_upgrade true 开启自动升级，跳过确认直接执行。
+
+升级执行时会区分 5 种安装类型（全局 git、本地 git、vendored 等），git 安装用 git fetch + reset，vendored 安装先备份再替换，失败时从 .bak 恢复。升级后还会自动同步项目本地的 vendored 副本。
+
+值得借鉴的点：
+
+"每次调用时检测"的模式覆盖率极高且用户无感知
+
+渐进退避避免了频繁打扰
+
+区分安装类型执行不同升级策略，而不是一刀切
+
+备份恢复保证升级失败不至于整个 skill 挂掉
+
+3. 学习系统——让 Skill 越用越聪明
+
+gstack 实现了一个轻量但有效的跨会话记忆系统。
+
+存储
+
+每个项目有独立的学习日志：~/.gstack/projects/$SLUG/learnings.jsonl，追加写入。
+
+{
+  "skill": "review",
+  "type": "pitfall",
+  "key": "n-plus-one",
+  "insight": "这个项目的 User model 有 N+1 查询问题，findAll 要加 include",
+  "confidence": 8,
+  "source": "observed",
+  "files": ["src/models/user.ts"],
+  "ts": "2026-04-01T14:30:00Z"
+}
+
+自动采集
+
+每个 skill 完成前都有一个"操作自我改进"环节——反思这次执行中有没有意外失败、走弯路、或发现项目怪癖，有则自动记录到 learnings.jsonl。不需要用户手动触发。
+
+自动加载
+
+每次新会话启动时，preamble 会加载前 3 条高置信度学习条目注入上下文，让新会话继承历史知识。
+
+置信度衰减
+
+observed 和 inferred 来源的条目每 30 天衰减 1 分。不需要人工清理知识库——过时的知识自然消退，新的观察自然取代。
+
+管理界面
+
+/learn            # 显示最近 20 条
+/learn search     # 搜索
+/learn prune      # 检测过期条目（引用的文件已删除）
+/learn export     # 导出为 markdown 可加入 CLAUDE.md
+
+值得借鉴的点：
+
+追加只写设计简单可靠，并发安全
+
+置信度衰减是低维护的知识时效管理——比手动清理高效得多
+
+用 git remote URL 而非路径标识项目（通过 gstack-slug），clone 到不同位置也能复用
+
+支持跨项目查询，但默认隔离
+
+4. Preamble 注入——Skill 的"中间件层"
+
+这是 gstack 最聪明的架构设计之一。每个 SKILL.md 共享一段约 220 行的 preamble 代码，功能类似 Web 框架的中间件：
+
+┌─ 更新检测 ──────────────────────────────────┐
+│ 会话追踪 (sessions/$PPID)                    │
+│ 配置读取 (proactive, skill_prefix, telemetry)│
+│ 学习历史加载 (前 3 条高置信度)                │
+│ 上下文恢复 (最近的 checkpoint + timeline)     │
+│ 路由规则检测                                 │
+│ 首次使用引导流程                              │
+└──────────────────────────────────────────────┘
+         ↓
+    Skill 特有逻辑
+
+Preamble 的 bash 脚本输出键值对（BRANCH: main、PROACTIVE: true），然后模板用自然语言条件让 Claude 据此调整行为：
+
+If PROACTIVE is false, do not invoke skills automatically.
+Instead suggest: "I think /skillname might help here -- want me to run it?"
+
+这本质上是把 bash 输出当作 Claude 的"环境变量"——用 bash 做运行时检测，用自然语言做行为路由。
+
+值得借鉴的点：如果你有多个 skill，共享逻辑（配置加载、状态恢复、版本检测）应该提取到统一的 preamble，而不是每个 skill 各写一份。
+
+5. 渐进式引导——Sentinel 文件模式
+
+gstack 的首次使用体验设计得很用心。通过 touch 文件（sentinel file）确保每个引导步骤只出现一次：
+
+~/.gstack/.completeness-intro-seen    ← "Boil the Lake" 理念介绍
+~/.gstack/.telemetry-prompted         ← 遥测选择（community/anonymous/off）
+~/.gstack/.proactive-prompted         ← 主动触发开关
+~/.gstack/.routing-prompted           ← CLAUDE.md 路由规则写入
+~/.gstack/.welcome-seen               ← 安装欢迎消息
+
+每次 skill 启动时检查这些文件是否存在，不存在则展示对应引导并 touch 文件。已经看过的步骤永远不会再出现。
+
+值得借鉴的点：比起在 config 里维护 "onboarding_step": 3 的状态，sentinel 文件更简单、更可靠——不会被配置文件损坏影响，而且每个步骤独立控制。
+
+6. SKILL.md 结构设计——三层架构
+
+每个 SKILL.md 都遵循标准的三层结构：
+
+第一层：YAML Frontmatter
+
+---
+name: qa
+preamble-tier: 3
+version: 0.15.1.0
+description: |
+  Systematically QA test a web application...
+  Use when asked to "qa", "test this site", "find bugs"...
+benefits-from: [office-hours]
+allowed-tools:
+  - Bash
+  - Read
+  - Write
+hooks:
+  PreToolUse:
+    - matcher: "Bash"
+      hooks:
+        - type: command
+          command: "bash ${CLAUDE_SKILL_DIR}/bin/check-careful.sh"
+---
+
+关键字段：
+
+allowed-tools：工具级权限白名单，每个 skill 只声明自己需要的工具
+
+benefits-from：显式声明前置依赖 skill
+
+hooks：PreToolUse 钩子，可以在工具调用前拦截（如 careful 拦截 rm -rf）
+
+description：包含所有自然语言触发词
+
+第二层：共享 Preamble + 通用规则
+
+preamble 启动代码 + Voice 定义 + 上下文恢复 + 完整性原则 + 搜索优先级 + 完成状态协议 + 升级规则等。所有 skill 完全相同，由模板生成。
+
+第三层：Skill 特有逻辑
+
+这才是每个 skill 的"灵魂"——工作流定义、角色设定、认知模式注入、交互门控等。
+
+值得借鉴的点：三层分离让每个 skill 只需要关注自己的独特逻辑，共享部分由框架保证一致性。
+
+7. Prompt 工程技巧合集
+
+读完所有 SKILL.md 后，以下是最值得学习的 prompt 设计技术：
+
+反谄媚规则
+
+office-hours 的 Startup Mode 明确禁止了 AI 常见的"和稀泥"行为：
+
+Never say:
+- "That's an interesting approach" → take a position instead
+- "There are many ways to think about this" → pick one
+- "You might want to consider..." → say "This is wrong because..."
+- "That could work" → say whether it WILL work
+
+禁止词表
+
+Voice 部分有明确的禁用词和禁用短语：
+
+禁用词：delve, crucial, robust, comprehensive, nuanced, pivotal, landscape...
+
+禁用短语："here's the kicker", "plot twist", "let me break this down"...
+
+禁用格式：em dash（用逗号/句号代替）
+
+这些是 LLM 常见的"AI 味"词汇，禁掉后输出明显更自然。
+
+认知模式注入
+
+每个 Review skill 注入了不同的思维框架：
+
+CEO Review：18 条认知模式（Bezos 的单向/双向门决策、Munger 的逆向思维、Jobs 的专注即减法...）
+
+Eng Review：15 条工程管理模式（"boring by default"、blast radius 直觉、Conway 定律...）
+
+Design Review：12 条设计认知模式（层级即服务、约束崇拜、"Would I notice?" 测试...）
+
+这些模式不是让 AI 机械执行，而是给它提供思考框架——就像给一个聪明的新人一份前辈的经验清单。
+
+具体化标准
+
+Not "you should test this"
+    but `bun test test/billing.test.ts`
+
+Not "this might be slow"
+    but "this queries N+1, ~200ms per page load with 50 items"
+
+Not "there's an issue in the auth flow"
+    but "auth.ts:47, the token check returns undefined"
+
+置信度校准
+
+review skill 要求每个发现附带置信度分数，低置信度的发现自动降级或隐藏：
+
+分数含义处理方式
+9-10
+读了具体代码验证过
+正常展示
+
+7-8
+高置信度模式匹配
+正常展示
+
+5-6
+中等，可能误报
+附带说明展示
+
+3-4
+低置信度
+从报告中隐藏
+
+1-2
+纯猜测
+只在 P0 级别才展示
+
+交互门控
+
+ship skill 精确定义了什么时候该停下来等用户、什么时候该自动继续：
+
+Only stop for:
+- Tests failing with no obvious fix
+- Merge conflicts requiring human judgment
+- Unclear which changes to include
+
+Never stop for:
+- Normal git operations
+- CHANGELOG/VERSION updates
+- PR creation
+
+值得借鉴的点：好的 skill 不是"AI 做完所有事"，而是精确定义人机边界。
+
+8. 状态管理——文件系统即数据库
+
+gstack 的所有持久化都通过文件系统完成，存储在 ~/.gstack/ 下：
+
+路径用途格式
+config.yaml
+全局配置
+YAML
+
+sessions/$PPID
+活跃会话
+touch 文件
+
+projects/$SLUG/learnings.jsonl
+学习记录
+JSONL
+
+projects/$SLUG/timeline.jsonl
+技能时间线
+JSONL
+
+projects/$SLUG/checkpoints/*.md
+检查点
+Markdown
+
+projects/$SLUG/health-history.jsonl
+健康检查历史
+JSONL
+
+analytics/skill-usage.jsonl
+使用遥测
+JSONL
+
+last-update-check
+版本缓存
+纯文本
+
+几乎所有时间序列数据都用 JSONL（每行一个 JSON 对象），追加写入。这个选择很聪明：
+
+追加写入天然并发安全
+
+不需要数据库依赖
+
+可以用 grep / jq 直接查询
+
+损坏最多丢失最后一行
+
+9. 跨 Skill 集成模式
+
+文件传递产物
+
+skill 之间通过文件系统传递工作产物：
+
+/office-hours → design doc → /plan-ceo-review 读取
+/plan-ceo-review → ceo-plans/*.md → /autoplan 读取
+/review → reviews.jsonl → /ship 读取并展示 Dashboard
+/qa → qa-reports/ → /retro 读取
+
+Review Readiness Dashboard
+
+ship skill 读取 reviews.jsonl，在发布前展示跨 skill 审查状态：
+
+| Review          | Runs | Last Run    | Status | Required |
+| Eng Review      |  1   | 2026-03-16  | CLEAR  | YES      |
+| CEO Review      |  0   | —           | —      | no       |
+| Design Review   |  0   | —           | —      | no       |
+
+前置依赖建议
+
+plan-ceo-review 检测到没有 design doc 时，会主动建议先运行 /office-hours：
+
+"No design doc found. /office-hours produces a structured problem statement...
+Takes about 10 minutes."
+Options: A) Run /office-hours now  B) Skip
+
+使用序列预测
+
+Context Recovery 会分析最近的 skill 使用顺序，预测下一步：
+
+If pattern repeats (e.g., review → ship → review),
+suggest: "Based on your recent pattern, you probably want /ship."
+
+10. 其他值得注意的设计
+
+Hook 系统
+
+careful、freeze、guard 三个 skill 用了 PreToolUse hooks——这是唯一能在工具调用之前拦截的机制：
+
+careful：拦截 Bash，检查 rm -rf、DROP TABLE、git push --force
+
+freeze：拦截 Edit/Write，检查路径是否在允许范围内
+
+guard：组合以上两者
+
+多平台适配
+
+同一套模板通过 --host 参数生成不同平台的 skill 文件：
+
+bun run gen:skill-docs --host claude   # Claude Code 格式
+bun run gen:skill-docs --host codex    # OpenAI Codex 格式
+bun run gen:skill-docs --host kiro     # AWS Kiro 格式
+bun run gen:skill-docs --host factory  # Factory Droid 格式
+
+路径和 frontmatter 自动适配，skill 逻辑不变。
+
+完成状态协议
+
+每个 skill 结束时必须输出标准化的完成状态：
+
+DONE                — 全部完成，提供证据
+DONE_WITH_CONCERNS  — 完成但有顾虑
+BLOCKED             — 无法继续
+NEEDS_CONTEXT       — 需要更多信息
+
+三次失败升级规则
+
+If you have attempted a task 3 times without success, STOP and escalate.
+
+防止 AI 陷入无限重试循环。
+
+Diff-based 测试选择
+
+E2E 测试每次约 $4（需要启动 Claude agent），所以 gstack 通过 touchfiles.ts 声明每个测试依赖的源文件，根据 git diff 只运行受影响的测试：
+
+// test/helpers/touchfiles.ts
+{
+  "qa-workflow": ["qa/SKILL.md.tmpl", "browse/src/server.ts"],
+  "ship-flow": ["ship/SKILL.md.tmpl", "scripts/resolvers/preamble.ts"]
+}
+
+总结：可以带走的设计原则
+
+从 gstack 的工程实践中，我提炼出以下几个对 Skill 开发者最有价值的设计原则：
+
+模板生成 > 手动同步：跨 skill 共享的内容用模板 + 构建步骤自动生成，不要复制粘贴
+
+被动检测 > 主动检查：升级检测嵌入每次 skill 调用，用户无感知但覆盖率 100%
+
+追加日志 > 复杂数据库：JSONL + 文件系统能覆盖绝大多数持久化需求，简单可靠
+
+渐进引导 > 一次配置：用 sentinel 文件控制引导步骤，每个只出现一次
+
+精确门控 > 全自动：明确定义"停下来等用户"和"自动继续"的边界
+
+置信度量化 > 模糊判断：每个 AI 判断附带置信度分数，低置信度自动降级
+
+时间衰减 > 手动清理：学习记录的置信度随时间衰减，过时知识自然消退
+
+禁止词表 > 风格指南：直接列出不准用的词比"请使用自然的语气"有效得多
+
+gstack - Claude Code 角色化技能集
+23+ 个角色化技能，将 Claude Code 从单一 AI 助手转变为虚拟工程团队。
+
+Garry TanGitHub
+EN前往
+
+相关阅读：
+
+gstack 概念篇 — gstack 是什么、解决什么问题
+
+gstack 实战篇 — 从安装到跑通完整工作流
+
+gstack 前端 Skill 篇 — 前端/UI 设计 Skill 全景与推荐工作流
+
+Claude Skills 概念篇 — 理解 Skills 的底层机制
+
+评论
+
+gstack 实战篇
+
+gstack 安装配置、完整命令参考、工作流演示和社区最佳实践
+gstack 前端 Skill 篇
+
+系统梳理 gstack 中 25+ 前端/UI 相关 Skill，推荐开发工作流，附真实测试命题
+
+目录
+
+引言1. SKILL.md 不是手写的——模板生成系统2. 升级机制——从检测到执行的完整链路第一层：版本检测第二层：Preamble 集成第三层：渐进提醒 + 自动升级3. 学习系统——让 Skill 越用越聪明存储自动采集自动加载置信度衰减管理界面4. Preamble 注入——Skill 的"中间件层"5. 渐进式引导——Sentinel 文件模式6. SKILL.md 结构设计——三层架构第一层：YAML Frontmatter第二层：共享 Preamble + 通用规则第三层：Skill 特有逻辑7. Prompt 工程技巧合集反谄媚规则禁止词表认知模式注入具体化标准置信度校准交互门控8. 状态管理——文件系统即数据库9. 跨 Skill 集成模式文件传递产物Review Readiness Dashboard前置依赖建议使用序列预测10. 其他值得注意的设计Hook 系统多平台适配完成状态协议三次失败升级规则Diff-based 测试选择总结：可以带走的设计原则
+
+拆解 gstack：Skill 开发者能学到什么 | Yu的赛博工位

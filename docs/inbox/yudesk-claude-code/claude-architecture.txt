@@ -1,0 +1,425 @@
+跳转到主要内容
+Yu的赛博工位
+
+笔记收录独立开发博客关于🇨🇳
+
+文档Claude Code 相关
+Claude Code 隐藏技巧
+
+系统架构全解析工具调用系统Worktree 指南Agent Teams 指南Claude Skills
+
+Claude Code Plugin
+
+Claude Code Subagent
+
+Agent 与工作流
+Agent 记忆系统
+
+Pi Agent
+
+规格驱动开发
+
+Ralph Wiggum
+
+GSD
+
+gstack
+
+Matt Pocock 的 Claude Code 技能集
+
+工程实践
+AI 时代的 TDD
+
+Tmux 入门
+
+Yu的赛博工位
+
+搜索⌘K
+笔记收录独立开发博客关于🇨🇳
+
+系统架构全解析
+
+下载
+
+Claude 系统架构全解析
+Copy page
+
+AI 辅助写的
+深入理解 Claude 系统中 MCP、Skills、Subagents、Hooks、Plugins 等组件的定位、设计意图与协同关系
+引言
+
+2025 年 9 月，Anthropic 以 $183B 估值完成 $13B 融资，成为全球第四大私营企业。其明星产品 Claude Code 自 2 月发布以来，已吸引 11.5 万活跃开发者，每周处理 1.95 亿行代码，用户增长 300%。
+
+更有趣的是，Anthropic CEO Dario Amodei 透露：90% 的 Claude Code 代码由它自己编写。
+
+凭什么？
+
+一个 AI 编程助手，如何做到"自己写自己"？它的架构设计有什么独特之处，让它能够如此高效地辅助——甚至替代——人类开发者？
+
+The key design principle behind Claude Code is that Claude needs the same tools that programmers use every day. By giving Claude access to the user's computer (via the terminal), it had what it needed to write code like programmers do.
+
+AnthropicBuilding agents with the Claude Agent SDK
+中文前往
+
+答案藏在 Claude 的模块化架构中：MCP 提供工具、Skills 教会用法、Subagents 并行执行、Hooks 确保可控——这些组件协同工作，让 Claude 具备了"像程序员一样工作"的能力。
+
+这篇文档将带你俯瞰这套架构的全貌——每个组件的定位、它们之间的协同关系、以及快速上手的配置示例。后续文章会深入拆解各个组件的细节。
+
+整体架构概览
+
+Claude 系统采用模块化架构设计，各组件按功能分类，互补协作而非层级依赖：
+
+Claude 系统模块化架构概览
+核心理解：这些组件是同级互补的扩展能力，而非层级依赖——你可以根据需求自由组合：
+
+你想要...使用...一句话定位连接外部数据源和服务MCP给 Claude 装上"手脚"，访问数据库、API、文件系统教 Claude 特定工作流Skills让 Claude "知道"某个领域怎么做事并行处理复杂任务Subagents把大任务拆成小任务，多个 Agent 同时干活快速触发重复操作Commands一键启动常用工作流，省去重复指令确保某些操作必须执行Hooks无论 Claude 怎么决策，这步必须跑
+
+核心运行时
+
+Agent SDK — 运行时引擎
+
+Agent SDK 是整个 Claude Agent 系统的运行时核心引擎，提供：
+
+主循环 (Main Loop)：Agent 的核心工作循环
+
+上下文管理：Token 预算、自动压缩（92% 使用率时触发）
+
+工具调度：决定使用哪个工具、如何执行
+
+权限系统：控制工具访问权限
+
+Agent 的核心工作模式是一个简单的反馈循环：
+
+收集上下文 → 执行操作 → 验证工作 → 重复
+
+The agent harness that powers Claude Code (the Claude Code SDK) can power many other types of agents too. To reflect this broader vision, we renamed the Claude Code SDK to the Claude Agent SDK.
+
+AnthropicBuilding agents with the Claude Agent SDK
+中文前往
+
+Built-in Tools — 核心工具
+
+Claude Agent 内置 20+ 核心工具，分为三类：
+
+类别工具说明读取Read, Glob, Grep文件读取、模式匹配、内容搜索操作Write, Edit, Bash文件写入、编辑、命令执行网络WebSearch, WebFetch网络搜索、网页抓取
+
+这些工具默认可用，无需额外配置。Claude 通过这些工具与计算机交互，就像程序员使用 IDE 一样。
+
+配置与上下文
+
+CLAUDE.md — 持久化上下文
+
+每次开始新对话，都要重复说明项目背景、编码规范、架构约定……CLAUDE.md 让这些信息一次配置、自动加载。
+
+CLAUDE.md 就像项目的 README for AI——告诉 Claude 这个项目的背景知识、工作方式和约定。
+
+层级覆盖
+
+Claude 按以下顺序加载 CLAUDE.md，越具体的优先级越高：
+
+Enterprise (最低)
+    ↓
+User (~/.claude/CLAUDE.md)
+    ↓
+Project (./CLAUDE.md)
+    ↓
+Module (./src/module/CLAUDE.md) (最高)
+
+内容建议
+
+CLAUDE.md 应包含以下核心信息：
+
+类别内容示例技术栈Next.js 14 + TypeScript, Tailwind CSS构建命令npm run dev, npm run build, npm run test代码规范命名约定、Lint 工具配置项目结构关键目录的用途说明
+
+关键原则：保持简洁。CLAUDE.md 每次对话都会加载，过长会浪费宝贵的 Token。
+
+打包分发
+
+Plugins — 可安装单元
+
+团队配置分散、难以共享和标准化。每个人都有自己的一套 Skills、Commands、Hooks……如何统一管理？
+
+Plugins 将 Skills + Commands + Subagents + Hooks + MCP 打包为可安装单元，实现一键分发、团队标准化。
+
+目录结构
+
+my-plugin/
+├── .claude-plugin/
+│   └── plugin.json     # 插件清单（必需）
+├── commands/           # Slash Commands
+├── agents/             # Subagents
+├── skills/             # Skills
+├── hooks/              # Hooks 配置
+├── .mcp.json           # MCP Server 配置
+└── README.md           # 说明文档
+
+配置示例
+
+// plugin.json
+{
+  "name": "frontend-toolkit",
+  "version": "1.0.0",
+  "description": "前端开发工具包",
+  "author": "Your Team"
+}
+
+# 安装方式
+claude plugin install github:your-org/your-plugin  # 从 GitHub
+claude plugin install /path/to/plugin              # 从本地
+
+相关资源
+
+资源说明claude-plugins-officialAnthropic 官方插件仓库wshobson/agents⭐ 24.3k，高质量 Agent 模板集合Claude Plugin Hub社区插件市场，可发现各类插件awesome-claude-code⭐ 19.3k，精选 Claude Code 资源列表
+
+扩展能力（互补模块）
+
+Claude 系统的扩展能力由多个互补模块组成，它们各司其职、协同工作：
+
+模块功能定位激活方式MCP连接外部数据和服务 (WHAT)配置后可用Skills程序性知识，教 Claude 怎么做 (HOW)自动匹配Subagents独立上下文，并行任务委派显式调用Commands重复性工作流手动 /cmdHooks确定性控制，事件驱动自动触发
+
+MCP — 外部连接
+
+设计理念
+
+Even the most sophisticated models are constrained by their isolation from data—trapped behind information silos and legacy systems.
+
+AnthropicIntroducing the Model Context Protocol
+中文前往
+
+传统方式下，每个外部数据源都需要自定义集成，导致 N×M 的集成地狱。MCP 提供标准化协议，实现一次接入、处处可用。
+
+MCP (Model Context Protocol) 被设计为 AI 应用的 USB-C 接口：
+
+特性说明开放标准2024 年 11 月发布，2025 年 12 月捐赠给 Linux 基金会行业采用OpenAI、Microsoft、Google、AWS 等已采用生态规模97M+ 月 SDK 下载量，数千个社区 Server
+
+架构模式
+
+┌─────────────────┐
+│   MCP Host      │  (Claude Desktop, IDE, AI 工具)
+│   (Main Agent)  │
+└────────┬────────┘
+         │ 1:N
+    ┌────┴────┬────────┬────────┐
+    │ Client  │ Client │ Client │  (协议客户端)
+    └────┬────┴────┬───┴────┬───┘
+         │         │        │
+    ┌────┴────┐ ┌──┴───┐ ┌─┴────┐
+    │ Server  │ │Server│ │Server│  (暴露特定能力)
+    │ GitHub  │ │  DB  │ │ Slack│
+    └─────────┘ └──────┘ └──────┘
+
+使用场景：连接数据库、集成第三方服务（GitHub、Slack、Notion）、访问私有 API、实时数据流处理。
+
+配置示例
+
+在项目根目录创建 .mcp.json：
+
+{
+  "mcpServers": {
+    "github": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github"],
+      "env": {
+        "GITHUB_TOKEN": "${GITHUB_TOKEN}"
+      }
+    }
+  }
+}
+
+Commands — 手动工作流
+
+Slash Commands 提供手动触发的重复性工作流。
+
+特性说明触发方式手动输入 /command-name存放位置.claude/commands/用途重复性工作流、标准化操作
+
+示例：创建 .claude/commands/review.md
+
+请对当前变更进行代码审查，重点关注：
+1. 代码风格和一致性
+2. 潜在的性能问题
+3. 安全漏洞
+4. 测试覆盖率
+
+然后输入 /review 即可触发。
+
+Hooks — 确定性控制
+
+Hooks 是确定性控制的核心——某些操作必须执行，不能依赖 LLM 的判断。
+
+类别事件触发时机工具PreToolUse工具执行前PostToolUse工具成功执行后PostToolUseFailure工具执行失败后PermissionRequest权限请求时会话SessionStart会话开始时SessionEnd会话结束时StopClaude 完成响应时子代理SubagentStart子代理启动时SubagentStop子代理停止时其他UserPromptSubmit用户提交 prompt 后Notification通知事件PreCompact上下文压缩前
+
+配置示例
+
+自动格式化 TypeScript 文件：
+
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "jq -r '.tool_input.file_path' | { read f; [[ $f == *.ts ]] && npx prettier --write \"$f\"; }"
+          }
+        ]
+      }
+    ]
+  }
+}
+
+实战：自主循环
+
+Ralph Wiggum 是 Anthropic 官方插件，利用 Stop hook 实现自主迭代循环：
+
+/ralph-loop "实现 TODO API，包含 CRUD 和测试" --max-iterations 20
+
+工作原理：Stop hook 拦截 Claude 的退出 → 重新注入原始 prompt → 继续迭代，直到任务完成或达到最大迭代次数。
+
+适用场景：需要多轮迭代的任务（测试通过、代码重构）、有自动验证手段的任务。
+
+Subagents — 任务委派与并行执行
+
+设计理念
+
+单一 Agent 面临的挑战：上下文窗口有限、无法并行、职责不清。Subagents 采用 Orchestrator-Worker 架构模式解决这些问题：
+
+Main Agent (Orchestrator)
+    ├── 分析用户请求
+    ├── 制定计划
+    ├── 分解任务
+    └── 生成专门化子代理
+         ↓
+    ┌────────┬────────┬────────┐
+    │ Sub 1  │ Sub 2  │ Sub 3  │  (Workers - 并行执行)
+    │ 代码   │ 测试   │ 文档   │
+    └────────┴────────┴────────┘
+         ↓
+    汇总结果 → 主代理综合输出
+
+核心特性
+
+特性说明上下文隔离每个 Subagent 独立上下文，避免污染任务专门化自定义系统提示定义专属角色工具权限控制可限制 Subagent 只能使用特定工具并行执行多个 Subagent 同时工作
+
+性能数据：多代理系统比单代理高出 90.2% 性能，并行化可削减研究时间 90%（Token 消耗约 15×，但复杂任务值得）。
+
+配置示例
+
+在 .claude/agents/ 创建 Markdown 文件：
+
+---
+name: Code Reviewer
+description: 专门进行代码审查的子代理
+tools:
+  - Read
+  - Grep
+  - Glob
+---
+
+你是一位资深代码审查专家。请重点关注：
+1. 代码质量和可维护性
+2. 潜在的 Bug 和边界情况
+3. 性能优化机会
+4. 安全漏洞
+
+Skills — 程序性知识
+
+设计理念
+
+Claude is powerful, but real work requires procedural knowledge and organizational context.
+
+AnthropicEquipping Agents for the Real World with Agent Skills
+中文前往
+
+Skills 是给 AI 的可重用工作手册——模块化的知识包，Claude 可以按需动态加载。核心设计原则是渐进式披露 (Progressive Disclosure)：
+
+📚 Skills 工作手册
+│
+├─ 📋 目录 ────────────── 【元数据层】启动时预加载 (~30-50 tokens)
+│   name: "weekly-report"
+│   description: "生成标准化周报"
+│
+├─ 📖 正文章节 ─────────── 【核心文档层】相关时加载 (~数百-数千 tokens)
+│   # Weekly Report Generator
+│   ## Instructions
+│   按以下结构生成周报...
+│
+└─ 📎 附录 ────────────── 【引用资源层】需要时加载
+    references/
+    ├── template.xlsx
+    └── examples/
+
+MCP vs Skills：MCP 给 Claude 访问工具的能力（WHAT），Skills 教 Claude 如何有效使用这些工具（HOW）。
+
+核心优势
+
+优势说明Token 高效元数据仅占 30-50 tokens，可同时启用数十个 Skills自动激活根据任务上下文自动匹配，无需手动触发可组合多个 Skills 自动协同工作可移植跨 Claude.ai、Claude Code、API 一致体验
+
+配置示例
+
+在 .claude/skills/ 创建目录：
+
+my-skill/
+├── SKILL.md          # 核心指令（必需）
+├── scripts/          # 可执行脚本（可选）
+└── references/       # 参考资料（可选）
+
+SKILL.md 核心结构：
+
+---
+name: code-review                        # Skill 名称
+description: 代码审查，检查质量和安全性    # 简短描述（用于自动匹配）
+---
+
+# Code Review Skill
+
+## Instructions
+[具体的步骤说明...]
+
+## Output Format
+[输出格式要求...]
+
+要点：frontmatter 中的 description 用于自动匹配，保持简洁准确。
+
+官方参考链接
+
+设计理念
+
+资源说明Building Effective AgentsAgent 架构纲领性文章Building agents with the Claude Agent SDKAgent SDK 工程实践Equipping Agents with Agent SkillsSkills 设计理念Introducing the Model Context ProtocolMCP 发布公告
+
+官方文档
+
+资源说明Skills explainedSkills 与其他组件对比Using CLAUDE.md FilesCLAUDE.md 使用指南Claude Code SubagentsSubagents 官方文档Claude Code HooksHooks 官方文档MCP DocumentationMCP 官方文档MCP SpecificationMCP 协议规范
+
+深度分析
+
+资源说明Understanding Claude Code's Full Stack包含架构图Claude Agent Skills: Deep DiveSkills 原理深入分析How Claude Code is builtClaude Code 构建内幕Claude Skills vs. MCPSkills 与 MCP 技术对比
+
+延伸阅读
+
+如果你想深入了解 Skills 的概念和实践，可以参考：
+
+Claude Skills 是什么 — Skills 核心原理详解
+
+Claude Skills 实战指南 — 动手创建你的第一个 Skill
+
+Claude Subagent 完全指南 — 子代理的使用和自定义
+
+GSD 深度解析 — 基于上下文工程的 AI 编程系统
+
+我的 Claude Code 最佳实践 — Claude Code 日常使用技巧
+
+评论
+
+进阶篇
+
+Claude Code 进阶技巧：终端通知、Hooks 进阶用法、插件生态、Agent Teams 多代理协作、提示词心法
+工具调用系统
+
+很多人把 Claude Code 理解成“模型加一堆工具”。真正值得学的是它如何把工具发现、权限、hooks、sandbox 和结果回流组织成一条可验证的 agent loop。
+
+目录
+
+引言整体架构概览核心运行时Agent SDK — 运行时引擎Built-in Tools — 核心工具配置与上下文CLAUDE.md — 持久化上下文层级覆盖内容建议打包分发Plugins — 可安装单元目录结构配置示例扩展能力（互补模块）MCP — 外部连接设计理念架构模式配置示例Commands — 手动工作流Hooks — 确定性控制配置示例实战：自主循环Subagents — 任务委派与并行执行设计理念核心特性配置示例Skills — 程序性知识设计理念核心优势配置示例官方参考链接延伸阅读
+
+Claude 系统架构全解析 | Yu的赛博工位

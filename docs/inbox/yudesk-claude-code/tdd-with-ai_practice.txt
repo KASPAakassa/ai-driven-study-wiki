@@ -1,0 +1,698 @@
+跳转到主要内容
+Yu的赛博工位
+
+笔记收录独立开发博客关于🇨🇳
+
+文档Claude Code 相关
+Claude Code 隐藏技巧
+
+系统架构全解析工具调用系统Worktree 指南Agent Teams 指南Claude Skills
+
+Claude Code Plugin
+
+Claude Code Subagent
+
+Agent 与工作流
+Agent 记忆系统
+
+Pi Agent
+
+规格驱动开发
+
+Ralph Wiggum
+
+GSD
+
+gstack
+
+Matt Pocock 的 Claude Code 技能集
+
+工程实践
+AI 时代的 TDD概念介绍实战指南
+
+Tmux 入门
+
+Yu的赛博工位
+
+搜索⌘K
+笔记收录独立开发博客关于🇨🇳
+
+实战指南
+
+AI 时代的 TDD
+
+下载
+
+AI 时代的 TDD：Codex 实战手册
+Copy page
+
+AI 辅助写的
+把 TDD 变成 Codex 里的可复制工作流：用 AGENTS.md 写项目纪律，用 skill 固化红绿重构，用 subagents 隔离阶段，用 hooks 检查测试 diff。
+先给一张地图
+
+概念篇 讲的是：AI 编程里，TDD 的价值不是“先写测试”这个仪式，而是先制造一个可验证的红灯，再让实现把它变绿。
+
+这篇讲怎么落地到 Codex。
+
+别一上来就问“我要配哪些文件”。更好的问题是：
+
+我怎么让 Codex 每次都按同一条 TDD 工作流行动？
+
+这条工作流可以拆成四层：
+
+层级你在做什么放在哪里适合什么时候
+L1
+写项目纪律
+AGENTS.md
+所有项目都该有
+
+L2
+固化流程
+.agents/skills/tdd-codex/SKILL.md
+反复用 TDD 做需求
+
+L3
+隔离阶段
+.codex/agents/*.toml
+复杂任务，怕测试和实现互相污染
+
+L4
+自动提醒
+.codex/hooks.json
+重要仓库，怕 AI 偷改测试
+
+最小可用版本是 L1 + L2。
+
+完整防线是 L1 + L2 + L3 + L4。
+
+一、先定义“完成”是什么
+
+如果没有完成标准，Codex 很容易把“写了代码”当成“做完了”。
+
+TDD 场景里，完成标准应该更具体。
+
+每一轮都要交付证据
+
+让 Codex 每轮都报告这六项：
+
+Behavior: 这一轮实现哪个行为
+Test: 测试文件和测试名
+Command: 跑了什么命令
+RED: 失败原因是否符合预期
+GREEN: 通过结果是什么
+REFACTOR: 是否重构，为什么
+
+这比一句“已完成”有用得多。
+
+它让你知道模型真的走过了红绿循环，而不是先写完实现再补一个看起来合理的测试。
+
+一轮只处理一个行为
+
+这条很关键。
+
+不要让 Codex 一次生成完整测试矩阵。那会变成“横向铺测试”：
+
+RED: test1, test2, test3, test4, test5
+GREEN: 一次写一个大实现
+
+你要的是纵向切片：
+
+RED test1 -> GREEN impl1 -> REFACTOR
+RED test2 -> GREEN impl2 -> REFACTOR
+RED test3 -> GREEN impl3 -> REFACTOR
+
+第一轮实现会改变你对问题的理解。不要把所有测试一次性写死。
+
+二、L1：把纪律写进 AGENTS.md
+
+AGENTS.md 是 Codex 进入项目时会读取的说明文件。
+
+OpenAI 官方文档说明，Codex 会先读取全局说明，再从项目根目录一路读到当前目录。每一层优先读取 AGENTS.override.md，否则读取 AGENTS.md。越靠近当前目录的说明越晚出现，因此优先级更高。默认合并上限是 32 KiB，所以这里不能写成长篇教程。
+
+它应该像项目交通规则
+
+AGENTS.md 不负责教会 Codex 什么是 TDD。它只负责写清楚：在这个项目里，什么行为不允许。
+
+可以直接放这段：
+
+# TDD Rules
+
+- For new behavior and bug fixes, use red/green TDD.
+- RED: write exactly one failing behavior test first.
+- Run the smallest relevant test command and confirm the failure is expected.
+- Do not edit production implementation during RED.
+- GREEN: write the minimum production code required to pass the current failing test.
+- Never modify, delete, skip, or weaken tests to make implementation pass.
+- REFACTOR only after tests are green.
+- Keep structural changes and behavior changes separate.
+- Report Behavior, Test, Command, RED, GREEN, and REFACTOR for each cycle.
+
+再补项目命令：
+
+# Verification
+
+- Use `pytest` or the smallest relevant pytest command for Python behavior tests.
+- Use `npm run types:check` only when this blog site's MDX or TypeScript changes.
+- Use the smallest targeted command during RED/GREEN loops.
+- If a command is slow, explain what targeted command was used first and what full command remains.
+
+它不应该写成百科全书
+
+坏的 AGENTS.md 会写满：
+
+TDD 历史
+
+所有测试哲学
+
+一大堆框架教程
+
+复杂 prompt 模板
+
+不同语言的完整规范
+
+这些东西会稀释真正重要的规则。
+
+我的建议是：AGENTS.md 只放常驻纪律。长流程放 skill。
+
+三、L2：把流程做成 Codex Skill
+
+AGENTS.md 解决“默认纪律”，skill 解决“完整流程”。
+
+当你经常对 Codex 说“按 TDD 做”，就应该把这句话升级成项目级 skill。
+
+目录结构
+
+放这里：
+
+.agents/
+  skills/
+    tdd-codex/
+      SKILL.md
+
+Codex 会从当前目录一路向上扫描 .agents/skills。仓库根目录下的 skill，适合放团队共同使用的工作流。
+
+最小可用 SKILL.md
+
+---
+name: tdd-codex
+description: Implementing or fixing maintainable code with Codex using strict red-green-refactor TDD. Use for new behavior, bug reproduction, behavior tests, or safe AI coding.
+---
+
+# TDD Codex Workflow
+
+Use one behavior slice per cycle.
+
+## Phase 0: Scope
+
+Identify one observable behavior.
+Name the public API, user flow, or integration boundary under test.
+Do not edit production code.
+
+## Phase 1: RED
+
+Write exactly one failing behavior test.
+Prefer public behavior over implementation details.
+Run the smallest relevant test command.
+Confirm the failure is expected.
+Stop and report:
+- Behavior
+- Test file
+- Command
+- Failure reason
+
+## Phase 2: GREEN
+
+Write the minimum production code to pass the current failing test.
+Never modify, delete, skip, or weaken tests to pass.
+Do not add speculative features or abstractions.
+Run the same test command.
+Report the passing result.
+
+## Phase 3: REFACTOR
+
+Only refactor after tests are green.
+If the code is already simple, skip.
+If refactoring, make one structural change at a time.
+Run tests after each refactor.
+Do not change behavior.
+
+## Cycle Report
+
+Return:
+- Behavior:
+- Test:
+- Command:
+- RED:
+- GREEN:
+- REFACTOR:
+- Next slice:
+
+调用方式
+
+以后你可以这样说：
+
+用 tdd-codex skill 做这个需求。
+每轮只处理一个行为。
+先 RED，确认失败后停下来，不要直接写实现。
+
+或者更短：
+
+用 tdd-codex。先写红灯，等我说 go。
+
+重点不是 prompt 多漂亮，而是它每次都能把 Codex 拉回同一条轨道。
+
+四、L3：用 Subagents 隔离红绿重构
+
+不是所有任务都需要 subagents。
+
+但当任务复杂、测试容易被实现污染、重构容易失控时，把 RED、GREEN、REFACTOR 拆给不同 agent 会更稳。
+
+什么时候值得拆
+
+适合拆：
+
+权限、计费、状态机
+
+多模块功能
+
+bug 很隐蔽，需要先写复现测试
+
+模型总是改测试凑绿
+
+你希望有人只负责 review 测试质量
+
+不适合拆：
+
+小工具函数
+
+文案改动
+
+纯视觉微调
+
+一次性脚本
+
+拆 agent 的成本是真实存在的。只在隔离收益大于沟通成本时使用。
+
+RED agent
+
+# .codex/agents/tdd-test-writer.toml
+name = "tdd_test_writer"
+description = "RED phase agent. Writes one failing behavior test and stops before implementation."
+sandbox_mode = "workspace-write"
+
+developer_instructions = """
+You own only the RED phase.
+Write exactly one behavior-focused test for the requested slice.
+Prefer public APIs and user-visible behavior over implementation details.
+Run the smallest relevant test command.
+Confirm the test fails for the expected reason.
+Do not edit production implementation.
+Do not add multiple tests at once.
+Return Behavior, Test, Command, and RED failure reason.
+"""
+
+GREEN agent
+
+# .codex/agents/tdd-implementer.toml
+name = "tdd_implementer"
+description = "GREEN phase agent. Implements the minimum production code to pass the current failing test."
+sandbox_mode = "workspace-write"
+
+developer_instructions = """
+You own only the GREEN phase.
+Read the failing test and relevant production code.
+Write the minimum implementation required to pass the current test.
+Never modify, delete, skip, or weaken tests to make them pass.
+Do not add speculative features, helpers, configuration, or abstractions.
+Run the relevant tests and return the command plus passing output.
+"""
+
+REFACTOR agent
+
+# .codex/agents/tdd-refactorer.toml
+name = "tdd_refactorer"
+description = "REFACTOR phase agent. Improves structure only after tests are green."
+sandbox_mode = "workspace-write"
+
+developer_instructions = """
+You own only the REFACTOR phase.
+Start by running the relevant tests to confirm the code is green.
+Look for duplication, unclear names, needless branching, or misplaced responsibility.
+Skip refactoring when the code is already simple.
+If you refactor, make one structural change at a time.
+Run tests after each refactor.
+Never change behavior in this phase.
+"""
+
+主会话怎么指挥
+
+按三阶段 TDD 做这个 slice：
+1. tdd_test_writer 只写一个失败测试，并确认 RED。
+2. 等我确认后，tdd_implementer 写最小实现，并确认 GREEN。
+3. tdd_refactorer 判断是否需要结构重构。
+不要批量铺测试。
+不要在 GREEN 阶段修改测试。
+
+这里的重点是隔离上下文。写测试的人尽量不要被实现细节影响；写实现的人不能随手动测试；重构的人不能引入新行为。
+
+五、L4：用 Hooks 盯住测试 diff
+
+如果只靠规则，模型仍然可能越界。
+
+最常见的越界就是：测试红了，模型为了变绿，顺手把测试改了。
+
+hooks 的价值不是“绝对安全”，而是把这种动作立刻暴露出来。
+
+启用 Codex hooks
+
+先在配置里打开 feature flag：
+
+# ~/.codex/config.toml 或 <repo>/.codex/config.toml
+[features]
+codex_hooks = true
+
+Codex 会在活动配置层旁边查找 hooks。常见位置：
+
+~/.codex/hooks.json
+
+~/.codex/config.toml
+
+<repo>/.codex/hooks.json
+
+<repo>/.codex/config.toml
+
+项目级建议先用 <repo>/.codex/hooks.json，因为它能跟着仓库走。
+
+hooks.json
+
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "apply_patch|Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$(git rev-parse --show-toplevel)/.codex/hooks/watch-test-edits.sh\"",
+            "timeout": 10,
+            "statusMessage": "Checking test file edits"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash|apply_patch|Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$(git rev-parse --show-toplevel)/.codex/hooks/run-fast-check.sh\"",
+            "timeout": 120,
+            "statusMessage": "Running fast checks"
+          }
+        ]
+      }
+    ]
+  }
+}
+
+检查测试文件是否被改
+
+# .codex/hooks/watch-test-edits.sh
+#!/usr/bin/env bash
+set -euo pipefail
+
+changed_tests="$(
+  git diff --name-only |
+    grep -E '(^|/)(__tests__|tests?)/|\.(test|spec)\.[cm]?[jt]sx?$|_test\.go$|test_.*\.py$' || true
+)"
+
+if [ -n "$changed_tests" ]; then
+  cat <<EOF
+{
+  "continue": false,
+  "stopReason": "Test files changed. Review before continuing.",
+  "systemMessage": "检测到测试文件被修改：\n$changed_tests\n\n测试文件可以改，但必须说明为什么改。先停下来确认：这是补充规格，还是为了凑绿而改测试？"
+}
+EOF
+fi
+
+跑快速检查
+
+# .codex/hooks/run-fast-check.sh
+#!/usr/bin/env bash
+set -euo pipefail
+
+root="$(git rev-parse --show-toplevel)"
+cd "$root"
+
+if [ -f pyproject.toml ] || [ -f pytest.ini ] || [ -d tests ]; then
+  pytest
+elif [ -f package.json ]; then
+  if npm run | grep -q "types:check"; then
+    npm run types:check
+  elif npm run | grep -q "check"; then
+    npm run check
+  fi
+elif [ -f go.mod ]; then
+  go test ./...
+fi
+
+不要神化 hooks
+
+hooks 是 guardrail，不是完整 enforcement boundary。
+
+它能提醒、能阻断常见路径，但不能替代 review、CI 和人的判断。尤其是测试确实需要修改时，正确做法不是永远禁止，而是要求模型解释：
+
+为什么要改测试？
+这是新需求、新边界，还是旧测试写错？
+生产实现有没有被同步验证？
+
+六、TDD-Guard 怎么看
+
+TDD-Guard 值得看，但不要把它当 Codex 的安装建议。
+
+它是 Claude Code plugin 路线，核心思想是阻止 AI 违反 TDD，尤其是阻止改测试凑绿。
+
+迁移到 Codex 时，可以借思想，不照搬路径。
+
+Claude Code 路线Codex 路线
+CLAUDE.md
+AGENTS.md
+
+.claude/agents/*.md
+.codex/agents/*.toml
+
+Claude plugin / TDD-Guard
+hooks + git diff 检查 + CI
+
+slash command
+skill 或 prompt
+
+Codex 侧更现实的组合是：
+
+AGENTS.md 写纪律
+skill 固化流程
+subagents 隔离角色
+hooks 检查测试 diff
+CI 做最后兜底
+
+这不是完全等价的强制边界，但对个人项目和多数团队项目已经够用。
+
+七、完整走查：slugify
+
+现在用一个小功能走一遍。
+
+需求：
+
+实现 slugify(text: string): string。
+把英文标题转成 URL slug。
+
+不要嫌这个例子小。TDD 就应该从小例子看清节奏。
+
+Step 0：先问边界，不写代码
+
+先让 Codex 别急着写：
+
+我想实现 slugify(text: string): string。
+先不要写代码。
+请先问我 5 个边界问题，覆盖大小写、空格、标点、unicode、空字符串。
+然后把确认后的规格写成 SPEC.md。
+
+规格可能是：
+
+# slugify SPEC
+
+- "Hello World" -> "hello-world"
+- trim leading/trailing spaces
+- collapse repeated spaces into one hyphen
+- remove punctuation
+- normalize "Café" -> "cafe"
+- empty input returns empty string
+
+Step 1：第一盏红灯
+
+读取 SPEC.md。
+只实现第一条行为："Hello World" -> "hello-world"。
+先 RED：只写一个失败测试，运行它，确认失败。
+不要写生产实现。
+
+理想输出：
+
+Behavior: basic title becomes lowercase hyphenated slug
+Test: tests/test_slugify.py
+Command: pytest tests/test_slugify.py -q
+RED: failed because slugify is not defined
+
+这时才可以继续。
+
+Step 2：最小变绿
+
+go
+
+Codex 写最小实现：
+
+def slugify(text: str) -> str:
+    return text.lower().replace(" ", "-")
+
+然后报告：
+
+GREEN: pytest tests/test_slugify.py -q passed
+REFACTOR: skipped, implementation is still simple
+Next slice: trim leading/trailing spaces
+
+Step 3：第二盏红灯
+
+继续下一条：去掉首尾空格。
+先 RED，只写一个测试。
+
+测试：
+
+def test_slugify_trims_spaces():
+    assert slugify("  Hello World  ") == "hello-world"
+
+如果当前实现输出 -hello-world-，红灯成立。
+
+然后 GREEN：
+
+def slugify(text: str) -> str:
+    return text.strip().lower().replace(" ", "-")
+
+Step 4：别急着抽象
+
+到这里很多 AI 会想抽一个 normalizeInput、removePunctuation、toAscii。
+
+先别急。
+
+TDD 的设计应该被测试压力推出来，不是被想象推出来。等你加到 unicode、标点、空字符串，结构压力真的出现，再重构。
+
+八、日常用法速查
+
+新功能
+
+用 TDD 实现这个需求。
+每轮只处理一个行为。
+先写一个失败测试并运行确认 RED。
+不要写生产实现，直到我说 go。
+
+修 bug
+
+先写一个能复现这个 bug 的失败测试。
+确认它因为这个 bug 失败后，再写最小修复。
+不要改测试来适配当前实现。
+
+复杂功能
+
+先不要写代码。
+请给出 TDD 分解计划：
+- 外圈集成测试是什么
+- 内圈每个行为 slice 是什么
+- 每轮用什么命令验证
+- 哪些地方不能 mock
+等我确认后再开始 RED。
+
+Review
+
+Review 这次改动，重点看：
+- 是否先有失败测试
+- 测试是否测行为而不是实现
+- 是否存在为了通过而弱化测试
+- 结构改动和行为改动是否混在一起
+- 是否缺少外圈集成测试
+
+九、最后的检查清单
+
+每次让 Codex 做 TDD，最后用这张表检查。
+
+问题合格标准
+真的先红了吗
+有失败命令和失败原因
+
+红得对吗
+失败原因对应目标行为缺失
+
+一轮只做一个行为吗
+没有批量铺测试
+
+GREEN 改测试了吗
+没有改测试凑绿
+
+测试测行为吗
+不依赖内部实现细节
+
+重构混行为了吗
+结构改动和行为改动分开
+
+有完整验证吗
+目标测试和必要全量检查都跑过
+
+如果这张表过不了，就不要急着合并。
+
+推荐资源
+
+Codex 的 AGENTS.md 项目说明
+Codex 官方说明：如何用全局、项目、子目录级 AGENTS.md 管理工程规则。
+
+OpenAIOpenAI Developers
+EN前往
+
+Codex Skills
+Codex 官方说明：如何把可重复工作流封装成 skills。
+
+OpenAIOpenAI Developers
+EN前往
+
+Codex Subagents
+Codex 官方说明：如何用自定义 agent 拆分复杂任务和隔离上下文。
+
+OpenAIOpenAI Developers
+EN前往
+
+Codex Hooks
+Codex 官方说明：如何在工具调用前后运行测试、检查和防护脚本。
+
+OpenAIOpenAI Developers
+EN前往
+
+Red Green Refactor is OP With Claude Code
+
+Matt Pocock 的短视频。标题保留原名，重点是 red/green/refactor 这套节奏。YouTube
+
+TDD-Guard：为 Claude Code 提供自动 TDD 强制
+Claude Code 插件路线的 TDD 强制工具。Codex 用户主要借鉴保护测试不被偷改的思想。
+
+nizosGitHub
+EN前往
+
+评论
+
+概念介绍
+
+AI 编程里为什么还需要 TDD。重点不是形式上的“先写测试”，而是先制造一个可验证的失败，再让实现从红变绿。
+Tmux 入门
+
+从零开始学习 Tmux 终端复用器：基础概念、常用命令、以及与 Claude Code 的深度集成
+
+目录
+
+先给一张地图一、先定义“完成”是什么每一轮都要交付证据一轮只处理一个行为二、L1：把纪律写进 AGENTS.md它应该像项目交通规则它不应该写成百科全书三、L2：把流程做成 Codex Skill目录结构最小可用 SKILL.md调用方式四、L3：用 Subagents 隔离红绿重构什么时候值得拆RED agentGREEN agentREFACTOR agent主会话怎么指挥五、L4：用 Hooks 盯住测试 diff启用 Codex hookshooks.json检查测试文件是否被改跑快速检查不要神化 hooks六、TDD-Guard 怎么看七、完整走查：slugifyStep 0：先问边界，不写代码Step 1：第一盏红灯Step 2：最小变绿Step 3：第二盏红灯Step 4：别急着抽象八、日常用法速查新功能修 bug复杂功能Review九、最后的检查清单推荐资源
+
+AI 时代的 TDD：Codex 实战手册 | Yu的赛博工位

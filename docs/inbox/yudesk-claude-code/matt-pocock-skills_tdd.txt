@@ -1,0 +1,323 @@
+跳转到主要内容
+Yu的赛博工位
+
+笔记收录独立开发博客关于🇨🇳
+
+文档Claude Code 相关
+Claude Code 隐藏技巧
+
+系统架构全解析工具调用系统Worktree 指南Agent Teams 指南Claude Skills
+
+Claude Code Plugin
+
+Claude Code Subagent
+
+Agent 与工作流
+Agent 记忆系统
+
+Pi Agent
+
+规格驱动开发
+
+Ralph Wiggum
+
+GSD
+
+gstack
+
+Matt Pocock 的 Claude Code 技能集概览初始化配置Grill MeBatch Grill MeGrill With DocsPRD 与 Issues诊断与分诊TDDZoom OutPrototype深化代码架构其他 Skills
+
+工程实践
+AI 时代的 TDD
+
+Tmux 入门
+
+Yu的赛博工位
+
+搜索⌘K
+笔记收录独立开发博客关于🇨🇳
+
+TDD
+
+Matt Pocock 的 Claude Code 技能集
+
+下载
+
+TDD：用红绿重构强迫 AI 走小步
+Copy page
+
+AI 辅助写的
+Matt Pocock 自称「最稳定提升 agent 输出质量的方法」。深入拆解他的 TDD skill 为什么坚持 vertical 而非 horizontal 红绿重构、怎么避免测试与实现耦合、以及 AI 时代 TDD 的新意义
+反馈速率就是你的速度上限。不要开过你的车头灯。
+
+David Thomas & Andrew Hunt《程序员修炼之道》
+EN前往
+
+失败模式：「AI 做对了东西，但跑不起来」
+
+Matt 演讲里的第三个失败模式：方向是对的，但 it doesn't work。
+
+最直接的修法是给 AI 装反馈基础设施：
+
+TypeScript（不用静态类型 is crazy）
+
+让 LLM 能访问浏览器自己看页面
+
+自动化测试
+
+但 Matt 观察到一件事：即使装了这些反馈，LLM 也用不好。它倾向于一次写 500 行，然后才想起来「噢我应该 type check 一下」。这就是 Pragmatic Programmer 里说的 outrunning your headlights——开得比车头灯能照到的还快，撞墙是早晚的事。
+
+"The rate of feedback is your speed limit, which means you should be testing as you go, taking small deliberate steps. And the AI by default is really not very good at that."
+
+要修这个问题，需要在工具层面强迫 AI 一步一停。Matt 的答案是 TDD——测试先行能强行制造检查点。
+
+经典理论：Kent Beck 的红绿重构
+
+TDD 的标准节奏是 Kent Beck 在 2003 年那本《Test-Driven Development: By Example》里定义的：
+
+RED：写一个失败的测试（描述要做的事）
+
+GREEN：写最小够用的代码让测试通过
+
+REFACTOR：在测试保护下改进代码结构
+
+每个循环极短——分钟级。每一步都有自动化检查（测试通过/失败）。
+
+Matt 直接照搬这个节奏，但他的 SKILL.md 里花了不少篇幅讲一个反模式——这才是核心。
+
+关键反模式：横向切片的红绿
+
+很多人以为 TDD 就是「先写所有测试，再写所有实现」。Matt 在 SKILL.md 里直接说这是错的：
+
+WRONG (horizontal slicing):
+  RED:   test1, test2, test3, test4, test5
+  GREEN: impl1, impl2, impl3, impl4, impl5
+
+RIGHT (vertical slicing via tracer bullets):
+  RED→GREEN: test1→impl1
+  RED→GREEN: test2→impl2
+  RED→GREEN: test3→impl3
+  ...
+
+为什么横向是错的？SKILL.md 给了三条理由：
+
+Tests written in bulk test imagined behavior, not actual behavior
+
+You end up testing the shape of things (data structures, function signatures) rather than user-facing behavior
+
+Tests become insensitive to real changes - they pass when behavior breaks, fail when behavior is fine
+
+人话：一口气写完所有测试是在测你脑子里的东西，不是真实代码。等你写到 impl3 才发现 test1 设计错了——但这时 test2/test3/test4 都耦合在错的设计上，回头改一发动全身。
+
+正确做法是一个测试一个实现，写完一对再开下一对。每对完成后你已经从这次实现里学到东西，下一对测试可以基于真实经验设计——而不是脑补。
+
+Skill 全文结构
+
+engineering/tdd/SKILL.md 是 Matt 写得最长的 skill 之一，因为 TDD 本身有很多 nuance。核心结构如下：
+
+哲学
+
+Core principle: Tests should verify behavior through public interfaces, not implementation details. Code can change entirely; tests shouldn't.
+
+Good tests are integration-style: they exercise real code paths through public APIs. They describe what the system does, not how it does it. A good test reads like a specification.
+
+Bad tests are coupled to implementation. They mock internal collaborators, test private methods, or verify through external means (like querying a database directly). The warning sign: your test breaks when you refactor, but behavior hasn't changed.
+
+记住一条诊断：重命名一个内部函数，测试就跪了——那这个测试在测实现而不是行为，是坏测试。
+
+工作流（带 checklist）
+
+1. Planning
+
+写代码前先和用户对齐：
+
+[ ] Confirm with user what interface changes are needed
+[ ] Confirm with user which behaviors to test (prioritize)
+[ ] Identify opportunities for deep modules (small interface, deep impl)
+[ ] Design interfaces for testability
+[ ] List the behaviors to test (not implementation steps)
+[ ] Get user approval on the plan
+
+关键问题：「What should the public interface look like? Which behaviors are most important to test?」
+
+"You can't test everything. Confirm with the user exactly which behaviors matter most. Focus testing effort on critical paths and complex logic, not every possible edge case."
+
+这条很反直觉。AI 默认会想穷举所有 edge case，但 Matt 强调优先级——不是所有行为都值得测，把火力集中到核心路径。
+
+2. Tracer Bullet
+
+写一个测试，验证一件事：
+
+RED:   Write test for first behavior → test fails
+GREEN: Write minimal code to pass → test passes
+
+这就是「曳光弹」——先打一发看看准星。Matt 强调这一发要 end-to-end——不是先写 schema 再写 API 再写 UI，而是切一条最薄但贯穿全栈的路径。
+
+3. Incremental Loop
+
+后面每个行为都重复 RED→GREEN：
+
+RED:   Write next test → fails
+GREEN: Minimal code to pass → passes
+
+规则：
+
+一次一个测试
+
+只写够通过当前测试的代码
+
+不要预判未来的测试
+
+测试聚焦于可观察行为
+
+「不要预判」这条特别重要。AI 会忍不住想「反正这个函数后面也要支持 X，顺便加上吧」——这就开始横向切片化了。
+
+4. Refactor
+
+测试都过之后，看重构机会：
+
+[ ] Extract duplication
+[ ] Deepen modules (move complexity behind simple interfaces)
+[ ] Apply SOLID principles where natural
+[ ] Consider what new code reveals about existing code
+[ ] Run tests after each refactor step
+
+Never refactor while RED. Get to GREEN first.
+
+红着重构 = 同时改测试和代码 = 你不知道是测试错还是代码错。先绿，再重构。
+
+Per-Cycle Checklist
+
+每个红绿循环结束 Matt 让 AI 自检：
+
+[ ] Test describes behavior, not implementation
+[ ] Test uses public interface only
+[ ] Test would survive internal refactor
+[ ] Code is minimal for this test
+[ ] No speculative features added
+
+这五条用来挑出坏测试和过度实现。AI 自查一遍能拦掉大部分常见错误。
+
+真实使用：从 issue 到 PR
+
+/tdd 在 Matt 的工作流里是接 /to-issues 的下一步。给定一个 vertical slice issue，流程是：
+
+你: 实现 issue #43
+    ↓
+/tdd
+    ↓
+Claude 读 issue acceptance criteria
+    ↓
+Claude 探索代码库 → 找到 CONTEXT.md → 用项目术语
+    ↓
+Planning 阶段:
+    - 列出准备改的接口
+    - 列出准备测的行为（按优先级排序）
+    - 让你点头
+    ↓
+Tracer Bullet:
+    - RED: 写第一个测试（基于 acceptance criteria 第 1 条）
+    - 跑测试，确认 fail
+    - GREEN: 写最小实现
+    - 跑测试，确认 pass
+    ↓
+Incremental Loop:
+    - 每个 acceptance criteria 一个 RED→GREEN
+    ↓
+Refactor:
+    - 看 deep module 提取机会
+    - 每次重构后跑全套测试
+    ↓
+PR
+
+每个红绿循环 AI 都会停下来给你一个状态——「test fails」/「test passes, here's the diff」。这些停顿就是 outrun headlights 的解药——AI 没机会一口气铺一千行了。
+
+关于 Mock：Matt 的强烈观点
+
+SKILL.md 里特别提到 mock 的危险——他还配了一份 mocking.md 单独讲。核心观点：
+
+"Bad tests... mock internal collaborators."
+
+mock 内部协作者 = 测试和实现 1:1 耦合 = 重构时测试集体跪。Matt 的偏好是 integration-style 测试——尽量用真实数据库（in-memory 或 testcontainers）、真实 HTTP（MSW）、真实文件系统（tmp dir）。只在真正昂贵或不稳定的边界（比如调用 OpenAI API）才 mock。
+
+这跟很多团队的现状反着——多数代码库 unit test 满天飞，mock 比真实代码还多。Matt 在演讲里有个判断：好代码库 = 容易测试的代码库。如果你必须 mock 一堆东西才能测，说明代码结构有问题，应该先改架构（去 /improve-codebase-architecture）。
+
+TDD 在 AI 时代的新意义
+
+Kent Beck 那本书 23 年前写的时候，TDD 的核心收益是「让人不写错代码」。在 AI 时代，TDD 多了一层意义：
+
+它是 AI 唯一能听懂的「成功标准」。
+
+Matt 在演讲后半段引用了 Karpathy 的金句：
+
+LLM 极擅长循环直到达成具体目标。不要告诉它做什么，给它成功标准然后看它跑。
+
+Andrej Karpathy同一条关于 AI 编程的推
+EN前往
+
+「成功标准」最好的形式就是测试——它是机器可验证、二值化、不会被狡辩的。给 AI 一个测试套件 + 「让它通过」，比给 AI 一段需求描述 + 「请实现」靠谱十倍。
+
+所以 /tdd 不只是质量保证手段——它是 agent loop 的输入接口。每个红绿循环都是一次完整的「输入 → 行动 → 反馈」，AI 在循环里学到这次实现的真实情况，下次循环更准。
+
+怎么装、怎么用
+
+npx skills@latest add mattpocock/skills
+
+勾选 tdd + setup-matt-pocock-skills。
+
+如果你现在主力用 Codex，就把安装产物承接到 .agents/skills/，并把项目级工作流、测试命令、issue tracker 规则写进 AGENTS.md。Matt 的 /tdd 精髓是红绿重构循环，不绑死在 Claude Code。
+
+调用方式：
+
+直接：/tdd —— 让它从当前 conversation context 推断要测什么
+
+接 issue：/tdd implement #43 —— 它会去 fetch issue 再开干
+
+修 bug：/tdd reproduce this bug then fix it —— 它会先写一个能复现 bug 的失败测试，再修
+
+注意事项
+
+不适合所有任务。一次性脚本、playground 探索代码、UI 微调——别用 TDD，会拖慢节奏。Matt 自己说 TDD 适合「有持久价值、需要被维护」的代码。
+
+测试基础设施先备好。如果项目还没装测试框架（Vitest / Jest / Playwright 等），先装好再用 /tdd，否则它会先帮你装，但那一步问得很多。
+
+不要让它自动加 e2e 测试。e2e 慢且脆，TDD 节奏要分钟级。/tdd 默认偏 integration test 不偏 e2e，但你可以明确告诉它「单元 + integration only，不要 e2e」。
+
+重构阶段最容易失控。AI 拿到 GREEN 状态后会兴奋地重构一堆——盯着，每次重构后跑测试。这部分是 AI 走偏的高发区。
+
+参考资源
+
+tdd Skill 源文件
+完整 TDD 哲学、横向切片反模式、完整工作流 checklist、每循环自检表。
+
+Matt PocockGitHub2026
+EN前往
+
+《测试驱动开发》by Kent Beck
+定义红绿重构节奏的原书。
+
+Kent BeckAmazon2003
+EN前往
+
+AI 编程时代的 TDD
+本站延伸阅读，讨论当 AI 负责实现时 TDD 概念会怎么变。
+
+Yu本站2026
+EN前往
+
+下一篇：Improve Codebase Architecture：把 shallow 重构成 deep modules——周期性维护，让 AI 长期能在你的代码库里跑得动。
+
+评论
+
+诊断与分诊
+
+拆解 Matt Pocock 的 /diagnose 和 /triage 两个工程 skill：一个负责用可重复反馈回路找出 bug 根因，一个负责把 issue 推进到 needs-info、ready-for-agent、ready-for-human 或 wontfix
+Zoom Out
+
+拆解 Matt Pocock 最短的工程 skill /zoom-out：它只做一件事，让 agent 从局部代码跳到更高一层，按项目领域语言说明相关模块、调用者和系统位置
+
+目录
+
+失败模式：「AI 做对了东西，但跑不起来」经典理论：Kent Beck 的红绿重构关键反模式：横向切片的红绿Skill 全文结构哲学工作流（带 checklist）1. Planning2. Tracer Bullet3. Incremental Loop4. RefactorPer-Cycle Checklist真实使用：从 issue 到 PR关于 Mock：Matt 的强烈观点TDD 在 AI 时代的新意义怎么装、怎么用注意事项参考资源
+
+TDD：用红绿重构强迫 AI 走小步 | Yu的赛博工位

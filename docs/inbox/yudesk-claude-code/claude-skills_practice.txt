@@ -1,0 +1,575 @@
+跳转到主要内容
+Yu的赛博工位
+
+笔记收录独立开发博客关于🇨🇳
+
+文档Claude Code 相关
+Claude Code 隐藏技巧
+
+系统架构全解析工具调用系统Worktree 指南Agent Teams 指南Claude Skills概念介绍实践指南Skill-Creator 解析
+
+Claude Code Plugin
+
+Claude Code Subagent
+
+Agent 与工作流
+Agent 记忆系统
+
+Pi Agent
+
+规格驱动开发
+
+Ralph Wiggum
+
+GSD
+
+gstack
+
+Matt Pocock 的 Claude Code 技能集
+
+工程实践
+AI 时代的 TDD
+
+Tmux 入门
+
+Yu的赛博工位
+
+搜索⌘K
+笔记收录独立开发博客关于🇨🇳
+
+实践指南
+
+Claude Skills
+
+下载
+
+Claude Skills 实践指南
+Copy page
+
+AI 辅助写的
+从零开始创建自定义 Skill：对比 MCP、Subagents 的区别，掌握启用、安装和创建 Skills 的最佳实践
+快速回顾
+
+在上一篇文章中，我们了解了 Skills 的核心概念：它是给 AI 助手的可重用工作手册，通过渐进式披露架构实现了极高的 token 效率，具备高效、可组合、可移植三大特点。本文将从实战角度出发，帮助你理解 Skills 与其他功能的区别，学会启用、安装和创建 Skills，掌握最佳实践并避开常见陷阱。
+
+功能对比
+
+Skills、Commands、Hooks 等功能的区别
+Claude 生态中有多种功能，初次接触可能会困惑它们之间的区别。下表可以帮助你快速区分：
+
+功能是什么最适合持久性
+Skills
+专业知识包
+重复性任务、标准化流程
+跨对话持久
+
+Prompts
+即时指令
+一次性请求
+仅限当前对话
+
+Projects
+知识库
+背景信息、项目文档
+项目工作区内
+
+MCP
+连接器
+外部数据、API 调用
+持续连接
+
+Subagents
+子代理
+任务委托、并行处理
+跨会话
+
+Skills vs MCP
+
+这是最常见的困惑。核心区别：MCP 将 Claude 连接到数据，Skills 教 Claude 如何处理数据。两者互补而非替代。
+
+维度SkillsMCP
+核心功能
+教 Claude 如何执行任务
+连接 Claude 到外部系统
+
+Token 消耗
+极低（数十个 token）
+较高（数千至数万 token）
+
+技术复杂度
+简单（Markdown + YAML）
+复杂（完整协议规范）
+
+典型场景
+品牌写作、报告生成、工作流程
+数据库查询、API 调用、云服务
+
+可移植性
+跨 Claude.ai/Code/API
+已被多家模型公司采用
+
+理解了这个区别，你就知道何时该用哪个了。需要查询数据库、调用 API、访问云服务时，用 MCP；需要遵循特定的写作风格、执行标准化流程、复用专业知识时，用 Skills。
+
+最佳实践是两者结合使用：用 MCP 连接你的 CRM 系统获取客户数据，用 Skills 定义如何分析这些数据并生成报告。
+
+Skills vs Subagents
+
+核心区别：Skills 让 Claude 更擅长某类任务；Subagents 让 Claude 把任务委托给独立的"专家员工"。
+
+维度SkillsSubagents
+核心功能
+提供专业知识和指令
+独立执行任务的子代理
+
+上下文
+注入主对话上下文
+拥有独立的上下文窗口
+
+适用场景
+让 Claude 更擅长某类任务
+复杂、多步骤的独立任务
+
+激活方式
+根据描述自动匹配
+手动调用或 Claude 自动委托
+
+可移植性
+跨 Claude.ai/Code/API
+仅限 Claude Code 和 Agent SDK
+
+形象地说，Skills 像培训材料——让 Claude 学会如何做某件事；Subagents 像专职员工——拥有自己的工位（上下文）和权限（工具），独立完成任务后汇报结果。
+
+两者可以组合使用：比如一个代码审查子代理可以加载语言特定的最佳实践 Skill，实现"专家 + 专业知识"的组合效果。根据 Anthropic 研究，多代理系统（Claude Opus 4 主代理 + Claude Sonnet 4 子代理）在内部评估中比单代理高出 90.2%。
+
+Skills vs 斜杠命令
+
+如果你用过 Claude Code，一定熟悉 /commit、/review 这样的斜杠命令。核心区别：Skills 根据上下文自动激活；斜杠命令需要手动输入触发。
+
+维度Skills斜杠命令 (Slash Commands)
+激活方式
+自动激活（根据上下文匹配）
+手动输入（如 /commit）
+
+触发条件
+Claude 根据 description 判断是否相关
+用户明确输入命令
+
+适用场景
+"始终在线"的能力增强
+明确的、可重复的操作
+
+用户感知
+无感知，自动生效
+需要记住命令名
+
+举例说明：当你输入 /commit，Claude 执行预定义的提交流程——这是斜杠命令；当你说"帮我写一份周报"，Claude 自动识别并加载周报生成 Skill，无需你输入任何命令——这是 Skills。
+
+简单记忆：斜杠命令是快捷键，需要你主动触发；Skills 是背景知识，Claude 自动判断何时使用。
+
+Skills vs Plugins
+
+Plugins 是 Claude Code 的扩展包机制。核心区别：Skills 是自动激活的能力扩展；Plugins 是打包分发的完整工作流配置。
+
+维度SkillsPlugins
+核心功能
+专业能力扩展
+打包分发工作流
+
+激活方式
+根据上下文自动激活
+安装后组件合并
+
+适用范围
+跨平台（Claude.ai/Code/API）
+仅限 Claude Code
+
+包含内容
+指令 + 脚本 + 资源
+斜杠命令 + hooks + skills
+
+分发机制
+单独文件夹
+通过 marketplace 安装
+
+关键理解：Plugins 可以包含 Skills（在 skills/ 目录下），是更大的打包单元。当你安装一个 Plugin 时，其中的 Skills 会自动激活，斜杠命令会出现在自动补全中，hooks 会与现有配置合并。
+
+简单来说：用 Skills 扩展 Claude 的能力，用 Plugins 在团队间分发标准化的工作流配置。
+
+实战教程
+
+方式一：启用内置 Skills
+
+这是最简单的入门方式。Anthropic 官方提供了一套实用的文档技能：
+
+技能功能
+Excel (xlsx)
+创建电子表格、分析数据、生成带图表的报告
+
+PowerPoint (pptx)
+创建演示文稿、编辑幻灯片、分析演示内容
+
+Word (docx)
+创建文档、编辑内容、格式化文本
+
+PDF (pdf)
+生成格式化的 PDF 文档和报告
+
+启用步骤：
+
+登录 Claude.ai
+
+点击右上角头像，进入 Settings
+
+找到 Capabilities 选项
+
+启用你需要的技能
+
+启用后可以直接测试："帮我创建一个 Q3 销售预算的 Excel 表格，包含月度明细和总计"。
+
+注意：需要 Pro、Max、Team 或 Enterprise 计划，并且需要启用代码执行功能。
+
+方式二：安装社区 Skills
+
+如果你使用 Claude Code，可以通过命令安装社区贡献的 Skills。
+
+通过插件市场安装：
+
+# 添加官方 Skills 仓库
+/plugin marketplace add anthropics/skills
+
+# 安装文档技能包
+/plugin install document-skills@anthropic-agent-skills
+
+# 安装示例技能包
+/plugin install example-skills@anthropic-agent-skills
+
+Skills 存储位置：
+
+位置路径说明
+个人 Skills
+~/.claude/skills/
+仅你自己可用
+
+项目 Skills
+.claude/skills/
+随 git 版本控制，团队共享
+
+方式三：创建自定义 Skill
+
+这才是 Skills 真正的威力所在——创建专属于你的工作流程。
+
+第一步：创建文件夹结构
+
+mkdir -p ~/.claude/skills/weekly-report
+cd ~/.claude/skills/weekly-report
+
+一个完整的 Skill 文件夹可能是这样的：
+
+weekly-report/
+├── SKILL.md          # 核心指令（必需）
+├── template.md       # 周报模板（可选）
+└── examples/         # 示例周报（可选）
+    ├── good-example.md
+    └── bad-example.md
+
+第二步：编写 SKILL.md
+
+SKILL.md 是整个 Skill 的核心。它由两部分组成：YAML frontmatter（元数据）和 Markdown 正文（详细指令）。
+
+必需元数据：
+
+字段要求说明
+name
+最多 64 字符
+技能的唯一标识名称
+
+description
+最多 200 字符
+告诉 Claude 何时使用此技能（非常重要！）
+
+可选元数据：
+
+字段说明
+dependencies
+所需软件包，如 python>=3.8, pandas>=1.5.0
+
+allowed-tools
+允许使用的工具列表
+
+model
+可选的模型覆盖
+
+一个完整的周报生成 Skill 示例：
+
+---
+name: weekly-report
+description: 根据本周工作内容生成标准化的周报，包含进展、问题和下周计划
+---
+
+# 周报生成助手
+
+## 使用场景
+当用户需要生成周报、工作总结或进度汇报时，使用此技能。
+
+## 输出格式
+请按以下结构生成周报：
+
+### 本周完成
+- 列出已完成的主要工作项
+- 每项包含简短说明和成果
+
+### 进行中
+- 列出正在进行的工作
+- 标注当前进度和预期完成时间
+
+### 遇到的问题
+- 列出阻碍进展的问题
+- 如果有，说明需要的支持
+
+### 下周计划
+- 列出下周的主要任务
+- 按优先级排序
+
+## 风格要求
+- 使用简洁的表达
+- 避免过于技术化的术语
+- 突出成果和影响
+
+## 示例
+
+**输入**：这周完成了用户登录功能，修复了 3 个 bug，参加了产品评审。
+
+**输出**：
+### 本周完成
+- 用户登录功能开发：完成前后端联调，支持邮箱和手机号登录
+- Bug 修复：解决了 3 个高优先级问题，提升系统稳定性
+
+### 进行中
+- （无）
+
+### 遇到的问题
+- （无）
+
+### 下周计划
+- 开始用户注册功能开发
+- 编写单元测试用例
+
+第三步：测试
+
+在 Claude 中测试："帮我生成本周的周报。这周我完成了用户登录功能的开发，修复了 3 个 bug，还参加了两次产品评审会议。"
+
+使用 Skill Creator
+
+如果你不想从头写 SKILL.md，Claude 内置了一个 skill-creator 技能，可以交互式引导你创建：
+
+Help me create a skill for [your workflow]
+
+Claude 会通过一系列问题帮你梳理需求，然后生成 SKILL.md 的初稿。
+
+技术原理
+
+Skills 作为元工具系统
+
+Skills 本质上是一个元工具系统——它不直接执行代码，而是将专门指令注入对话上下文，改变 Claude 的推理方式。
+
+当你触发一个 Skill 时，发生了两件事：
+
+元数据消息：一个可见的状态指示器，显示正在加载哪个 Skill
+
+技能提示：完整的 SKILL.md 指令发送给 Claude，但对用户隐藏
+
+发现与选择机制
+
+Claude 如何知道该调用哪个 Skill？答案是：完全依靠语言理解。
+
+所有已启用 Skills 的 name 和 description 会被格式化为一个动态列表，写入系统提示。当你发送消息时，Claude 使用原生语言理解能力匹配你的意图，决定是否调用某个 Skill。
+
+这就是为什么 description 字段如此重要——它是 Claude 判断的唯一依据。没有复杂的算法路由，决策完全在 Claude 的推理过程中完成。
+
+最佳实践
+
+经过大量实践，社区总结出了创建 Skills 的四条黄金法则：
+
+1. 保持专注
+
+一个 Skill 应该只做一件事。多个专注的 Skills 远比一个大而全的 Skill 好用，这样不仅更容易维护，也更容易组合使用。
+
+2. 清晰描述
+
+description 字段决定了 Claude 何时调用你的 Skill，务必写清楚适用场景。"根据销售数据生成季度分析报告"是好的描述，"处理数据"则太过笼统。
+
+3. 提供示例
+
+在 SKILL.md 中包含输入输出示例能大幅提升输出的稳定性，尤其是对于有特定格式要求的任务。
+
+4. 从简单开始
+
+先用纯 Markdown 写基本指令，验证效果后再考虑添加脚本，逐步增加复杂度。
+
+常见问题排查
+
+问题可能原因解决方案
+Skill 没有被触发
+description 不够准确
+改写为更具体的使用场景描述
+
+Skill 没有被触发
+Skill 未正确安装
+检查文件路径和命名
+
+输出不稳定
+缺少示例
+添加更多输入输出示例
+
+输出不稳定
+指令太模糊
+添加约束条件和格式要求
+
+加载太慢
+文件太大
+将大文件移到 references 子目录
+
+安全注意事项
+
+Skills 可以执行代码，因此安全性非常重要：
+
+来源可信：只使用来自可信渠道的 Skills
+
+审查脚本：安装前检查 Skills 中的脚本代码
+
+保护敏感信息：不要在 Skills 中硬编码 API 密钥或密码
+
+权限管理：团队使用时，注意 Skills 的共享范围
+
+当前限制
+
+作为一项新兴功能，Skills 目前存在一些限制：
+
+限制说明
+仅限 Anthropic 生态
+✅ 已解决 - 见下方说明
+
+缺乏审核机制
+暂无内置的审查或审核工作流
+
+学习曲线
+团队需要调整工作流并建立版本管理流程
+
+新兴阶段
+生态系统仍在发展中
+
+🎉 重大更新（2025年12月18日）：Anthropic 正式将 Agent Skills 作为开放标准发布。规范和参考 SDK 已在 agentskills.io 公开。
+
+已采用的公司/产品：
+
+Microsoft：VS Code、GitHub 已集成
+
+OpenAI：ChatGPT、Codex CLI 采用相同架构
+
+编程工具：Cursor、Goose、Amp、OpenCode
+
+合作伙伴 Skills：Atlassian、Figma、Canva、Stripe、Notion、Zapier
+
+同时，Anthropic、OpenAI 和 Block 共同创立了 Agentic AI Foundation（由 Linux Foundation 托管），Google、Microsoft、AWS 也已加入。这意味着 Skills 正在从单一厂商功能演变为行业标准，为 Claude Code 编写的 Skills 可以与 OpenAI Codex CLI 互操作。
+
+参考来源：
+
+Anthropic makes agent Skills an open standard - SiliconANGLE
+
+OpenAI Adds 'Skills' Framework - WinBuzzer
+
+学习资源
+
+官方资源
+
+资源链接说明
+Skills GitHub 仓库
+anthropics/skills
+官方示例，22k+ Stars
+
+Claude Code 文档
+code.claude.com/docs
+Skills 使用指南
+
+帮助中心
+support.claude.com
+常见问题解答
+
+技术博客
+Anthropic Engineering
+技术原理深度解析
+
+API 快速入门
+docs.claude.com
+开发者集成指南
+
+Agent Skills 开放标准
+agentskills.io
+官方规范和 SDK
+
+社区精选
+
+资源链接说明
+awesome-claude-skills
+VoltAgent/awesome-claude-skills
+Skills 精选合集
+
+Claude Command Suite
+qdhenry/Claude-Command-Suite
+148+ 斜杠命令，54 个 AI 代理
+
+Office Skills
+tfriedel/claude-office-skills
+办公文档创建编辑技能
+
+推荐阅读
+
+文章作者
+Claude Skills are awesome, maybe a bigger deal than MCP
+Simon Willison
+
+Claude Agent Skills: A First Principles Deep Dive
+Lee Han Chung
+
+Skills explained: How Skills compares to prompts, Projects, MCP, and subagents
+Anthropic 官方
+
+Understanding Claude Code: Skills vs Commands vs Subagents vs Plugins
+Young Leaders
+
+展望
+
+Skills 的出现代表了 AI 工具发展的一个重要方向——让 AI 不仅能够执行任务，还能够学习和记忆特定的工作方式。Simon Willison 预测 Skills 将带来 AI 工具领域的"寒武纪大爆发"，这个判断并非夸张。
+
+随着越来越多的开发者和团队开始构建和分享 Skills，我们可能会看到：
+
+专业化 Skills 市场：各行各业的专家将知识打包成可复用的 Skills
+
+Skills 与 MCP 深度融合：形成完整的端到端工作流
+
+企业级 Skills 平台：团队协作、版本管理、权限控制
+
+现在正是入场的好时机。立即可做的是登录 Claude.ai 启用文档技能；这周可以尝试安装一个社区 Skill，创建你的第一个简单 Skill；长期来看，识别团队中的重复性工作，逐步构建专属的技能库，将是提升效率的有效途径。
+
+延伸阅读
+
+《Claude 系统架构全解析》— Skills 在整个 Claude 系统中的定位
+
+《Claude Subagent 完全指南》— 深入了解 Subagent 机制
+
+《我的 Claude Code 最佳实践》— Claude Code 日常使用技巧
+
+评论
+
+概念介绍
+
+深入理解 Claude Skills 的核心原理：可重用 AI 工作手册如何通过渐进式披露实现 Token 效率与可组合性
+Skill-Creator 解析
+
+深入解析 Anthropic 官方「元技能」Skill-Creator——如何系统性地创建、测试、评估和优化 Claude Code 技能，将技能开发从直觉驱动转向数据驱动
+
+目录
+
+快速回顾功能对比Skills vs MCPSkills vs SubagentsSkills vs 斜杠命令Skills vs Plugins实战教程方式一：启用内置 Skills方式二：安装社区 Skills方式三：创建自定义 Skill使用 Skill Creator技术原理Skills 作为元工具系统发现与选择机制最佳实践常见问题排查安全注意事项当前限制学习资源官方资源社区精选推荐阅读展望延伸阅读
+
+Claude Skills 实践指南 | Yu的赛博工位

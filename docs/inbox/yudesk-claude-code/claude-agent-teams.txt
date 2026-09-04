@@ -1,0 +1,514 @@
+跳转到主要内容
+Yu的赛博工位
+
+笔记收录独立开发博客关于🇨🇳
+
+文档Claude Code 相关
+Claude Code 隐藏技巧
+
+系统架构全解析工具调用系统Worktree 指南Agent Teams 指南Claude Skills
+
+Claude Code Plugin
+
+Claude Code Subagent
+
+Agent 与工作流
+Agent 记忆系统
+
+Pi Agent
+
+规格驱动开发
+
+Ralph Wiggum
+
+GSD
+
+gstack
+
+Matt Pocock 的 Claude Code 技能集
+
+工程实践
+AI 时代的 TDD
+
+Tmux 入门
+
+Yu的赛博工位
+
+搜索⌘K
+笔记收录独立开发博客关于🇨🇳
+
+Agent Teams 指南
+
+下载
+
+Claude Agent Teams 完全指南
+Copy page
+
+AI 辅助写的
+掌握 Claude Code 的 Agent Teams 功能：如何协调多个 Claude 实例组成团队，实现真正的多智能体协作开发
+引言
+
+To stress test it, we tasked 16 agents with writing a Rust-based C compiler, from scratch, capable of compiling the Linux kernel.
+
+Anthropic EngineeringBuilding a C compiler with a team of parallel Claudes
+中文前往
+
+如果你用过 Claude Code 的 Subagent，可能会觉得并行开发已经足够强大了。但 Subagent 有个限制：它们只能向主 Agent 汇报结果，无法相互交流。
+
+Agent Teams 彻底改变了这一点。想象一下：一个 Agent 负责安全审查，另一个负责性能优化，第三个负责测试覆盖——它们不仅能并行工作，还能直接对话、相互挑战、达成共识。这就是 Agent Teams 的核心价值。
+
+理解 Agent Teams
+
+Agent Teams
+Claude Code 的实验性功能，允许多个 Claude 实例组成团队协作。一个实例作为 Team Lead 负责协调，其他实例作为 Teammates 独立工作，它们共享任务列表并可以直接相互通信。
+
+来源: Claude Code Documentation前往
+
+Agent Teams 的架构很像一个真实的开发团队：
+
+┌─────────────────────────────────────────────────────────┐
+│                      你（用户）                          │
+└─────────────────────────────────────────────────────────┘
+                           │
+                           ▼
+┌─────────────────────────────────────────────────────────┐
+│                    Team Lead                             │
+│           （主 Claude 实例，负责协调）                    │
+└─────────────────────────────────────────────────────────┘
+         │              │              │
+         ▼              ▼              ▼
+┌─────────────┐  ┌─────────────┐  ┌─────────────┐
+│ Teammate 1  │  │ Teammate 2  │  │ Teammate 3  │
+│  安全审查    │◄─►│  性能优化    │◄─►│  测试覆盖    │
+└─────────────┘  └─────────────┘  └─────────────┘
+         │              │              │
+         └──────────────┼──────────────┘
+                        ▼
+              ┌─────────────────┐
+              │   共享任务列表    │
+              └─────────────────┘
+
+与 Subagent 的区别
+
+特性SubagentAgent Teams上下文独立上下文，结果返回主 Agent独立上下文，完全独立运行通信方式只能向主 Agent 汇报Teammates 之间可以直接通信任务协调主 Agent 管理所有工作共享任务列表，自行协调适用场景只需要结果的聚焦任务需要讨论和协作的复杂工作Token 成本较低：结果摘要返回主上下文较高：每个 Teammate 都是独立实例
+
+简单来说：Subagent 是你派出去执行任务的承包商，Agent Teams 是坐在同一个房间里协作的项目团队。
+
+为什么 Agent Teams 有效
+
+LLMs perform worse as context expands. Adding unrelated information to a context window degrades performance. Swarms solve this by giving each agent narrow scope and clean context.
+
+Addy OsmaniClaude Code Swarms
+中文前往
+
+核心洞察：专业化带来专注。
+
+单个 Agent 处理复杂多步骤任务时，上下文会不断膨胀，经常需要 /clear 重置。Agent Teams 让每个 Teammate 保持狭窄的专注领域，上下文保持干净，性能更稳定。
+
+启用 Agent Teams
+
+Agent Teams 目前是实验性功能，默认关闭。需要手动启用：
+
+方式一：环境变量
+
+export CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1
+
+方式二：settings.json（推荐，永久生效）
+
+{
+  "env": {
+    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
+  }
+}
+
+核心用法
+
+创建第一个 Agent Team
+
+启用后，只需用自然语言告诉 Claude 创建团队：
+
+创建一个 agent team 来审查 PR #142。
+生成三个审查者：
+- 一个专注安全问题
+- 一个检查性能影响
+- 一个验证测试覆盖率
+让他们各自审查并汇报发现。
+
+关键词提示：使用 "create an agent team" 或 "spawn an agent team"。如果只说 "spawn agents"，可能会混淆 Subagent 和 Agent Teams。
+
+显示模式
+
+Agent Teams 支持两种显示模式：
+
+模式说明要求In-process所有 Teammates 在主终端运行无特殊要求Split panes每个 Teammate 独立窗格需要 tmux 或 iTerm2
+
+默认是 auto：如果在 tmux 中运行则使用 split panes，否则用 in-process。
+
+配置显示模式：
+
+{
+  "teammateMode": "in-process"
+}
+
+单次会话指定：
+
+claude --teammate-mode in-process
+
+常用快捷键
+
+操作快捷键在 Teammates 间切换Shift+Down返回上一个 TeammateShift+Up切换任务列表显示Ctrl+T中断当前 TeammateEscape启用 Delegate ModeShift+Tab进入 Teammate 会话Enter
+
+Delegate Mode（重要）
+
+Enable delegate mode (Shift+Tab) as soon as you start a team. Without delegate mode, the lead often tries to do everything itself instead of delegating.
+
+Claude Code Best PracticesAgent Teams Best Practices
+中文前往
+
+Delegate Mode 是 Agent Teams 最重要的功能之一：
+
+模式Lead 行为普通模式Lead 可能自己实现任务、写代码Delegate ModeLead 只能协调，不能写代码、运行测试
+
+为什么需要 Delegate Mode：
+
+没有这个限制，Lead 经常会"抢活干"——明明有三个 Teammates 等着工作，Lead 却自己开始写代码。开启 Delegate Mode 后，Lead 被强制成为纯粹的项目经理，只能管理任务、与 Teammates 沟通、审查输出。
+
+# 启动团队后立即按 Shift+Tab 启用
+
+实战案例
+
+案例一：并行代码审查
+
+单个审查者容易在某类问题上陷入深挖。将审查维度拆分成独立领域，安全、性能、测试覆盖都能得到同等关注：
+
+创建 agent team 审查这个 PR。生成三个审查者：
+- 安全审查者：检查认证、授权、注入漏洞
+- 性能审查者：分析算法复杂度、数据库查询、缓存策略
+- 测试审查者：验证测试覆盖率、边界条件、错误处理
+
+让他们各自审查后，相互讨论发现的问题。
+
+案例二：竞争性假设调试
+
+当根本原因不明时，单个 Agent 倾向于找到一个看似合理的解释就停止。让 Teammates 相互挑战可以避免这个问题：
+
+用户反馈应用在发送一条消息后就退出了，而不是保持连接。
+
+生成 5 个 agent teammates 调查不同的假设。让他们相互讨论，
+尝试反驳彼此的理论，像科学辩论一样。把达成共识的发现
+更新到调查报告中。
+
+关键机制：辩论结构。多个独立调查者积极尝试推翻彼此的理论，最终存活下来的假设更可能是真正的根本原因。
+
+案例三：内容批量生产
+
+这是非技术任务的典型应用——将一个输入转化为多个输出：
+
+创建 agent team 将这个视频脚本转化为四个平台的内容：
+- LinkedIn 文章作者
+- Twitter 线程作者
+- Newsletter 作者
+- 博客文章作者
+
+脚本位置：/content/scripts/video-20.md
+
+每个 Teammate 独立创作，但保持内容一致性。
+
+案例四：QA 质量检查集群
+
+一个博客网站的质量检查，部署 5 个 Agent 并行测试不同方面：
+
+创建 agent team 对博客进行全面质量检查：
+- Agent 1：核心页面测试（首页、关于页、联系页）
+- Agent 2：文章页面测试（渲染、导航、SEO 元数据）
+- Agent 3：链接检查（内部链接、外部链接、死链）
+- Agent 4：SEO 验证（标题、描述、结构化数据）
+- Agent 5：可访问性测试（ARIA 标签、对比度、键盘导航）
+
+生成按优先级排序的问题报告。
+
+效果：几分钟内完成了原本需要人工顺序执行的全面检查，每个 Agent 专注自己的领域，最后汇总成优先级排序的问题列表。
+
+案例五：多轮讨论模式
+
+一个有用的提示词模式——让 Teammates 像开会一样讨论：
+
+使用 Agent Teams 创建 4 个 teammates 讨论 [技术决策]，
+进行 3 轮讨论。让 teammates 在每轮中相互交流。
+其中一个 teammate 专门负责 Red Team 视角，提出批评意见。
+
+这种模式特别适合架构决策、技术选型等需要多角度权衡的场景。
+
+案例六：C 编译器项目
+
+Anthropic 用 16 个 Agent 从零开始构建了一个能编译 Linux 内核的 C 编译器：
+
+指标数据Agent 数量16 个并行实例会话数~2,000 个 Claude Code 会话成本~$20,000代码行数100,000 行Token 用量20 亿输入 + 1.4 亿输出
+
+最终产出：一个能在 x86、ARM、RISC-V 上构建可启动 Linux 6.9 的 Rust 编译器。
+
+团队管理
+
+指定 Teammates 和模型
+
+Claude 会根据任务自动决定生成多少 Teammates，你也可以明确指定：
+
+创建 4 个 teammates 并行重构这些模块。
+每个 teammate 使用 Sonnet 模型。
+
+要求计划审批
+
+对于复杂或高风险任务，可以要求 Teammates 在执行前先制定计划：
+
+生成一个架构师 teammate 来重构认证模块。
+在他们做任何更改之前，要求计划审批。
+
+Teammate 完成计划后会发送审批请求给 Lead。Lead 审核后可以批准或退回修改意见。
+
+直接与 Teammates 对话
+
+每个 Teammate 都是完整的 Claude Code 会话。你可以直接发消息给任何 Teammate：
+
+In-process 模式：用 Shift+Down 切换，然后输入消息
+
+Split-pane 模式：直接点击对应窗格
+
+关闭 Teammates
+
+请安全审查 teammate 关闭
+
+Lead 会发送关闭请求，Teammate 可以批准或拒绝（并解释原因）。
+
+清理团队
+
+完成后，让 Lead 清理资源：
+
+清理团队
+
+重要：始终通过 Lead 清理。不要让 Teammates 执行清理，可能导致资源状态不一致。
+
+最佳实践
+
+团队规模控制
+
+Start with 3-5 teammates for most workflows. This balances parallel work with manageable coordination.
+
+Claude Code DocumentationAgent Teams Best Practices
+中文前往
+
+规模建议：
+
+团队大小适用场景3 个简单的多视角审查4-5 个标准的功能开发或重构6+ 个大规模迁移或复杂架构任务
+
+经验法则：每个 Teammate 分配 5-6 个任务比较合适。如果有 15 个独立任务，3 个 Teammates 是不错的起点。
+
+任务粒度
+
+太小：协调开销超过收益
+
+太大：Teammates 工作太久没有检查点，浪费风险增加
+
+刚好：独立完整、产出清晰的工作单元（一个函数、一个测试文件、一份审查报告）
+
+避免文件冲突
+
+两个 Teammates 编辑同一文件会导致覆盖。拆分工作时确保每个 Teammate 负责不同的文件集：
+
+Teammate 1：负责 src/auth/ 目录
+Teammate 2：负责 src/api/ 目录
+Teammate 3：负责 src/utils/ 目录
+
+监控和引导
+
+定期检查 Teammates 进度，及时纠正不合适的方向。让团队无人监管运行太久会增加浪费风险。
+
+如果 Lead 开始自己实现任务而不是等待 Teammates：
+
+等待你的 teammates 完成任务后再继续
+
+给足上下文
+
+Teammates 会自动加载项目上下文（CLAUDE.md、MCP servers、skills），但不会继承 Lead 的对话历史。在生成时提供足够的任务细节：
+
+生成一个安全审查 teammate，提示如下：
+"审查 src/auth/ 目录的认证模块安全漏洞。
+重点关注 token 处理、会话管理、输入验证。
+应用使用 JWT token 存储在 httpOnly cookies 中。
+报告发现时附带严重性评级。"
+
+自报告验证模式
+
+在任务描述中包含明确的验证标准，确保 Teammates 在完成后自我检查：
+
+在任务完成时，向 Lead 报告：
+1. 你检查了哪些文件
+2. 发现了什么问题
+3. 你做了什么修改
+4. 验证标准（测试通过、lint 无警告等）是否满足
+
+这种模式减少了 Lead 的验证工作量，同时确保任务真正完成而非"看起来完成"。
+
+高级技巧
+
+使用 Hooks 强制质量门禁
+
+通过 Hooks 在 Teammates 完成工作时强制执行规则：
+
+{
+  "hooks": {
+    "TeammateIdle": [
+      {
+        "command": "your-validation-script.sh"
+      }
+    ],
+    "TaskCompleted": [
+      {
+        "command": "your-quality-check.sh"
+      }
+    ]
+  }
+}
+
+TeammateIdle：Teammate 即将空闲时运行。返回 exit code 2 可以发送反馈并让 Teammate 继续工作
+
+TaskCompleted：任务标记完成时运行。返回 exit code 2 可以阻止完成并发送反馈
+
+预审批权限
+
+Teammate 的权限请求会冒泡到 Lead，可能造成频繁中断。在生成前预先批准常见操作：
+
+{
+  "permissions": {
+    "allow": [
+      "Read(*)",
+      "Write(src/**)",
+      "Bash(npm test)"
+    ]
+  }
+}
+
+与 Worktree 结合
+
+Agent Teams 可以和 Worktree 配合使用，每个 Teammate 在自己的 worktree 中工作：
+
+创建 agent team，每个 teammate 在独立的 worktree 中工作，
+避免文件冲突。
+
+第三方编排工具
+
+除了原生 Agent Teams，社区也开发了一些编排工具：
+
+工具说明Gas Town管理多个并行 Claude 会话的工具Multiclaude在多个终端窗口中运行 Claude 实例
+
+这些工具在 Agent Teams 实验性功能之外提供了替代方案，但需要更多手动配置。如果原生 Agent Teams 满足需求，建议优先使用官方功能。
+
+当前限制
+
+Agent Teams 仍是实验性功能，了解限制很重要：
+
+限制说明无法恢复 in-process teammates/resume 和 /rewind 不会恢复 in-process teammates任务状态可能滞后Teammates 有时忘记标记任务完成关闭可能较慢Teammates 会完成当前请求后才关闭每会话一个团队Lead 一次只能管理一个团队无嵌套团队Teammates 不能生成自己的团队Lead 固定创建团队的会话就是 Lead，无法转移Split panes 需要 tmux/iTerm2不支持 VS Code 终端、Windows Terminal、GhosttyPlan mode 会话级别Teammate 的 Plan mode 状态在生成时锁定，会话中无法更改
+
+成本考量
+
+Agent Teams 的 Token 消耗显著高于单会话：
+
+场景Token 消耗成本倍数单 Agent 会话~200k tokens1x3 个 Teammates~800k tokens~4x5 个 Teammates~1.2M tokens~6x16 个 Teammates（C 编译器案例）20 亿 tokens$20,000 / 2 周
+
+成本分析：
+
+每个 Teammate 是完全独立的 Claude 实例，有自己的上下文
+
+Teammates 之间的通信也消耗 Token
+
+Lead 需要协调所有 Teammates，额外增加开销
+
+何时值得：
+
+✅ 需要并行探索的研究任务
+
+✅ 多视角审查（安全、性能、测试）
+
+✅ 需要讨论达成共识的决策
+
+❌ 可以顺序完成的常规任务
+
+❌ 不需要相互通信的并行任务（用 Subagent 更省）
+
+我的使用心得
+
+什么时候用 Agent Teams
+
+我的判断标准：
+
+任务需要多个视角：不同领域的专业知识（安全 + 性能 + 测试）
+
+需要讨论和共识：竞争性假设、架构决策
+
+并行探索有价值：多种实现方案对比
+
+如果只是需要并行执行、不需要相互通信，用 Subagent 或 Worktree 更合适。
+
+从研究和审查开始
+
+如果你是 Agent Teams 新手，从不需要写代码的任务开始：审查 PR、研究技术方案、调查 bug。这些任务有清晰的边界，能展示并行探索的价值，同时避免并行实现带来的协调挑战。
+
+与其他功能配合
+
+组合效果Agent Teams + Worktree每个 Teammate 在隔离环境工作Agent Teams + Hooks自动化质量检查和反馈Agent Teams + Skills每个 Teammate 具备专业能力
+
+写在最后
+
+Agent Teams 代表了 AI 辅助开发的一个新范式：从"一个 AI 助手"到"一个 AI 团队"。
+
+Anthropic 用 16 个 Agent 花 2 周、$20,000 写出了 10 万行代码的 C 编译器。这个项目的关键经验是：测试质量比什么都重要。Agent 会自主解决你给它的问题，所以任务验证器必须近乎完美，否则 Agent 会解决错误的问题。
+
+记住三个核心要点：
+
+要点说明协作Teammates 可以直接交流，不只是汇报结果共享通过共享任务列表协调工作监督定期检查进度，及时纠正方向
+
+开始很简单：
+
+创建一个 agent team 来 [你的任务]
+
+相关阅读：
+
+Claude Worktree 完全指南 — 理解 Worktree 与 Agent Teams 的配合
+
+Claude Subagent 完全指南 — 对比 Subagent 和 Agent Teams 的使用场景
+
+Tmux 快速入门指南 — 使用 Tmux 管理多个 Agent 会话
+
+参考资料：
+
+Claude Code 官方文档 - Agent Teams
+
+Building a C compiler with a team of parallel Claudes
+
+Claude Code Agent Teams: The Complete Guide
+
+Multi-Agent Orchestration: Running 10+ Claude Instances in Parallel
+
+视频教程：
+
+7 Unexpected Use Cases for Claude Code Agent Teams — 7 个非技术用例演示
+
+Claude Code Multi-Agent Workflows — 多智能体工作流详解
+
+Agent Teams Orchestration Deep Dive — 团队编排深度解析
+
+Claude Code Agent Teams Setup Guide — 完整设置教程
+
+评论
+
+Worktree 指南
+
+掌握 Claude Code 的 Worktree 功能：如何运行多个并行 Agent 而不发生冲突，实现真正的并行开发工作流
+概念介绍
+
+深入理解 Claude Skills 的核心原理：可重用 AI 工作手册如何通过渐进式披露实现 Token 效率与可组合性
+
+目录
+
+引言理解 Agent Teams与 Subagent 的区别为什么 Agent Teams 有效启用 Agent Teams核心用法创建第一个 Agent Team显示模式常用快捷键Delegate Mode（重要）实战案例案例一：并行代码审查案例二：竞争性假设调试案例三：内容批量生产案例四：QA 质量检查集群案例五：多轮讨论模式案例六：C 编译器项目团队管理指定 Teammates 和模型要求计划审批直接与 Teammates 对话关闭 Teammates清理团队最佳实践团队规模控制任务粒度避免文件冲突监控和引导给足上下文自报告验证模式高级技巧使用 Hooks 强制质量门禁预审批权限与 Worktree 结合第三方编排工具当前限制成本考量我的使用心得什么时候用 Agent Teams从研究和审查开始与其他功能配合写在最后
+
+Claude Agent Teams 完全指南 | Yu的赛博工位

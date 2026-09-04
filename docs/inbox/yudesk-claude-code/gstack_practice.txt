@@ -1,0 +1,539 @@
+跳转到主要内容
+Yu的赛博工位
+
+笔记收录独立开发博客关于🇨🇳
+
+文档Claude Code 相关
+Claude Code 隐藏技巧
+
+系统架构全解析工具调用系统Worktree 指南Agent Teams 指南Claude Skills
+
+Claude Code Plugin
+
+Claude Code Subagent
+
+Agent 与工作流
+Agent 记忆系统
+
+Pi Agent
+
+规格驱动开发
+
+Ralph Wiggum
+
+GSD
+
+gstackgstack 概念篇gstack 实战篇gstack Skill 架构拆解gstack 前端 Skill 篇
+
+Matt Pocock 的 Claude Code 技能集
+
+工程实践
+AI 时代的 TDD
+
+Tmux 入门
+
+Yu的赛博工位
+
+搜索⌘K
+笔记收录独立开发博客关于🇨🇳
+
+gstack 实战篇
+
+gstack
+
+下载
+
+gstack 实战：从安装到跑通完整工作流
+Copy page
+
+AI 辅助写的
+gstack 安装配置、完整命令参考、工作流演示和社区最佳实践
+核心结论
+
+gstack 是一套把 Claude Code 拆成虚拟工程团队的角色化 skill 集。如果你只是想跑通它，最短路径是：全局安装 gstack，先用 /office-hours 或 /autoplan 把需求和计划审一遍，再用 /review、/qa、/ship 完成代码审查、浏览器验证和发布。
+
+这篇实战篇不再解释「gstack 是什么」——这个在 概念篇 里已经讲过。这里回答更具体的问题：gstack 怎么装、先用哪几个命令、怎样把它串成一个完整工作流。
+
+目标优先使用的命令作用
+想清楚产品方向
+/office-hours
+用 6 个逼迫性问题重构想法
+
+生成审查后的计划
+/autoplan
+自动跑 CEO、设计、工程等多角色审查
+
+找出代码风险
+/review
+从生产事故视角审查 diff
+
+验证页面是否真的可用
+/qa 或 /browse
+用真实浏览器测试页面、截图和交互
+
+准备发布
+/ship
+跑测试、更新文档、提交并创建 PR
+
+安装与配置
+
+前置条件
+
+Claude Code 已安装并可用
+
+Git 已安装
+
+Bun v1.0+ 已安装（gstack 基于 Bun 构建）
+
+Windows 用户还需要 Node.js
+
+全局安装（推荐，30 秒完成）
+
+git clone --single-branch --depth 1 https://github.com/garrytan/gstack.git ~/.claude/skills/gstack
+cd ~/.claude/skills/gstack && ./setup
+
+安装脚本会做三件事：
+
+将 gstack 的 skill 信息添加到你的 CLAUDE.md 文件
+
+将所有 skill 文件放入 skills 目录
+
+安装 Playwright 和对应的 Chromium 浏览器（用于 /browse 和 /qa）
+
+项目级安装（团队共享）
+
+如果希望团队成员克隆仓库后自动获得 gstack：
+
+cp -Rf ~/.claude/skills/gstack .claude/skills/gstack
+rm -rf .claude/skills/gstack/.git
+cd .claude/skills/gstack && ./setup
+
+多 Agent 支持
+
+gstack 不限于 Claude Code，目前已支持 10 个 AI 编程 Agent，./setup 默认自动检测已安装的 host：
+
+./setup --host codex      # OpenAI Codex CLI
+./setup --host opencode   # OpenCode
+./setup --host cursor     # Cursor
+./setup --host factory    # Factory Droid
+./setup --host slate      # Slate
+./setup --host kiro       # Kiro
+./setup --host hermes     # Hermes
+./setup --host gbrain     # GBrain（修改版）
+./setup --host openclaw   # OpenClaw（通过 ACP 派发 Claude Code 会话）
+
+每个 host 的 skill 安装路径形如 ~/.<agent>/skills/gstack-*/，互不干扰。
+
+💡 OpenClaw 用户额外选择：除了通过 ACP 调用，OpenClaw 还能通过 ClawHub 直接安装 4 个原生方法论 skill（gstack-openclaw-office-hours、gstack-openclaw-ceo-review、gstack-openclaw-investigate、gstack-openclaw-retro），无需 Claude Code 会话即可对话使用。
+
+Team Mode（团队共享 + 自动更新，推荐）
+
+v1.x 引入 Team Mode：每个开发者全局安装 gstack，仓库只记录"我们用 gstack"这件事，更新自动发生：
+
+(cd ~/.claude/skills/gstack && ./setup --team) && \
+~/.claude/skills/gstack/bin/gstack-team-init required && \
+git add .claude/ CLAUDE.md && git commit -m "require gstack for AI-assisted work"
+
+把 required 换成 optional 则是"温柔提醒"而非强制。每次启动 Claude Code 会自动跑一次更新检查（节流 1 次/小时，网络失败安全静默），仓库里没有 vendored 文件，也没有版本漂移。
+
+更新
+
+cd ~/.claude/skills/gstack && git pull && ./setup
+
+或者在 Claude Code 中直接使用 /gstack-upgrade。
+
+完整命令参考
+
+Sprint 流程
+
+命令角色说明
+/office-hours
+YC Office Hours
+6 个逼迫性问题重构产品方向，生成设计文档
+
+/plan-ceo-review
+CEO / 创始人
+寻找 10 星级产品，四种范围模式可选
+
+/plan-eng-review
+工程经理
+锁定架构、数据流、边界情况、测试矩阵
+
+/plan-design-review
+资深设计师
+设计维度 0-10 评分，说明如何做到 10 分
+
+/plan-devex-review
+开发者体验负责人
+探索开发者画像、对标 TTHW、设计魔法时刻；三种模式（DX EXPANSION / POLISH / TRIAGE），20-45 个逼迫性问题
+
+/autoplan
+审查流水线
+自动依次运行 CEO → 设计 → 工程 → DX 审查，按编码决策原则自动决议，仅把"品味决策"上抛给你
+
+设计
+
+命令说明
+/design-consultation
+从头构建完整设计系统，生成 DESIGN.md
+
+/design-shotgun
+生成多个 AI 设计变体，在浏览器中对比选择
+
+/design-html
+生成生产级 HTML/CSS，支持 React/Svelte/Vue 框架检测
+
+审查与安全
+
+命令角色说明
+/review
+Staff 工程师
+找出能过 CI 但会在生产爆炸的 bug，明显问题自动修复，标记完整性缺口
+
+/investigate
+调试专家
+系统化根因调试。铁律：不找到根因不修 bug；3 次失败修复后强制停下
+
+/design-review
+会写代码的设计师
+视觉审计 + 自动修复，原子提交，前后对比截图
+
+/devex-review
+DX 测试员
+真实跑一遍 onboarding：浏览文档、跑入门流程、计时 TTHW、截图错误，对照 /plan-devex-review 评分
+
+/cso
+安全官
+OWASP Top 10 + STRIDE 威胁建模，17 条误报排除规则，8/10 置信度门槛，每条发现附具体利用场景
+
+测试与 QA
+
+命令说明
+/qa
+打开真实浏览器测试，发现 bug → 原子提交修复 → 生成回归测试 → 重新验证
+
+/qa-only
+同上但仅报告，不修改代码
+
+/benchmark
+基线性能测试：页面加载、Core Web Vitals、资源大小，支持前后对比
+
+/browse
+~100ms 级别的浏览器命令，真实 Chromium，截图、表单填写、元素点击
+
+/open-gstack-browser
+启动 GStack Browser：可见的 AI 控制 Chromium，自带 sidebar 扩展、反爬 stealth、自动模型路由（Sonnet 操作 / Opus 分析），支持一键 cookie 导入
+
+/setup-browser-cookies
+从真实浏览器（Chrome / Arc / Brave / Edge）导入 cookie 到 headless 会话，测试需登录的页面
+
+/pair-agent
+跨 AI Agent 浏览器配对：把同一个 GStack Browser 共享给 OpenClaw / Hermes / Codex / Cursor 等，每个 Agent 独立 tab，自带 ngrok 隧道支持远程 Agent，作用域 token + tab 隔离 + 速率限制 + 行为归因
+
+发布与运维
+
+命令说明
+/ship
+同步主分支 → 跑测试 → 审计覆盖率 → 更新版本 → 提交推送 → 创建 PR；项目无测试框架时自动 bootstrap
+
+/land-and-deploy
+合并 PR → 等待 CI → 部署 → 验证生产环境健康
+
+/canary
+部署后金丝雀监控：控制台错误、性能回归、页面故障
+
+/setup-deploy
+/land-and-deploy 一次性配置：自动检测平台（Fly.io / Render / Vercel / Netlify / Heroku / GitHub Actions / 自定义）+ 生产 URL + 部署命令
+
+/setup-gbrain
+GBrain 数据库一键上手（5 分钟内）：PGLite 本地、Supabase 现有 URL，或通过 Management API 自动创建新 Supabase 项目；MCP 注册 + 仓库级 read-write/read-only/deny 权限
+
+回顾与学习
+
+命令说明
+/retro
+团队感知周报：人均拆解、连胜统计、测试健康趋势、成长机会；/retro global 跨所有项目 + AI 工具（Claude Code / Codex / Gemini）
+
+/document-release
+自动更新项目文档匹配已发布的代码（README / ARCHITECTURE / CONTRIBUTING / CLAUDE.md / TODOS）；/ship 现已自动调用
+
+/learn
+管理跨会话学习记忆：查看、搜索、修剪、导出，按项目积累
+
+/context-save /context-restore
+Continuous checkpoint 模式配套：自动 WIP 提交保存上下文，崩溃/切换后用 /context-restore 重建会话
+
+安全防护
+
+命令说明
+/careful
+危险操作警告：rm -rf、DROP TABLE、force-push 等
+
+/freeze / /unfreeze
+锁定/解锁编辑范围到特定目录
+
+/guard
+/careful + /freeze 组合，最高安全模式
+
+/checkpoint
+保存/恢复工作状态快照
+
+工具集成
+
+命令说明
+/codex
+OpenAI Codex CLI 集成：独立代码审查（pass/fail 门）、对抗模式、咨询模式；与 /review 都跑过后给出跨模型重叠分析
+
+/health
+代码质量仪表盘：tsc + biome + knip + shellcheck + tests → 0-10 综合评分
+
+/skillify
+把当前工作流固化为可复用 skill
+
+/scrape
+网页抓取工作流
+
+/landing-report
+落地页性能与体验报告
+
+/make-pdf
+生成 PDF 文档
+
+/benchmark-models /model-overlays /plan-tune
+跨模型对比、覆盖叠加、计划调优
+
+Standalone CLI（v0.19+）
+
+除了 slash 命令，gstack 还附带一组独立 CLI（不在 Claude Code 会话内跑）：
+
+命令说明
+gstack-model-benchmark
+跨模型评测：同一 prompt 同时跑 Claude / GPT（via Codex CLI）/ Gemini，对比延迟、token、成本和（可选）LLM-judge 质量分；不可用 provider 自动跳过
+
+gstack-taste-update
+设计品味学习：把 /design-shotgun 的赞同/否决写入项目级品味档案，每周衰减 5%，反哺后续变体生成
+
+配置详解
+
+CLAUDE.md 添加内容
+
+安装后，gstack 会在你的 CLAUDE.md 中添加所有可用 skill 的列表和简短描述。这让 Claude Code 知道可以使用哪些命令。
+
+Skill 目录结构
+
+主入口是顶层 ~/.claude/skills/gstack/SKILL.md，每个子命令以平级目录形式存在，核心都是 SKILL.md 文件：
+
+~/.claude/skills/gstack/
+├── SKILL.md            # 主入口 skill
+├── browse/             # 浏览器 daemon
+├── qa/                 # QA 测试
+├── review/             # 代码审查
+├── ship/               # 发布流程
+├── plan-ceo-review/    # CEO 审查
+├── office-hours/       # 产品门诊
+├── pair-agent/         # 跨 Agent 浏览器配对
+├── open-gstack-browser/ # GStack Browser 启动器
+├── setup-gbrain/       # GBrain 数据库一键上手
+├── hosts/              # 10 个 host 配置（claude/codex/cursor/...）
+├── bin/                # standalone CLI（gstack-model-benchmark 等）
+└── ...                 # 当前 v1.x 共 50 个 skill 目录
+
+你可以自由修改任何 SKILL.md 来定制行为——这就是"fork 和定制"的优势。
+
+Browse Daemon
+
+Browse Daemon 是长驻 Chromium 实例，关键配置：
+
+端口：随机选择 10000-60000，支持 10+ 个并行工作区
+
+安全：仅绑定 localhost，每次会话使用 bearer token 认证
+
+Cookie：使用 /setup-browser-cookies 可从 Chrome/Arc/Brave/Edge 导入
+
+实战工作流演示
+
+以下演示一个典型的 gstack 工作流。命令和输出基于文档和视频中的真实案例整理。
+
+💡 注意：以下输出为基于研究整理的通用示例。后续会根据真实实操补充具体项目截图。
+
+Step 1: 产品门诊
+
+> /office-hours
+
+[YC Office Hours] 6 forcing questions:
+1. Who specifically needs this?
+2. What do they do today without it?
+3. Why is this urgent right now?
+4. How will you know it works?
+5. What happens if you do nothing?
+6. What is the smallest version you can ship?
+
+→ Design doc generated
+
+不急着写代码，先让 AI 以 YC Office Hours 的视角拷问你的想法。
+
+Step 2: 多角色审查计划
+
+> /autoplan
+
+[CEO Review] Finding the 10-star product...
+[Design Review] Rating dimensions 0-10...
+[Eng Review] Locking architecture + edge cases...
+
+→ Fully reviewed plan ready
+
+/autoplan 自动运行 CEO → 设计 → 工程三轮审查，产出完整的审查后计划。
+
+Step 3: 编码实现
+
+按审查通过的计划正常编码。可以用标准 Claude Code 对话方式。
+
+Step 4: 多专家代码审查
+
+> /review
+
+Dispatching 7 specialist reviewers...
+- Testing coverage ✓
+- Maintainability ✓
+- Security: Found 1 issue (auto-fixing)
+- Performance ✓
+- Data migration ✓
+- API contract ✓
+- Red team: No vulnerabilities found
+
+→ Review complete, 1 auto-fix applied
+
+Step 5: 浏览器 QA
+
+> /qa
+
+Opening headless browser...
+Testing user flows:
+- Login flow ✓
+- Dashboard load ✓
+- Form submission: Bug found → fixing → re-testing ✓
+- Image upload ✓
+
+→ 4 flows tested, 1 bug fixed, regression test generated
+
+Step 6: 发布
+
+> /ship
+
+Syncing with main...
+Running tests: 42 passed, 0 failed
+Reviewing diff: 3 files changed
+Updating VERSION: 1.2.0 → 1.3.0
+Creating PR: "Add screenshot feature"
+
+→ PR #47 created, ready for merge
+
+实用技巧与社区经验
+
+Garry Tan 的建议
+
+来自 gstack 的 ETHOS.md，三个核心原则：
+
+Boil the Lake：AI 让完整性几乎免费——永远做完整的事，不走捷径
+
+Search Before Building：先搜索、先理解，三层知识验证后再动手
+
+User Sovereignty：AI 推荐，你决定。即使两个 AI 模型都同意，你的判断依然优先
+
+而 gstack 的 README 开篇用了一段 Karpathy 的话——这也是 Garry Tan 自己解释他为什么要做 gstack 的起点：
+
+我大概从 12 月起就没怎么真正敲过一行代码了，这是一个极其巨大的变化。
+
+Andrej KarpathyNo Priors podcast (March 2026)
+EN前往
+
+社区正面经验
+
+/office-hours 用于 YC 申请：Reddit r/ycombinator 上多位 S26 申请者反馈，用 gstack 的 office hours 来压力测试自己的申请材料效果极佳
+
+安全审计发现真实漏洞：有 CTO 反馈 /review 发现了团队不知道的 XSS 漏洞
+
+/browse 真实浏览器测试：被社区（包括批评者）认可为"真正有技术含量的贡献"
+
+常见踩坑
+
+权限提示频繁：有用户反馈"每 30 秒要批准一次权限提示，根本没法睡觉"。建议在 Claude Code 设置中配置适当的自动批准规则
+
+Token 消耗较高：角色化 prompt 会增加上下文消耗。如果成本敏感，可以选择性使用最需要的 skill
+
+Agent 循环：HN 上有用户报告 agent 陷入 70 分钟循环的案例。建议设置合理的超时和检查点
+
+不适合所有人：资深开发者可能觉得大部分 skill 是不必要的包装。gstack 更适合独立创始人和小团队，而非已有成熟工程流程的团队
+
+常见问题与最佳实践
+
+Q：gstack 和 Superpowers 可以同时使用吗？
+
+可以。两者互补——Superpowers 擅长流程纪律和 TDD 保障，gstack 擅长产品思维和多角色审查。很多团队用 Superpowers 做日常编码纪律，用 gstack 做产品规划和 QA。
+
+Q：Token 消耗大吗？
+
+比原生 Claude Code 高。每个 skill 的角色 prompt 会占用上下文窗口。但如果你的时间比 token 费用更有价值，这通常是划算的。
+
+Q：适合什么类型的项目？
+
+最适合全流程产品开发——从想法到上线。如果只是修 bug 或做小功能，原生 Claude Code 就够了。gstack 的价值在"完整流程"中最大化。
+
+Q：如何定制 skill？
+
+每个 skill 就是一个 SKILL.md 文件。直接编辑即可：
+
+找到 skill 目录：~/.claude/skills/gstack/<skill-name>/
+
+编辑 SKILL.md
+
+重新运行 ./setup
+
+社区建议 fork 仓库后定制，而非直接修改全局安装。
+
+最佳实践
+
+先 /office-hours 再编码：养成习惯，在写任何代码之前先做产品门诊
+
+善用 /browse 验证：不要只看代码，让 AI 真正"看到"你的应用
+
+定期 /retro：保持对代码质量和工作节奏的可见性
+
+渐进采用：不需要一次用所有 skill。从 /office-hours + /review + /ship 开始
+
+Fork 定制：遇到不合适的 prompt，直接改。这是开源的优势
+
+小结
+
+gstack 的核心价值不在于某个具体 skill 有多强大，而在于它提供了一种结构化的 AI 协作模式——通过角色切换，让你在不同阶段获得不同类型的 AI 辅助。先以 CEO 的视角审视产品方向，再以工程经理的严谨审查架构，最后以 QA 的真实浏览器验证结果。
+
+下一步，你可以亲自安装试试，从 /office-hours 开始你的第一个 gstack 项目。
+
+延伸阅读：
+
+gstack 概念篇 — 理解 gstack 的核心理念和工具生态定位
+
+GSD 实战篇 — 另一种结构化 AI 编程方案的实战指南
+
+Claude Skills 实战篇 — 理解 Skill 的创建机制
+
+gstack - Claude Code 角色化技能集
+一套有强主张的角色化技能集，把 Claude Code 变成一支虚拟工程团队，现已支持 10 个 AI 编程 Agent。
+
+Garry TanGitHub
+EN前往
+
+评论
+
+gstack 概念篇
+
+Garry Tan 开源的 gstack 是什么、解决什么问题、核心工作流和工具生态定位
+gstack Skill 架构拆解
+
+从 Skill 开发者视角系统拆解 gstack 的工程设计：模板生成、升级机制、学习系统、Preamble 注入、状态管理、Prompt 工程技巧
+
+目录
+
+核心结论安装与配置前置条件全局安装（推荐，30 秒完成）项目级安装（团队共享）多 Agent 支持Team Mode（团队共享 + 自动更新，推荐）更新完整命令参考Sprint 流程设计审查与安全测试与 QA发布与运维回顾与学习安全防护工具集成Standalone CLI（v0.19+）配置详解CLAUDE.md 添加内容Skill 目录结构Browse Daemon实战工作流演示Step 1: 产品门诊Step 2: 多角色审查计划Step 3: 编码实现Step 4: 多专家代码审查Step 5: 浏览器 QAStep 6: 发布实用技巧与社区经验Garry Tan 的建议社区正面经验常见踩坑常见问题与最佳实践最佳实践小结
+
+gstack 实战：从安装到跑通完整工作流 | Yu的赛博工位

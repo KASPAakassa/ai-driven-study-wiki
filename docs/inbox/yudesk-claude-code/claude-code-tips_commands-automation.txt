@@ -1,0 +1,155 @@
+跳转到主要内容
+Yu的赛博工位
+
+笔记收录独立开发博客关于🇨🇳
+
+文档Claude Code 相关
+Claude Code 隐藏技巧Claude Code 隐藏技巧快捷键篇输入与交互篇思考与模型控制篇会话管理篇上下文管理篇实用命令与自动化篇配置与诊断篇进阶篇
+
+系统架构全解析工具调用系统Worktree 指南Agent Teams 指南Claude Skills
+
+Claude Code Plugin
+
+Claude Code Subagent
+
+Agent 与工作流
+Agent 记忆系统
+
+Pi Agent
+
+规格驱动开发
+
+Ralph Wiggum
+
+GSD
+
+gstack
+
+Matt Pocock 的 Claude Code 技能集
+
+工程实践
+AI 时代的 TDD
+
+Tmux 入门
+
+Yu的赛博工位
+
+搜索⌘K
+笔记收录独立开发博客关于🇨🇳
+
+实用命令与自动化篇
+
+Claude Code 隐藏技巧
+
+下载
+
+实用命令与自动化篇
+Copy page
+
+AI 辅助写的
+Claude Code 实用命令：/diff 交互式查看器、/simplify 多代理审查、/batch 并行重构、/loop 定时任务、Headless 模式参数
+/diff：交互式 Diff 查看器
+
+输入 /diff 打开一个交互式的 diff 视图：
+
+左右箭头：在 git diff（全量改动）和 Claude 每轮改动之间切换
+
+上下箭头：浏览不同文件
+
+比在终端里跑 git diff 体验好得多，特别是改动涉及多个文件的时候。
+
+/diff 交互式 Diff 查看器
+/simplify：多代理代码审查
+
+执行 /simplify 会同时启动 3 个并行的审查代理：
+
+代码复用代理：查找重复模式
+
+代码质量代理：检查可读性和结构
+
+效率代理：分析不必要的性能开销
+
+三个代理独立工作，最后汇总结果，自动修复有效问题、跳过误报。
+
+/simplify 多代理代码审查
+/security-review：安全扫描
+
+对当前分支的改动进行安全审查，检查 SQL 注入、XSS、认证缺陷、数据处理问题和依赖漏洞。每个发现会经过对抗性验证来减少误报。
+
+/copy 的隐藏功能
+
+/copy 交互式代码块选择器
+/copy 不只是复制上一条回复。当回复中包含代码块时，它会弹出交互式选择器让你选择特定的代码块，而不是复制整段回复。还可以传数字来复制更早的回复：/copy 2 复制倒数第二条，/copy 3 复制倒数第三条，不用翻屏手动选择。
+
+/batch：大规模并行重构
+
+/batch 把 src/ 下所有组件从 Class 组件迁移到函数组件
+
+这是重量级功能。/batch 会分析代码库，把任务分解成 5-30 个独立单元，每个单元启动一个独立代理在隔离的 git worktree 中工作，最后每个代理提交并开一个 PR。
+
+适合大规模迁移、批量加类型注解、全局重命名等场景。
+
+/loop：定时任务
+
+/loop 5m 检查部署是否完成
+/loop 1h /review-pr 1234
+
+在会话内创建定时任务，按指定间隔重复执行。适合轮询部署状态、定期检查 PR 等场景。会话级别的（退出就没了），最多 50 个任务，3 天自动过期。
+
+/loop 定时任务
+管道输入：把任何东西喂给 Claude
+
+# 让 Claude 分析错误日志
+cat error.log | claude -p "分析这个错误日志，找出根本原因"
+
+# 让 Claude 总结最近的改动
+git diff HEAD~3 | claude -p "总结这三次提交的改动"
+
+# 让 Claude 解读命令输出
+kubectl get pods | claude -p "哪些 pod 状态异常？"
+
+-p 是 headless 模式（非交互式），适合在脚本和 CI/CD 中使用。
+
+Headless 模式的隐藏参数
+
+-p 模式有一些非常强大但很少人知道的参数：
+
+# 设置花费上限（超过就停）
+claude -p --max-budget-usd 5.00 "重构认证模块"
+
+# 限制对话轮数
+claude -p --max-turns 3 "修复这个测试"
+
+# 输出 JSON 格式（方便程序解析）
+claude -p --output-format json "分析这个项目"
+
+# 要求输出符合特定 JSON Schema
+claude -p --json-schema '{"type":"object","properties":{"summary":{"type":"string"}}}' "总结项目"
+
+# 多轮 headless 对话（用 session-id 保持上下文）
+claude -p --session-id my-task "第一步：分析代码"
+claude -p --session-id my-task "第二步：生成测试"
+
+# 指定备用模型（主模型过载时自动切换）
+claude -p --fallback-model sonnet "复杂分析"
+
+# 限制可用工具
+claude -p --tools "Read,Grep,Glob" "只读分析，不要改代码"
+
+# 完全替换系统提示词
+claude -p --system-prompt "你是一个 Python 专家" "优化这段代码"
+
+评论
+
+上下文管理篇
+
+Claude Code 上下文管理：/compact 带参数压缩、Compact Instructions、防止 token 预算放弃、Handoff 协议、MCP 工具懒加载
+配置与诊断篇
+
+Claude Code 配置与诊断：/statusline 自定义状态栏、settings.json 自动补全、/stats 使用分析、/doctor 健康检查、社区工具
+
+目录
+
+/diff：交互式 Diff 查看器/simplify：多代理代码审查/security-review：安全扫描/copy 的隐藏功能/batch：大规模并行重构/loop：定时任务管道输入：把任何东西喂给 ClaudeHeadless 模式的隐藏参数
+
+实用命令与自动化篇 | Yu的赛博工位

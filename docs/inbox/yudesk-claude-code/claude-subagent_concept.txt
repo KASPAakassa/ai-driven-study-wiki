@@ -1,0 +1,453 @@
+跳转到主要内容
+Yu的赛博工位
+
+笔记收录独立开发博客关于🇨🇳
+
+文档Claude Code 相关
+Claude Code 隐藏技巧
+
+系统架构全解析工具调用系统Worktree 指南Agent Teams 指南Claude Skills
+
+Claude Code Plugin
+
+Claude Code Subagent概念介绍实践指南
+
+Agent 与工作流
+Agent 记忆系统
+
+Pi Agent
+
+规格驱动开发
+
+Ralph Wiggum
+
+GSD
+
+gstack
+
+Matt Pocock 的 Claude Code 技能集
+
+工程实践
+AI 时代的 TDD
+
+Tmux 入门
+
+Yu的赛博工位
+
+搜索⌘K
+笔记收录独立开发博客关于🇨🇳
+
+概念介绍
+
+Claude Code Subagent
+
+下载
+
+Claude Code Subagent 概念介绍
+Copy page
+
+AI 辅助写的
+深入理解 Claude Code 子代理机制：独立上下文、专门化能力、任务委托如何提升 AI 编程效率
+引言
+
+A multi-agent system with Claude Opus 4 as the lead agent and Claude Sonnet 4 subagents outperformed single-agent Claude Opus 4 by 90.2% on an internal research eval.
+
+AnthropicHow we built our multi-agent research system
+中文前往
+
+在使用 Claude Code 处理复杂任务时，你可能遇到过这样的困境：主对话的上下文越来越长，AI 开始"忘记"之前的重要信息，响应质量逐渐下降。
+
+Subagent（子代理）就是为解决这个问题而生的。
+
+如果说 Skills 是给 Claude 的"工作手册"，那么 Subagent 就是你雇佣的"专职员工"——它们有自己独立的工位（上下文），专注于特定类型的工作，完成后向你汇报结果。
+
+理解 Subagent
+
+想象你是一家公司的 CEO。当公司规模小的时候，你亲自处理所有事务。但随着业务扩展，你开始雇佣专职员工：会计负责财务、HR 负责招聘、工程师负责开发。每个员工在自己的工位上工作，处理完任务后向你汇报。
+
+Subagent 在 Claude Code 中扮演的正是这样的角色。
+
+从技术角度来说，Subagent 是专门化的 AI 助手，它们具有以下特点：
+
+特性说明
+独立上下文
+每个 Subagent 在自己的上下文窗口中运行
+
+专门化能力
+针对特定任务类型进行优化
+
+可配置工具
+只能访问指定的工具集
+
+自定义提示
+有专门的系统提示指导行为
+
+为什么需要独立上下文
+
+这是 Subagent 最核心的设计理念，值得深入理解。
+
+在普通对话中，所有信息都堆积在同一个上下文里。当你让 Claude 搜索代码库、分析文件、然后进行修改时，所有这些中间过程都会占用上下文空间。随着对话深入，上下文越来越拥挤，Claude 可能开始"忘记"早期的重要信息。
+
+Subagent 改变了这一点：
+
+主对话（专注于高层目标）
+│
+├── 用户：帮我优化这个模块的性能
+│
+├── Claude：我来分析一下...
+│   │
+│   └── [调用 Explore Subagent]
+│       │ 在独立上下文中：
+│       ├── 搜索相关文件
+│       ├── 分析代码结构
+│       ├── 识别性能瓶颈
+│       └── 返回：发现 3 个优化点...
+│
+└── Claude：根据分析，我发现 3 个优化点...
+
+Subagent 的分析过程不会污染主对话。主对话只收到精炼的结果，保持了清晰和专注。
+
+内置 Subagent 类型
+
+Claude Code 提供了三个强大的内置 Subagent，覆盖最常见的使用场景：
+
+Explore Subagent（探索代理）
+
+定位：快速、只读的代码库探索。
+
+特点：
+
+使用 Haiku 模型（快速、低延迟）
+
+严格只读——无法创建、修改或删除文件
+
+可用工具：Glob、Grep、Read、Bash（只读操作）
+
+何时使用：
+当你问"这个功能在哪里实现的"、"错误是怎么处理的"这类探索性问题时，Claude 会自动调用 Explore Subagent。
+
+详细程度级别：
+
+级别说明适用场景
+Quick
+快速搜索，最少探索
+针对性的简单查询
+
+Medium
+适度探索
+平衡速度和完整性
+
+Very thorough
+全面分析
+需要深入理解的复杂问题
+
+Plan Subagent（计划代理）
+
+定位：研究代码库，准备实施计划。
+
+特点：
+
+使用 Sonnet 模型（更强的推理能力）
+
+只有探索工具：Read、Glob、Grep、Bash
+
+在计划模式下自动调用
+
+何时使用：
+当你进入计划模式，需要 Claude 先调研再提出方案时，Plan Subagent 会自动收集信息，然后基于研究结果给出计划建议。
+
+General-purpose Subagent（通用目的代理）
+
+定位：处理复杂的多步任务。
+
+特点：
+
+使用 Sonnet 模型
+
+访问所有工具（包括读写）
+
+适合需要探索和修改的复杂任务
+
+何时使用：
+当任务涉及多个步骤、需要先搜索再修改、或者初始搜索可能失败需要尝试多种策略时。
+
+我的理解与实践
+
+仔细观察官方内置的三个 Subagent，你会发现一个共同点：它们都是调研和规划类的任务。Explore 负责探索代码库，Plan 负责制定计划，即使是 General-purpose 也主要用于研究和分析。没有一个是专门用来写代码的。
+
+这印证了我对 Subagent 的理解：Subagent 的核心价值不是"干净的上下文"，而是让主 agent 能够专注做事。
+
+分工模式
+
+我的使用方式很简单：Subagent 负责调研、规划、review 这类"信息收集"的工作，主 agent 负责实际执行。
+
+Subagent（调研员）          主 Agent（执行者）
+     │                           │
+     ├── 探索代码库结构            │
+     ├── 分析依赖关系              │
+     ├── 制定实施计划              │
+     └── 返回精炼的上下文 ──────────→ 基于上下文执行任务
+                                  │
+                                  ├── 编写代码
+                                  ├── 修改文件
+                                  └── 运行测试
+
+为什么不让 Subagent 写代码
+
+有些人喜欢让主 agent 调度多个 subagent 去写代码，我觉得这不太靠谱。原因很简单：上下文严重缺失。
+
+Subagent 的上下文是独立的，它不知道主对话中讨论过什么、做过什么决定、有什么约束。让它去写代码，就像让一个刚入职的员工在没有任何背景信息的情况下独立完成任务——产出的代码很可能和你的预期不符。
+
+相反，把 Subagent 定位为"调研员"就合理多了：
+
+调研任务本身就不需要太多上下文
+
+返回的是信息而不是代码，主 agent 可以基于完整上下文来使用这些信息
+
+即使调研结果有偏差，主 agent 也能纠正
+
+我的日常用法
+
+开始新任务前：让 Explore 代理快速了解相关代码的结构
+
+复杂任务规划：让 Plan 代理分析需求并制定实施步骤
+
+代码审查：让 Review 代理检查代码质量和安全问题
+
+实际编码：主 agent 基于收集到的上下文来写代码
+
+这是我目前使用的 agent 列表：
+
+当前使用的 Subagent 列表
+这样做的好处是：主 agent 的上下文窗口保持干净，只有"我需要知道的信息"，而不是"Subagent 搜索过程中产生的一堆中间结果"。
+
+与其他功能的对比
+
+Subagent vs Skills
+
+这是最常见的困惑。核心区别：Skills 向 Claude 注入知识；Subagent 创建独立的工作者。
+
+维度SkillsSubagent
+核心功能
+提供专业知识和指令
+独立执行任务的代理
+
+上下文
+共享主对话上下文
+拥有独立的上下文
+
+触发方式
+根据描述自动匹配
+自动委托或手动调用
+
+适用场景
+让 Claude 更擅长某类任务
+复杂、多步骤的独立任务
+
+形象地说：Skills 像培训材料，让 Claude 学会怎么做某件事；Subagent 像专职员工，在自己的工位上独立完成任务后汇报结果。
+
+两者可以组合：一个代码审查 Subagent 可以加载代码规范 Skill，实现"专家 + 专业知识"的组合效果。
+
+Subagent vs 斜杠命令
+
+维度Subagent斜杠命令
+激活方式
+自动委托或显式调用
+用户手动输入
+
+上下文
+独立上下文
+共享主对话
+
+复杂度
+适合复杂任务
+适合简单操作
+
+斜杠命令是快捷键，你输入 /review 触发预定义的操作；Subagent 是独立的工作者，可以自主完成复杂的多步任务。
+
+Subagent vs Plugin
+
+Plugin 是一个"容器"概念，它可以包含 Subagent：
+
+Plugin（容器）
+├── Commands（快捷命令）
+├── Skills（知识包）
+├── Agents（子代理）← 这就是 Subagent
+└── Hooks（事件钩子）
+
+你可以在 Plugin 的 agents/ 目录下定义 Subagent，随 Plugin 一起分发。
+
+Agentic 设计模式
+
+Anthropic 在其官方文档中总结了六种核心的 Agentic 设计模式，理解这些模式有助于更好地设计 Subagent 系统：
+
+模式核心思想Subagent 应用
+Prompt Chaining
+将复杂任务分解为多个顺序步骤
+链式调用多个 Subagent
+
+Routing
+根据输入类型分发到专门处理器
+不同类型任务委托给专门 Subagent
+
+Parallelization
+同时执行多个独立子任务
+并行启动多个 Subagent
+
+Orchestrator-Workers
+中央协调者分配任务给工作者
+Claude 作为协调者，Subagent 作为工作者
+
+Evaluator-Optimizer
+生成器产出，评估器优化
+生成 Subagent + 审查 Subagent
+
+Agents
+自主决策执行的独立代理
+每个 Subagent 独立运行
+
+这些模式可以组合使用。例如，一个代码质量系统可能同时使用：
+
+Parallelization：同时运行安全扫描和性能分析
+
+Orchestrator-Workers：主 Claude 协调多个专门化 Subagent
+
+Evaluator-Optimizer：代码生成后立即进行审查
+
+核心优势
+
+上下文保护
+
+Subagent 最大的价值在于保护主对话的上下文。代码搜索、文件分析这些中间过程不会堆积在主对话里，让主对话始终专注于高层目标。
+
+专门化能力
+
+你可以为特定领域创建专门的 Subagent，配置详细的指令和适当的工具。专门化的 Subagent 比通用的 Claude 在特定任务上表现更好。
+
+灵活的权限控制
+
+每个 Subagent 可以有不同的工具访问权限。比如，探索类 Subagent 只给只读权限，修改类 Subagent 才给写权限。这种细粒度控制提高了安全性。
+
+可复用性
+
+一旦创建，Subagent 可以在不同项目间复用，也可以通过 Plugin 与团队共享。
+
+何时使用 Subagent
+
+适合使用 Subagent 的场景：
+
+需要独立上下文运行任务
+
+任务是复杂的多步工作流
+
+需要与主对话不同的工具集
+
+任务可能长时间运行
+
+不适合使用 Subagent 的场景：
+
+简单的一次性查询
+
+需要与主对话紧密交互
+
+任务很快就能完成
+
+典型应用场景
+
+代码审查
+
+代码审查 Subagent
+├── 专门的审查提示
+├── 只读工具（Read, Grep, Glob）
+└── 输出：结构化的审查报告
+
+当你完成一段代码后，可以让代码审查 Subagent 在独立上下文中进行审查，不干扰你的主要开发工作。
+
+调试分析
+
+调试 Subagent
+├── 错误分析专家提示
+├── 读写工具
+└── 输出：根因分析 + 修复方案
+
+遇到错误时，调试 Subagent 可以深入分析错误原因，尝试各种假设，最终给出修复建议。
+
+代码库探索
+
+探索 Subagent
+├── Haiku 模型（快速）
+├── 只读工具
+└── 输出：代码结构概览
+
+当你对新项目不熟悉时，探索 Subagent 可以快速绘制代码库地图，而不会让大量的搜索结果污染你的主对话。
+
+学习资源
+
+官方资源
+
+资源链接说明
+Claude Code 文档
+docs.anthropic.com
+官方文档入口
+
+Subagents 指南
+Claude Code Docs
+Subagent 官方文档
+
+多代理系统研究
+Anthropic Engineering
+90.2% 性能提升的研究详情
+
+Agentic 设计模式
+Anthropic Docs
+六种核心设计模式详解
+
+社区资源
+
+资源链接说明
+wshobson/agents
+GitHub
+99 个 Agent + 15 个编排器
+
+Compound Engineering
+GitHub
+17 个专门化代理的 Plugin
+
+awesome-claude-code
+GitHub
+最佳实践汇总
+
+小结
+
+Claude Code Subagent 本质上是独立上下文的专门化 AI 助手。它通过上下文隔离解决了复杂任务中的信息过载问题，让主对话始终保持清晰和专注。
+
+记住三个关键词：
+
+关键词含义
+独立
+每个 Subagent 有自己的上下文窗口
+
+专门
+针对特定任务类型优化
+
+委托
+Claude 可以自动或手动将任务委托给 Subagent
+
+了解了概念之后，下一篇《Claude Code Subagent 实战指南》将带你动手实践：创建自定义 Subagent、配置工具权限、以及实际项目中的最佳实践。
+
+如果你想了解 Subagent 可以加载的 Skills，请阅读《Claude Skills 是什么》。如果你想把 Subagent 打包分发，请阅读《Claude Code Plugin 是什么》。
+
+评论
+
+实践指南
+
+从零创建 Claude Code 插件：完整的开发流程、Marketplace 发布、团队协作配置与常见问题排查
+实践指南
+
+从零创建 Claude Code 子代理：配置格式、触发机制、实用模板与高级技巧
+
+目录
+
+引言理解 Subagent为什么需要独立上下文内置 Subagent 类型Explore Subagent（探索代理）Plan Subagent（计划代理）General-purpose Subagent（通用目的代理）我的理解与实践分工模式为什么不让 Subagent 写代码我的日常用法与其他功能的对比Subagent vs SkillsSubagent vs 斜杠命令Subagent vs PluginAgentic 设计模式核心优势上下文保护专门化能力灵活的权限控制可复用性何时使用 Subagent典型应用场景代码审查调试分析代码库探索学习资源官方资源社区资源小结
+
+Claude Code Subagent 概念介绍 | Yu的赛博工位

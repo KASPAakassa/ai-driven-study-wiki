@@ -1,0 +1,264 @@
+跳转到主要内容
+Yu的赛博工位
+
+笔记收录独立开发博客关于🇨🇳
+
+文档Claude Code 相关
+Claude Code 隐藏技巧
+
+系统架构全解析工具调用系统Worktree 指南Agent Teams 指南Claude Skills
+
+Claude Code Plugin
+
+Claude Code Subagent
+
+Agent 与工作流
+Agent 记忆系统
+
+Pi Agent
+
+规格驱动开发
+
+Ralph Wiggum
+
+GSD
+
+gstack
+
+Matt Pocock 的 Claude Code 技能集概览初始化配置Grill MeBatch Grill MeGrill With DocsPRD 与 Issues诊断与分诊TDDZoom OutPrototype深化代码架构其他 Skills
+
+工程实践
+AI 时代的 TDD
+
+Tmux 入门
+
+Yu的赛博工位
+
+搜索⌘K
+笔记收录独立开发博客关于🇨🇳
+
+初始化配置
+
+Matt Pocock 的 Claude Code 技能集
+
+下载
+
+Setup Matt Pocock Skills：先把项目规则写清楚
+Copy page
+
+AI 辅助写的
+解析 /setup-matt-pocock-skills 为什么是整套工程 skill 的入口：它不是安装脚本，而是把 issue tracker、triage 标签、CONTEXT.md 和 ADR 路径写成其他 skill 能稳定读取的项目契约
+这个 Skill 解决的不是安装问题
+
+/setup-matt-pocock-skills 容易被误解成「装完之后跑一下的初始化命令」。实际上它更像一个项目契约生成器：告诉后续 skill 这个仓库怎么追踪任务、怎么标记 issue、在哪里读取领域语言和架构决策。
+
+Matt 在 README 的 Quickstart 里特别提醒：安装时要选中 /setup-matt-pocock-skills，然后在 agent 里运行它。原因很简单：to-prd、to-issues、triage、diagnose、tdd、improve-codebase-architecture、zoom-out 都需要同一批项目上下文。如果每个 skill 都临时问一遍，流程会变得很碎。
+
+它做的不是「配置 Claude 偏好」，而是回答三个工程问题：
+
+问题它要写清楚什么后续谁会用
+Issue tracker 在哪
+GitHub、GitLab、本地 markdown，还是其他系统
+to-prd、to-issues、triage
+
+Triage 标签怎么映射
+needs-triage、needs-info、ready-for-agent 等角色对应哪些真实标签
+triage
+
+领域文档在哪里
+单一 CONTEXT.md，还是多上下文 CONTEXT-MAP.md + 分区 ADR
+grill-with-docs、diagnose、tdd、zoom-out、improve-codebase-architecture
+
+它为什么重要
+
+这套 skills 的核心思路是「小而可组合」。小的代价是：它们不想自己接管整个项目流程，所以必须知道你项目里的真实约定。
+
+举例：/to-issues 要创建 issue。没有 setup，它不知道应该：
+
+调 gh issue create
+
+调 glab issue create
+
+写到 .scratch/<feature>/
+
+还是给你生成一段 Linear/Jira 可复制文本
+
+再比如 /triage 要把 issue 移到 ready-for-agent。如果你的仓库里真实标签叫 ai:ready，而 skill 自己创建了一个新标签 ready-for-agent，issue tracker 会立刻变脏。
+
+所以 /setup-matt-pocock-skills 的价值不是自动化，而是把隐含约定外显化。
+
+它会读哪些东西
+
+这个 skill 开始时会先探索仓库，而不是假设：
+
+git remote -v 和 .git/config：判断是不是 GitHub/GitLab 项目
+
+根目录 AGENTS.md / CLAUDE.md：看是否已有 ## Agent skills 区块
+
+根目录 CONTEXT.md / CONTEXT-MAP.md：判断领域语言文档形态
+
+docs/adr/ 和 src/*/docs/adr/：判断 ADR 是全局还是模块级
+
+docs/agents/：看是否已经跑过 setup
+
+.scratch/：判断是否已有本地 markdown issue 约定
+
+这符合 Matt 整套工作流的风格：先看项目真实状态，再写规则。
+
+三个决策
+
+1. Issue tracker
+
+这是后续工作单元落地的位置。
+
+默认倾向是 GitHub，因为这套 skill 最早围绕 GitHub Issues 设计。但它已经把 GitLab 和本地 markdown 也当作一等选择：
+
+选择适合什么场景
+GitHub
+开源项目、GitHub issue workflow 已经存在
+
+GitLab
+公司项目在 GitLab，习惯用 glab
+
+Local markdown
+个人项目、临时探索、没有远程 issue tracker
+
+Other
+Jira、Linear、飞书、多维表格等，需要用文字记录你的真实流程
+
+重点不是选哪个，而是选团队真的在用的那个。写错了，后续 skill 会在错误系统里创建任务。
+
+2. Triage label vocabulary
+
+/triage 内部使用 5 个状态角色：
+
+角色含义
+needs-triage
+等维护者判断
+
+needs-info
+等报告者补信息
+
+ready-for-agent
+已经清楚到可以交给 AFK agent
+
+ready-for-human
+需要人类判断或实现
+
+wontfix
+不处理
+
+setup 会问你这些角色对应的真实标签名。如果项目里没有既有标签，用默认名就行；如果已经有自己的命名体系，应该在这里映射，而不是让 skill 新造一套。
+
+3. Domain docs
+
+这是 Matt 这套 skill 和普通 prompt 最大的区别：它不是只看当前对话，还会读项目里的领域语言和架构决策。
+
+最简单的形态：
+
+/
+├── CONTEXT.md
+└── docs/
+    └── adr/
+
+大型 monorepo 可以用多上下文：
+
+/
+├── CONTEXT-MAP.md
+├── apps/
+│   └── web/
+│       ├── CONTEXT.md
+│       └── docs/adr/
+└── services/
+    └── billing/
+        ├── CONTEXT.md
+        └── docs/adr/
+
+setup 不是强迫你现在写完所有文档，而是告诉后续 skill：应该去哪里找、找不到时应该如何创建。
+
+它会写什么
+
+最终会有两类输出。
+
+第一类是 AGENTS.md 或 CLAUDE.md 里的 ## Agent skills 区块：
+
+## Agent skills
+
+### Issue tracker
+
+...
+
+### Triage labels
+
+...
+
+### Domain docs
+
+...
+
+第二类是 docs/agents/ 下的三份说明：
+
+文件内容
+docs/agents/issue-tracker.md
+issue 系统、命令、创建/更新约定
+
+docs/agents/triage-labels.md
+canonical role 到真实标签的映射
+
+docs/agents/domain.md
+CONTEXT.md、CONTEXT-MAP.md、ADR 的读取规则
+
+注意它会优先编辑已有的 CLAUDE.md；没有 CLAUDE.md 才考虑 AGENTS.md。这体现了一个很重要的克制：不要在项目里制造两份互相竞争的 agent 规则入口。
+
+我建议怎么用
+
+第一次装 Matt 这套 skill 时，顺序应该是：
+
+安装：npx skills@latest add mattpocock/skills
+
+选中 /setup-matt-pocock-skills
+
+运行 /setup-matt-pocock-skills
+
+按真实项目状态回答 issue tracker、标签、领域文档三个问题
+
+看它生成的 ## Agent skills 和 docs/agents/*.md
+
+再开始用 /grill-with-docs、/to-prd、/triage
+
+如果只是想单独体验 /grill-me，可以跳过 setup；但只要进入工程流，最好先做。
+
+这个 Skill 的设计启发
+
+/setup-matt-pocock-skills 看起来很朴素，但它解决了 agent workflow 里最常见的一个问题：规则散落在人的脑子里。
+
+很多团队把「我们用哪个标签」「哪些 issue 可以给 AI」「CONTEXT.md 在哪」这些信息当作口头约定。人知道，AI 不知道。AI 不知道就会反复问，或者更糟糕：自己猜。
+
+setup 的作用是把这些口头约定变成可读取文件。后续 skill 不需要更聪明，只需要稳定地读同一份项目契约。
+
+这也是我觉得它值得单独写一篇的原因：它不是炫技的 skill，但它是整套 workflow 能长期跑起来的地基。
+
+参考资源
+
+setup-matt-pocock-skills 源文件
+为工程类 skills 生成每个仓库自己的 issue tracker、triage 标签和领域文档配置。
+
+Matt PocockGitHub2026
+EN前往
+
+下一篇：Grill Me：让 AI 在你写代码前拷问你 50 个问题。
+
+评论
+
+概览
+
+拆解 mattpocock/skills——这个 4 个月冲到 61k star 的仓库为什么火，以及它背后那场 18 分钟演讲讲了什么。从 5 个 AI 编程失败模式到 5 个可装可用的 Skill，给你一张完整的 Matt Pocock 工作流地图
+Grill Me
+
+Matt Pocock 最火的 Skill，7 行 markdown 让 Claude 在动手前先和你做 30~45 分钟的需求对齐——拆解它的工作原理、和 Claude Code 自带 plan mode 的差异，以及怎么把它扩展到非编程场景
+
+目录
+
+这个 Skill 解决的不是安装问题它为什么重要它会读哪些东西三个决策1. Issue tracker2. Triage label vocabulary3. Domain docs它会写什么我建议怎么用这个 Skill 的设计启发参考资源
+
+Setup Matt Pocock Skills：先把项目规则写清楚 | Yu的赛博工位

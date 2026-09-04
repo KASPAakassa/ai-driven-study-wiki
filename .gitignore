@@ -1,0 +1,27 @@
+# Python venv
+.venv/
+
+# MkDocs build output
+site/
+
+# Python
+__pycache__/
+*.py[cod]
+
+# OS
+.DS_Store
+
+# Editor
+.idea/
+.vscode/
+
+# Obsidian 本地状态(不提交)
+.obsidian/workspace.json
+.obsidian/workspace-mobile.json
+
+# 敏感文件保护(上传 GitHub 前保险)
+.env
+.env.*
+*.pem
+*.key
+*_secret*

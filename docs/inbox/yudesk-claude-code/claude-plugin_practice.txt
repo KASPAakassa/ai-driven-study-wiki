@@ -1,0 +1,673 @@
+跳转到主要内容
+Yu的赛博工位
+
+笔记收录独立开发博客关于🇨🇳
+
+文档Claude Code 相关
+Claude Code 隐藏技巧
+
+系统架构全解析工具调用系统Worktree 指南Agent Teams 指南Claude Skills
+
+Claude Code Plugin概念介绍实践指南
+
+Claude Code Subagent
+
+Agent 与工作流
+Agent 记忆系统
+
+Pi Agent
+
+规格驱动开发
+
+Ralph Wiggum
+
+GSD
+
+gstack
+
+Matt Pocock 的 Claude Code 技能集
+
+工程实践
+AI 时代的 TDD
+
+Tmux 入门
+
+Yu的赛博工位
+
+搜索⌘K
+笔记收录独立开发博客关于🇨🇳
+
+实践指南
+
+Claude Code Plugin
+
+下载
+
+Claude Code Plugin 实践指南
+Copy page
+
+AI 辅助写的
+从零创建 Claude Code 插件：完整的开发流程、Marketplace 发布、团队协作配置与常见问题排查
+快速回顾
+
+在上一篇文章中，我们了解了 Plugin 的核心概念：它是 Claude Code 的工作流打包分发机制，可以将 Commands、Skills、Agents、Hooks 等组件整合在一起，便于团队共享和社区分发。本文将从实战角度出发，带你完成从创建到发布的完整流程。
+
+创建你的第一个 Plugin
+
+第一步：创建目录结构
+
+mkdir my-first-plugin
+mkdir my-first-plugin/.claude-plugin
+mkdir my-first-plugin/commands
+
+第二步：创建插件清单
+
+在 .claude-plugin/plugin.json 中定义插件的元数据：
+
+{
+  "name": "my-first-plugin",
+  "description": "我的第一个 Claude Code 插件",
+  "version": "1.0.0",
+  "author": {
+    "name": "Your Name"
+  }
+}
+
+第三步：添加斜杠命令
+
+在 commands/ 目录下创建 Markdown 文件。每个文件对应一个命令：
+
+commands/hello.md:
+
+---
+description: 向用户发送友好的问候
+---
+
+# Hello 命令
+
+请热情地问候用户，并询问今天可以帮助他们做什么。
+
+第四步：测试插件
+
+使用 --plugin-dir 标志加载本地插件进行测试：
+
+claude --plugin-dir ./my-first-plugin
+
+在 Claude Code 中运行命令：
+
+/my-first-plugin:hello
+
+第五步：添加命令参数
+
+命令支持接收用户输入的参数。更新 hello.md：
+
+---
+description: 向指定用户发送个性化问候
+---
+
+# Hello 命令
+
+请热情地问候名为 "$ARGUMENTS" 的用户，并询问今天可以帮助他们做什么。
+
+如果用户没有提供名字，就使用"朋友"作为称呼。
+
+测试带参数的命令：
+
+/my-first-plugin:hello 小明
+
+支持的参数占位符：
+
+$ARGUMENTS - 所有用户输入
+
+$1, $2, $3 - 单独的参数
+
+添加更多组件
+
+添加 Skills
+
+创建 skills/ 目录，每个 Skill 是一个包含 SKILL.md 的文件夹：
+
+my-first-plugin/
+├── skills/
+│   └── code-review/
+│       └── SKILL.md
+
+skills/code-review/SKILL.md:
+
+---
+name: code-review
+description: 审查代码质量、安全性和可维护性
+---
+
+当审查代码时，请检查以下方面：
+
+1. **代码组织**：结构是否清晰
+2. **错误处理**：异常是否被妥善处理
+3. **安全隐患**：是否存在安全漏洞
+4. **测试覆盖**：关键逻辑是否有测试
+
+输出格式：
+- 严重问题（必须修复）
+- 警告（建议修复）
+- 建议（可以改进）
+
+添加 Subagents
+
+创建 agents/ 目录：
+
+agents/code-reviewer.md:
+
+---
+name: code-reviewer
+description: 专业的代码审查代理，用于代码质量检查
+tools: Read, Grep, Glob, Bash
+---
+
+你是一位资深的代码审查专家。
+
+当被调用时：
+1. 运行 git diff 查看最近的更改
+2. 分析修改的文件
+3. 提供结构化的审查反馈
+
+审查清单：
+- 代码可读性和命名规范
+- 错误处理和边界条件
+- 安全漏洞（如注入、敏感信息泄露）
+- 性能优化机会
+
+添加 Hooks
+
+Hooks 让你在特定事件发生时自动执行脚本。创建 hooks/hooks.json：
+
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/format-code.sh"
+          }
+        ]
+      }
+    ]
+  }
+}
+
+重要：使用 ${CLAUDE_PLUGIN_ROOT} 环境变量引用插件目录中的文件，确保路径在任何安装位置都能正确解析。
+
+创建对应的脚本 scripts/format-code.sh：
+
+#!/bin/bash
+# 格式化代码
+cd "$CLAUDE_PROJECT_DIR" && make format 2>/dev/null || true
+
+记得设置执行权限：
+
+chmod +x scripts/format-code.sh
+
+添加 MCP 服务器
+
+如果你的插件需要连接外部系统，创建 .mcp.json：
+
+{
+  "mcpServers": {
+    "plugin-database": {
+      "command": "${CLAUDE_PLUGIN_ROOT}/servers/db-server",
+      "args": ["--config", "${CLAUDE_PLUGIN_ROOT}/config.json"],
+      "env": {
+        "DB_PATH": "${CLAUDE_PLUGIN_ROOT}/data"
+      }
+    }
+  }
+}
+
+完整的 Plugin 结构
+
+一个功能完整的 Plugin 可能是这样的：
+
+my-plugin/
+├── .claude-plugin/
+│   └── plugin.json           # 插件清单
+├── commands/
+│   ├── review.md             # 代码审查命令
+│   ├── deploy.md             # 部署命令
+│   └── test.md               # 测试命令
+├── agents/
+│   ├── code-reviewer.md      # 代码审查代理
+│   └── debugger.md           # 调试代理
+├── skills/
+│   └── code-standards/
+│       └── SKILL.md          # 代码规范知识
+├── hooks/
+│   └── hooks.json            # 事件钩子配置
+├── scripts/
+│   ├── format-code.sh        # 格式化脚本
+│   └── run-tests.sh          # 测试脚本
+├── .mcp.json                  # MCP 配置
+├── LICENSE
+├── README.md
+└── CHANGELOG.md
+
+对应的 plugin.json：
+
+{
+  "name": "dev-toolkit",
+  "version": "1.0.0",
+  "description": "开发者工具箱：代码审查、测试、部署一站式解决方案",
+  "author": {
+    "name": "Your Team",
+    "email": "team@example.com"
+  },
+  "homepage": "https://github.com/you/dev-toolkit",
+  "repository": "https://github.com/you/dev-toolkit",
+  "license": "MIT",
+  "keywords": ["development", "code-review", "deployment"],
+  "commands": "./commands/",
+  "agents": "./agents/",
+  "skills": "./skills/",
+  "hooks": "./hooks/hooks.json",
+  "mcpServers": "./.mcp.json"
+}
+
+发布到 Marketplace
+
+什么是 Marketplace
+
+Marketplace 是 Plugin 的分发中心。你可以把它理解为"插件商店"——用户通过简单的命令就能安装你发布的插件。
+
+创建 Marketplace 配置
+
+在你的 GitHub 仓库中创建 .claude-plugin/marketplace.json：
+
+{
+  "name": "my-marketplace",
+  "owner": {
+    "name": "Your Name",
+    "email": "you@example.com"
+  },
+  "plugins": [
+    {
+      "name": "dev-toolkit",
+      "source": "./plugins/dev-toolkit",
+      "description": "开发者工具箱",
+      "version": "1.0.0"
+    },
+    {
+      "name": "doc-generator",
+      "source": {
+        "source": "github",
+        "repo": "you/doc-generator-plugin"
+      },
+      "description": "文档生成工具"
+    }
+  ]
+}
+
+插件来源类型
+
+Marketplace 支持多种来源：
+
+相对路径（同仓库内的插件）：
+
+{
+  "name": "my-plugin",
+  "source": "./plugins/my-plugin"
+}
+
+GitHub 仓库：
+
+{
+  "name": "github-plugin",
+  "source": {
+    "source": "github",
+    "repo": "owner/plugin-repo"
+  }
+}
+
+任意 Git 仓库：
+
+{
+  "name": "git-plugin",
+  "source": {
+    "source": "url",
+    "url": "https://gitlab.com/team/plugin.git"
+  }
+}
+
+发布流程
+
+创建 GitHub 仓库
+
+推送代码：
+
+git init
+git add .
+git commit -m "Initial release"
+git push origin main
+
+用户添加你的 Marketplace：
+
+/plugin marketplace add your-username/your-repo
+
+用户安装插件：
+
+/plugin install dev-toolkit@your-marketplace
+
+安装和管理 Plugin
+
+通过交互式菜单
+
+/plugin
+
+这会打开一个交互式界面，你可以浏览、安装、启用、禁用插件。
+
+通过命令行
+
+添加 Marketplace：
+
+/plugin marketplace add owner/repo           # GitHub
+/plugin marketplace add https://example.com/marketplace.json  # URL
+/plugin marketplace add ./local-marketplace  # 本地
+
+安装插件：
+
+# 安装到用户范围（默认）
+/plugin install formatter@my-marketplace
+
+# 安装到项目范围（团队共享）
+/plugin install formatter@my-marketplace --scope project
+
+# 安装到本地范围（gitignored）
+/plugin install formatter@my-marketplace --scope local
+
+其他管理命令：
+
+/plugin enable <plugin>      # 启用插件
+/plugin disable <plugin>     # 禁用插件
+/plugin uninstall <plugin>   # 卸载插件
+/plugin update <plugin>      # 更新插件
+
+验证插件
+
+在发布前验证插件配置是否正确：
+
+claude plugin validate .
+
+或在 Claude Code 中：
+
+/plugin validate .
+
+团队协作配置
+
+在项目中共享插件配置
+
+将插件配置提交到版本控制，让团队成员自动获得：
+
+.claude/settings.json:
+
+{
+  "extraKnownMarketplaces": {
+    "company-tools": {
+      "source": {
+        "source": "github",
+        "repo": "your-org/claude-plugins"
+      }
+    }
+  },
+  "enabledPlugins": {
+    "code-formatter@company-tools": true,
+    "deployment-tools@company-tools": true
+  }
+}
+
+团队成员克隆项目后，这些插件会自动可用。
+
+企业级 Marketplace 限制
+
+对于需要严格控制的企业环境，可以在 managed settings 中限制允许的 Marketplace：
+
+{
+  "strictKnownMarketplaces": [
+    {
+      "source": "github",
+      "repo": "company/approved-plugins"
+    }
+  ]
+}
+
+设置为空数组 [] 可以完全禁止外部插件。
+
+CLI 命令参考
+
+命令说明
+/plugin
+打开交互式管理界面
+
+/plugin install <name>@<marketplace>
+安装插件
+
+/plugin uninstall <name>
+卸载插件
+
+/plugin enable <name>
+启用插件
+
+/plugin disable <name>
+禁用插件
+
+/plugin update <name>
+更新插件
+
+/plugin validate .
+验证当前目录的插件配置
+
+/plugin marketplace add <source>
+添加 Marketplace
+
+/plugin marketplace list
+列出已添加的 Marketplace
+
+/plugin marketplace update
+更新 Marketplace 缓存
+
+/plugin marketplace remove <name>
+移除 Marketplace
+
+最佳实践
+
+开发最佳实践
+
+保持 Skills 专注：每个 Skill 做好一件事，避免大而全
+
+编写清晰的描述：让 Claude 知道何时使用你的组件
+
+先团队测试：在分发到社区前，先在团队内部验证
+
+记录版本变更：在 CHANGELOG.md 中记录每个版本的改动
+
+目录结构最佳实践
+
+将 commands/、agents/、skills/ 放在插件根目录
+
+只将 plugin.json 放在 .claude-plugin/ 目录
+
+使用 ${CLAUDE_PLUGIN_ROOT} 引用插件内的文件
+
+不要用 ../ 访问插件外的文件
+
+Hooks 最佳实践
+
+脚本必须可执行：chmod +x script.sh
+
+使用 shebang 声明解释器：#!/bin/bash
+
+使用 ${CLAUDE_PLUGIN_ROOT} 变量确保路径正确
+
+先单独测试脚本再集成到 Hook
+
+版本管理最佳实践
+
+遵循语义化版本（Semantic Versioning）：
+
+MAJOR (1.0.0 → 2.0.0)：破坏性变更
+
+MINOR (1.0.0 → 1.1.0)：新增功能（向后兼容）
+
+PATCH (1.0.0 → 1.0.1)：Bug 修复（向后兼容）
+
+常见问题排查
+
+问题可能原因解决方案
+插件不加载
+plugin.json 格式错误
+用 claude plugin validate 验证
+
+命令未出现
+目录结构错误
+确保 commands/ 在根目录，不在 .claude-plugin/
+
+Hooks 不触发
+脚本不可执行
+运行 chmod +x script.sh
+
+路径找不到
+使用了相对路径
+改用 ${CLAUDE_PLUGIN_ROOT}
+
+MCP 服务器失败
+环境变量未设置
+检查 .mcp.json 中的路径配置
+
+从现有配置迁移
+
+如果你已经有 .claude/ 目录下的配置，可以按以下步骤迁移为 Plugin：
+
+创建 Plugin 结构：
+
+mkdir my-plugin/.claude-plugin
+
+创建 plugin.json：
+
+{
+  "name": "my-plugin",
+  "description": "从现有配置迁移的插件",
+  "version": "1.0.0"
+}
+
+复制现有文件：
+
+cp -r .claude/commands my-plugin/
+cp -r .claude/agents my-plugin/
+cp -r .claude/skills my-plugin/
+
+迁移 Hooks：
+从 .claude/settings.json 复制 hooks 配置到 hooks/hooks.json
+
+测试：
+
+claude --plugin-dir ./my-plugin
+
+学习资源
+
+官方文档
+
+资源链接说明
+Plugins Reference
+code.claude.com/docs
+插件参考文档
+
+Create Plugins
+code.claude.com/docs
+插件创建指南
+
+Best Practices
+Anthropic Engineering
+官方最佳实践
+
+Agent Skills 标准
+agentskills.io
+开放标准规范
+
+官方仓库
+
+资源链接说明
+anthropics/skills
+GitHub
+官方 Skills 仓库
+
+anthropics/claude-plugins-official
+GitHub
+官方插件目录
+
+Docker MCP Toolkit
+官网
+200+ 预构建 MCP
+
+社区资源
+
+资源链接说明
+claude-plugins.dev
+官网
+社区注册表和 CLI
+
+awesome-claude-plugins
+GitHub
+243 个插件集合
+
+awesome-claude-code
+GitHub
+最佳实践汇总
+
+wshobson/agents
+GitHub
+99 代理 + 15 编排器
+
+jeremylongshore 教程
+GitHub
+数百插件 + Jupyter 教程
+
+推荐阅读
+
+文章来源
+Understanding Claude Code: Skills vs Commands vs Subagents vs Plugins
+Young Leaders Tech
+
+Improving your coding workflow with Claude Code Plugins
+Composio
+
+Building My First Claude Code Plugin
+Alexander Opalic
+
+展望
+
+Plugin 机制让 Claude Code 的扩展能力有了质的飞跃。随着社区的发展，我们可以期待：
+
+更丰富的插件生态：覆盖各种开发场景和工作流
+
+企业级功能：更完善的权限管理和审计能力
+
+跨平台兼容：Skills 开放标准已被多家厂商采用
+
+现在正是入场的好时机。你可以从简单的命令开始，逐步添加 Skills、Hooks，最终形成一套完整的工作流解决方案。
+
+如果你想深入了解 Plugin 可以包含的 Subagent 组件，请阅读《Claude Code Subagent 是什么》。
+
+评论
+
+概念介绍
+
+深入理解 Claude Code 插件机制：如何通过 Plugin 打包分发工作流，实现团队协作与社区共享
+概念介绍
+
+深入理解 Claude Code 子代理机制：独立上下文、专门化能力、任务委托如何提升 AI 编程效率
+
+目录
+
+快速回顾创建你的第一个 Plugin第一步：创建目录结构第二步：创建插件清单第三步：添加斜杠命令第四步：测试插件第五步：添加命令参数添加更多组件添加 Skills添加 Subagents添加 Hooks添加 MCP 服务器完整的 Plugin 结构发布到 Marketplace什么是 Marketplace创建 Marketplace 配置插件来源类型发布流程安装和管理 Plugin通过交互式菜单通过命令行验证插件团队协作配置在项目中共享插件配置企业级 Marketplace 限制CLI 命令参考最佳实践开发最佳实践目录结构最佳实践Hooks 最佳实践版本管理最佳实践常见问题排查从现有配置迁移学习资源官方文档官方仓库社区资源推荐阅读展望
+
+Claude Code Plugin 实践指南 | Yu的赛博工位
+
+self.__next_f.push([1,"d\",\"className\":\"lucide size-3.5 shrink-0 text-fd-muted-foreground opacity-0 transition-opacity peer-hover:opacity-100\",\"aria-hidden\":true,\"children\":[[[\"$\",\"path\",\"1cjeqo\",{\"d\":\"M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71\"}],[\"$\",\"path\",\"19qd67\",{\"d\":\"M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71\"}]],\"$undefined\"]}]]}]\n9f:[\"$\",\"ol\",null,{\"children\":[\"\\n\",[\"$\",\"li\",null,{\"children\":[\"脚本必须可执行：\",[\"$\",\"code\",null,{\"children\":\"chmod +x script.sh\"}]]}],\"\\n\",[\"$\",\"li\",null,{\"children\":[\"使用 shebang 声明解释器：\",[\

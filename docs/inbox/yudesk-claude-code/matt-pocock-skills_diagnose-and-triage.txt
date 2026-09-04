@@ -1,0 +1,318 @@
+跳转到主要内容
+Yu的赛博工位
+
+笔记收录独立开发博客关于🇨🇳
+
+文档Claude Code 相关
+Claude Code 隐藏技巧
+
+系统架构全解析工具调用系统Worktree 指南Agent Teams 指南Claude Skills
+
+Claude Code Plugin
+
+Claude Code Subagent
+
+Agent 与工作流
+Agent 记忆系统
+
+Pi Agent
+
+规格驱动开发
+
+Ralph Wiggum
+
+GSD
+
+gstack
+
+Matt Pocock 的 Claude Code 技能集概览初始化配置Grill MeBatch Grill MeGrill With DocsPRD 与 Issues诊断与分诊TDDZoom OutPrototype深化代码架构其他 Skills
+
+工程实践
+AI 时代的 TDD
+
+Tmux 入门
+
+Yu的赛博工位
+
+搜索⌘K
+笔记收录独立开发博客关于🇨🇳
+
+诊断与分诊
+
+Matt Pocock 的 Claude Code 技能集
+
+下载
+
+Diagnose 与 Triage：先建立反馈回路，再决定交给谁
+Copy page
+
+AI 辅助写的
+拆解 Matt Pocock 的 /diagnose 和 /triage 两个工程 skill：一个负责用可重复反馈回路找出 bug 根因，一个负责把 issue 推进到 needs-info、ready-for-agent、ready-for-human 或 wontfix
+为什么把两个 Skill 放在一起讲
+
+/diagnose 和 /triage 在 README 里是两个独立 skill，但它们解决的是同一个工程问题的两半：
+
+/diagnose 关心：这个 bug 到底是什么、怎么复现、怎么证明修好了
+
+/triage 关心：这个 issue 现在该等信息、给 agent、给人，还是不做
+
+一个负责事实，一个负责流程。真实项目里这两个经常连在一起：先 triage 一个 bug issue，发现信息不够就 needs-info；信息够了就用 diagnose 建反馈回路；复现清楚后再决定是 ready-for-agent 还是 ready-for-human。
+
+/diagnose 的核心：反馈回路就是全部
+
+/diagnose 最值得记住的一句话是：先建立一个 agent 能运行的 pass/fail 信号。
+
+Matt 把诊断拆成 6 个阶段：
+
+阶段目标
+Build a feedback loop
+搭一个快速、确定、可反复运行的失败信号
+
+Reproduce
+让这个信号复现用户描述的同一个 bug
+
+Hypothesise
+列 3-5 个可证伪假设
+
+Instrument
+用最少探针验证假设
+
+Fix + regression test
+在正确测试面写回归测试，再修
+
+Cleanup + post-mortem
+清理临时探针，记录真实根因
+
+这和很多人调 bug 的顺序相反。普通调试常见流程是：看代码、猜原因、改一改、刷新页面。Matt 反过来：先把 bug 变成一个可重复机器信号，再谈假设。
+
+什么算好反馈回路
+
+/diagnose 给了一组优先级，从最好到最兜底：
+
+回路适合场景
+失败测试
+有合适测试面，能直接表达 bug
+
+curl / HTTP script
+API bug、服务端行为可用请求复现
+
+CLI + fixture
+命令行工具、解析器、转换器
+
+Headless browser
+UI bug、控制台错误、网络行为
+
+Replay captured trace
+线上真实 payload、事件流、日志链路
+
+Throwaway harness
+只启动系统一小块，隔离复杂依赖
+
+Property / fuzz loop
+偶现错误输出，需要提高触发率
+
+Bisection / differential loop
+某版本后坏了，需要二分或对比旧版
+
+HITL script
+只能人手点时，也要让人按脚本提供稳定输出
+
+这里有一个很硬的判断：没有回路，不要进入假设阶段。因为没有信号，所有分析都会变成「看起来像」。
+
+非确定性 bug 怎么办
+
+/diagnose 对偶发 bug 的态度也很实用：目标不是一开始就 100% 复现，而是先把复现率提高到可调试。
+
+比如：
+
+循环触发 100 次
+
+并发触发
+
+注入 sleep 拉大竞态窗口
+
+固定随机种子或时间
+
+缩小环境变量和外部依赖
+
+1% 的偶发 bug 很难调；50% 的偶发 bug 就已经是可调试对象。这个思路对前端异步、消息队列、支付回调、流式输出都很有用。
+
+假设必须可证伪
+
+Matt 要求在动手验证前先列 3-5 个假设，并且每个假设都要写出预测：
+
+如果 X 是原因，那么改变 Y 后 bug 应该消失；
+或者观察 Z 时应该出现某个特征。
+
+这会防止 agent 被第一个看起来合理的解释锁死。更重要的是，它让你能判断某个实验到底有没有信息量。
+
+一个坏假设：
+
+可能是缓存问题。
+
+一个可证伪假设：
+
+如果是浏览器缓存导致旧脚本执行，那么禁用缓存并强刷后，console 里的旧 bundle hash 应该消失，按钮点击事件也应该恢复。
+
+后者才值得验证。
+
+修复阶段最容易犯的错
+
+/diagnose 要求：如果有正确测试面，就先把最小复现转成失败测试，再修代码。
+
+关键是「正确测试面」。不是随便补一个 unit test 就算回归测试。正确测试面必须覆盖真实 bug 模式：
+
+bug 是多个调用者组合触发的，就不能只测单个函数
+
+bug 是真实 payload 结构触发的，就不能只测一个手写 toy object
+
+bug 是浏览器事件顺序触发的，就不能只测纯函数
+
+如果找不到正确测试面，这本身就是结论：代码结构没有给你留下可锁定 bug 的地方。修完之后应该把这个信息交给 /improve-codebase-architecture。
+
+/triage 的核心：issue 是状态机
+
+/triage 不是让 AI 随便帮你「看一下 issue」。它把 issue 当作一个小状态机。
+
+每个 issue 应该同时有：
+
+一个 category：bug 或 enhancement
+
+一个 state：needs-triage、needs-info、ready-for-agent、ready-for-human、wontfix
+
+这套状态的价值在于让维护者可以快速回答：
+
+哪些还没人看？
+
+哪些等报告者补信息？
+
+哪些已经清楚到可以交给 AFK agent？
+
+哪些必须人类自己做？
+
+哪些应该关掉，并把原因沉淀下来？
+
+ready-for-agent 的标准
+
+ready-for-agent 是这套流程里最关键的状态。它不是「这个任务可以让 AI 试试」，而是：
+
+任务已经清楚到一个不在场的 agent 可以独立领取、实现、验证。
+
+这通常意味着 issue 里至少有：
+
+背景和问题陈述
+
+相关代码路径或模块
+
+明确的验收标准
+
+已知约束
+
+如果是 bug，最好有复现方式
+
+不需要额外产品/设计判断
+
+如果缺这些，应该是 needs-info 或 ready-for-human，而不是勉强丢给 agent。
+
+needs-info 要问具体问题
+
+/triage 给 needs-info 的模板很朴素，但重点是问题必须具体：
+
+## Triage Notes
+
+**What we've established so far:**
+
+- ...
+
+**What we still need from you (@reporter):**
+
+- ...
+
+坏问题：
+
+请提供更多信息。
+
+好问题：
+
+请提供触发问题的浏览器版本、出错页面 URL、点击顺序，以及 Network 面板里 `/api/orders/:id` 的 response body。
+
+AI 很容易写礼貌废话，这个 skill 强迫它把「我们已经知道什么」和「还缺什么」分开。
+
+wontfix 也要沉淀
+
+/triage 对 enhancement 的 wontfix 有一个有趣设计：不要只是关 issue，而是把拒绝理由写进 .out-of-scope/ 知识库，再在评论里链接。
+
+这样下次类似需求出现时，AI 不会重新展开同一场讨论。它可以先读 .out-of-scope/，提醒维护者：「这个方向之前拒绝过，理由是 X。」
+
+这和 ADR 的精神很像：不是记录所有决定，只记录未来会让人疑惑、并且会反复出现的决定。
+
+两者怎么配合
+
+一个典型 bug issue 可以这样走：
+
+/triage 读取 issue、评论、标签和相关代码
+
+它判断这是 bug + needs-triage
+
+先尝试复现；如果步骤不足，转 needs-info
+
+信息足够后，启动 /diagnose
+
+/diagnose 建立复现回路，列假设，定位根因
+
+如果修复路径清楚、测试面明确，issue 变 ready-for-agent
+
+如果需要产品判断、外部权限、人工验证，issue 变 ready-for-human
+
+修完后把根因和回归测试写回 issue 或 PR
+
+这套流程的关键不是「AI 自动修 bug」，而是让 issue 从模糊描述变成可执行工作包。
+
+我的使用建议
+
+如果你只记一条：
+
+/diagnose 先问「我怎么证明它坏了」；/triage 先问「它现在该处在哪个状态」。
+
+这两个问题能挡住大量低质量 AI 编程：
+
+没复现就修
+
+没验收就开工
+
+没根因就重构
+
+没信息就甩给 agent
+
+Matt 这两个 skill 并不花哨，但很像真实团队里资深工程师会做的事：先把事实收束，再推进流程。
+
+参考资源
+
+diagnose 源文件
+用于困难 bug 和性能回退的纪律化诊断流程。
+
+Matt PocockGitHub2026
+EN前往
+
+triage 源文件
+用一组 triage 角色推动 issue 状态流转。
+
+Matt PocockGitHub2026
+EN前往
+
+下一篇：TDD：用红绿重构强迫 AI 走小步。
+
+评论
+
+PRD 与 Issues
+
+Matt Pocock 工作流的中段——/to-prd 把对话变 PRD，/to-issues 把 PRD 切成可独立领取的纵向切片 issue。深入解读「tracer bullet」「vertical slice」这两个老概念在 AI 时代的新作用
+TDD
+
+Matt Pocock 自称「最稳定提升 agent 输出质量的方法」。深入拆解他的 TDD skill 为什么坚持 vertical 而非 horizontal 红绿重构、怎么避免测试与实现耦合、以及 AI 时代 TDD 的新意义
+
+目录
+
+为什么把两个 Skill 放在一起讲/diagnose 的核心：反馈回路就是全部什么算好反馈回路非确定性 bug 怎么办假设必须可证伪修复阶段最容易犯的错/triage 的核心：issue 是状态机ready-for-agent 的标准needs-info 要问具体问题wontfix 也要沉淀两者怎么配合我的使用建议参考资源
+
+Diagnose 与 Triage：先建立反馈回路，再决定交给谁 | Yu的赛博工位

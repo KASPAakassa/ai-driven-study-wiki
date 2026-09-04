@@ -1,0 +1,313 @@
+跳转到主要内容
+Yu的赛博工位
+
+笔记收录独立开发博客关于🇨🇳
+
+文档Claude Code 相关
+Claude Code 隐藏技巧
+
+系统架构全解析工具调用系统Worktree 指南Agent Teams 指南Claude Skills
+
+Claude Code Plugin
+
+Claude Code Subagent
+
+Agent 与工作流
+Agent 记忆系统
+
+Pi Agent
+
+规格驱动开发
+
+Ralph Wiggum
+
+GSD
+
+gstack
+
+Matt Pocock 的 Claude Code 技能集概览初始化配置Grill MeBatch Grill MeGrill With DocsPRD 与 Issues诊断与分诊TDDZoom OutPrototype深化代码架构其他 Skills
+
+工程实践
+AI 时代的 TDD
+
+Tmux 入门
+
+Yu的赛博工位
+
+搜索⌘K
+笔记收录独立开发博客关于🇨🇳
+
+Batch Grill Me
+
+Matt Pocock 的 Claude Code 技能集
+
+下载
+
+Batch Grill Me：把 13 轮拷问压成 3 轮
+Copy page
+
+AI 辅助写的
+Batch Grill Me 是 Matt Pocock 的分轮批量拷问 Skill。按 design tree 的 frontier 提问，问题不减、轮次减少，约把 13 轮压到 3 轮。
+核心结论
+
+Batch Grill Me
+Matt Pocock 的 Agent Skill，是 Grill Me 的分轮批量版：按 design tree 的 frontier 提问，同一轮问完当前所有前置条件已定的问题，再根据回答推进下一层。问题数量通常不变，减少的是来回轮次。
+
+来源: GitHub前往
+
+一句话：Batch Grill Me 改的是 Grill Me 的提问节奏——不再一次只问一题，而是按 design tree 的 frontier 分轮批量提问。
+
+它针对的失败模式很具体：一次一问把人问废了。中等功能常有 20 到 50 题。回着回着，你就只会反复说 I agree。问题还是那些问题，狠劲也还在，只是轮次少了。
+
+Matt 给过一组很干净的数字：
+
+同样 13 个问题，以前 13 轮，现在 3 轮。
+
+如果你已经读过 Grill Me，这篇可以当续篇看。
+
+失败模式：一次一问会把人问废
+
+/grill-me 确实管用。你说想加个评论功能，它不会立刻开写，而是先问：要不要登录？能不能匿名？删父评论时子评论怎么办？审核谁来做？这些问题一出来，你就知道刚才那句需求有多糊。
+
+但烦也是真的烦。
+
+每题单独弹出来，注意力会被切碎。前 5 题还行，到第 15 题，你开始只想结束。推荐答案一出来，手指比脑子快，直接同意。表面上完成了 30 个决策，后半程很多其实是疲劳签字。
+
+Matt 自己把这个失败模式说得很准：到后面你只会反复回一句 I agree。
+
+他改的是提问节奏
+
+一听 batch，很多人会担心：一次甩一堆问题，不就乱了吗？
+
+原来的 grill-me 有一条铁律：一次只问一题。原因合理，问题之间有依赖。你还没决定“要不要登录”，它就不该接着问“登录失败几次锁账号”。
+
+batch-grill-me 没把这条铁律扔掉，只是换了节奏。
+
+它还是先把方案看成一棵树。树根是上游决策，树枝是下游决策。每一轮，它只问当前已经能问的那一层，也就是 Matt 说的 frontier：前置条件已经定了，现在问还不需要猜你还没说的答案。
+
+一轮里可能同时出现 5 到 8 个问题。你一口气答完。它根据你的回答重算树，再推下一层。依赖还没解开的问题，不会混进这一轮。
+
+所以问题数量没有变少，变少的是来回次数。
+
+Matt 后来还说，/grill-me 和 /grill-with-docs 也准备这么改，不再死守 one question at a time，而是按 rounds 问。更快，更省 token，依赖关系还在。
+
+源文件在这里：
+
+batch-grill-me Skill 源文件
+一轮问完当前 frontier 上所有问题的 relentless interview。
+
+Matt PocockGitHub2026-07
+EN前往
+
+frontier 到底是什么
+
+frontier
+在 design tree 里，前置条件已经定下、现在就能问的那一层决策。Batch Grill Me 每一轮只问当前 frontier 上的问题；答案依赖尚未确定决策的问题，会留到后面几轮。
+
+来源: Matt Pocock / batch-grill-me前往
+
+以前我觉得 one-at-a-time 更认真。
+
+现在回头看，认真归认真，它也有坑。
+
+Matt 改本地版本的时候，最先喜欢上的不是“更快”，而是另一种状态：你可以一口气把答案说完。
+
+这更像在拍板，不太像应付漫长口试。一轮里同时看到 6 个上游问题，反而更容易发现冲突。比如你一边说“游客也能评论”，一边又说“必须登录才能嵌套回复”，两题放在一起时，矛盾会直接撞上；拆开一题一题问，反而容易漏。
+
+还有一件小事，也比看起来重要：每题都要给推荐答案。
+
+原版就有这句。batch 之后它更值钱。一轮问 8 题，如果每题都甩给你一个空白选择题，人会炸。有推荐答案，你才是在审核，不是从零发明。
+
+拿“博客评论”走一遍
+
+假设你要对 AI 说：给博客加评论。
+
+原版常见路径是：
+
+谁能评论？
+
+要不要登录？
+
+要不要嵌套？
+
+要不要审核？
+
+要不要通知？
+
+一题一回，稳，但慢。
+
+按 batch 的逻辑，第一轮更像这样：
+
+评论到底服务什么？
+
+推荐：优先深度讨论，不追求热闹。
+
+谁可以发？
+
+推荐：登录用户可发，游客只读。
+
+扁平还是嵌套？
+
+推荐：先做一层回复，不做无限楼中楼。
+
+要不要审核？
+
+推荐：先发后审，敏感词拦一下，人工能删。
+
+多语言文章怎么处理评论？
+
+推荐：评论跟着文章语言走，不要中英串到同一条线程。
+
+第三方还是自建？
+
+推荐：先第三方，真有需求再自建。
+
+这 6 题能放同一轮，因为它们大多是上游选择，彼此还没形成硬依赖。
+
+下面这些问题就不该出现在第一轮：
+
+parent_id 能不能为空
+
+你都还没决定要不要嵌套。
+
+审核队列的 webhook 怎么接
+
+你都还没决定审不审、谁来审。
+
+SSO 失败重试几次
+
+你都还没决定要不要登录。
+
+第二轮才会轮到它们。
+
+batch 和“一次甩 20 个大杂烩”的差别就在这里。后者是堆问题，前者是按依赖分层推进。
+
+Batch Grill Me 和 Grill Me 有什么区别
+
+Grill MeBatch Grill Me
+怎么问
+一次一题
+一轮问完当前 frontier
+
+依赖处理
+串行走
+按依赖分层，同层一起问
+
+轮次
+问题多时轮次也多
+同样问题，轮次通常更少
+
+好处
+很聚焦
+更快，没那么容易点到麻木
+
+代价
+来回多
+一轮信息量大，你得真看
+
+更适合
+树根还不清楚、关键分歧要单独钉死
+方向大致清楚，细节多且部分可并行
+
+差别不大：依赖还在，来回少了。
+
+什么时候用
+
+适合 batch 的情况很窄：
+
+你已经知道大概要做什么
+
+细节很多
+
+其中一部分问题彼此独立，能并着问
+
+不适合 batch 的情况更常见一点：
+
+连“这个功能解决谁的问题”都说不清
+
+你现在只想抓住一个最大分歧
+
+决策高度耦合，几乎每题都挂在上一题上
+
+前两种情况，一次一问，或者先做 blind spot pass，往往更合适。我之前写 别急着让 AI 写代码，先让它帮你找盲点 时讲过：有时缺的不是更快的提问，而是先承认自己不知道什么。
+
+第三种情况强行 batch，看起来省轮次，实际上还是会回头改前面的答案。
+
+怎么开始
+
+这个 skill 目前还在 Matt 仓库的 in-progress 里：
+
+npx skills add https://github.com/mattpocock/skills --skill batch-grill-me
+
+然后跑：
+
+/batch-grill-me
+
+我自己比较顺的流程是：
+
+先用一句话说清楚你要做什么。
+
+比如：“我想给博客加评论，还没定登录、审核和是否自建。”
+
+开 batch。
+
+第一轮认真看完再答，别整轮“都同意”。
+
+让它根据回答推下一轮。
+
+问完后先确认共识，再写 PRD 或动手。
+
+两个容易踩的坑：
+
+不要中途清 context。后面如果要压成 PRD，这些对话本身就是材料。
+
+“你定”可以用，但只用在真不重要的题上。身份、数据边界、兼容策略，别随手甩给模型。
+
+如果你已经会用 grill-me，直接拿一个真实需求试一轮就够了。问题数量大概还是那些，只是不用一题一回磨完。
+
+常见问题
+
+Q: Batch Grill Me 是什么？
+
+A: Batch Grill Me 是 Matt Pocock 的 Agent Skill，也是 Grill Me 的分轮批量版。 它按 design tree 的 frontier 提问：同一轮只问当前前置条件已定的问题，答完再推进下一层。问题通常不减，减少的是来回轮次；Matt 的例子是 13 题从 13 轮压到约 3 轮。
+
+Q: Batch Grill Me 和 Grill Me 怎么选？
+
+A: 方向清楚、细节多、部分问题可并行时，用 Batch Grill Me；树根不清或关键分歧要单独钉死时，用 Grill Me。 决策几乎全是串行依赖时，也更适合原来的一次一问。
+
+Q: 一次问很多题，会不会乱？
+
+A: 按 frontier 分轮问不会乱，一次甩无关大杂烩才会乱。 Batch 只问前置条件已经定了的问题；依赖还没解开的下游题，不会进当前轮。
+
+Q: 怎么安装 Batch Grill Me？
+
+A: 在项目里执行 npx skills add https://github.com/mattpocock/skills --skill batch-grill-me，然后运行 /batch-grill-me。 该 skill 目前仍在仓库的 in-progress 路径。
+
+Q: 问完之后下一步做什么？
+
+A: 先确认 design tree 已达成共识，再进入 to-prd / to-issues 或动手写代码。 不要中途清 context，这些对话就是后面写 PRD 的原料。
+
+参考与延伸阅读
+
+上一篇：Grill Me：让 AI 在你写代码前拷问你 50 个问题
+
+下一篇：Grill With Docs：维护项目语言和 ADR
+
+相关：to-prd 和 to-issues：把对话压成可执行任务
+
+源文件：batch-grill-me/SKILL.md
+
+评论
+
+Grill Me
+
+Matt Pocock 最火的 Skill，7 行 markdown 让 Claude 在动手前先和你做 30~45 分钟的需求对齐——拆解它的工作原理、和 Claude Code 自带 plan mode 的差异，以及怎么把它扩展到非编程场景
+Grill With Docs
+
+grill-me 的进阶版——在拷问需求的同时，自动维护 CONTEXT.md（项目术语表）和 ADR（架构决策记录），把 DDD 的 ubiquitous language 思想翻译成 LLM 能直接执行的工作流
+
+目录
+
+核心结论失败模式：一次一问会把人问废他改的是提问节奏frontier 到底是什么拿“博客评论”走一遍Batch Grill Me 和 Grill Me 有什么区别什么时候用怎么开始常见问题参考与延伸阅读
+
+Batch Grill Me：把 13 轮拷问压成 3 轮 | Yu的赛博工位
