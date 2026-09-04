@@ -68,280 +68,280 @@ exclude_docs: |
   inbox/yudesk-claude-code/*.md
 
 nav:
-  - 馃彔 棣栭〉: index.md
-  - 馃椇 鐭ヨ瘑搴撶储寮?娓愯繘寮忓姞杞?: knowledge-index.md
-  - 馃 AI 路 ML 路 DL 鍩虹:
+  - "馃彔 棣栭〉": index.md
+  - "馃椇 鐭ヨ瘑搴撶储寮?娓愯繘寮忓姞杞?": knowledge-index.md
+  - "馃 AI 路 ML 路 DL 鍩虹":
       - 01-ai-basics/index.md
-      - 浜哄伐鏅鸿兘鍏ラ棬: 01-ai-basics/ai-intro.md
-      - AI / ML / DL 鐨勫叧绯?: 01-ai-basics/ai-ml-dl.md
-      - 瀛︿範鑼冨紡涓庢牳蹇冩蹇?: 01-ai-basics/ml-learning-paradigms.md
-      - 绾挎€у洖褰掍笌閫昏緫鍥炲綊: 01-ai-basics/ml-linear-models.md
-      - 鍐崇瓥鏍戜笌闆嗘垚瀛︿範: 01-ai-basics/ml-tree-ensemble.md
-      - 鏀寔鍚戦噺鏈?SVM: 01-ai-basics/ml-svm.md
-      - 鑱氱被: 01-ai-basics/ml-clustering.md
-      - 鐗瑰緛宸ョ▼涓庢ā鍨嬭瘎浼?: 01-ai-basics/ml-feature-engineering.md
-      - 绁炵粡缃戠粶鍩虹: 01-ai-basics/dl-neural-network-basics.md
-      - 鍙嶅悜浼犳挱涓庢搴︿笅闄?: 01-ai-basics/dl-backpropagation.md
-      - 娣卞害瀛︿範璁粌鎶€宸?: 01-ai-basics/dl-training-techniques.md
-      - 鍗风Н绁炵粡缃戠粶 CNN: 01-ai-basics/dl-cnn.md
-      - 寰幆绁炵粡缃戠粶 RNN: 01-ai-basics/dl-rnn.md
-      - 寰蒋 AI for Beginners 璇剧▼瀵艰: 01-ai-basics/microsoft-ai-for-beginners.md
-  - 馃挰 澶ц瑷€妯″瀷:
+      - "浜哄伐鏅鸿兘鍏ラ棬": 01-ai-basics/ai-intro.md
+      - "AI / ML / DL 鐨勫叧绯?": 01-ai-basics/ai-ml-dl.md
+      - "瀛︿範鑼冨紡涓庢牳蹇冩蹇?": 01-ai-basics/ml-learning-paradigms.md
+      - "绾挎€у洖褰掍笌閫昏緫鍥炲綊": 01-ai-basics/ml-linear-models.md
+      - "鍐崇瓥鏍戜笌闆嗘垚瀛︿範": 01-ai-basics/ml-tree-ensemble.md
+      - "鏀寔鍚戦噺鏈?SVM": 01-ai-basics/ml-svm.md
+      - "鑱氱被": 01-ai-basics/ml-clustering.md
+      - "鐗瑰緛宸ョ▼涓庢ā鍨嬭瘎浼?": 01-ai-basics/ml-feature-engineering.md
+      - "绁炵粡缃戠粶鍩虹": 01-ai-basics/dl-neural-network-basics.md
+      - "鍙嶅悜浼犳挱涓庢搴︿笅闄?": 01-ai-basics/dl-backpropagation.md
+      - "娣卞害瀛︿範璁粌鎶€宸?": 01-ai-basics/dl-training-techniques.md
+      - "鍗风Н绁炵粡缃戠粶 CNN": 01-ai-basics/dl-cnn.md
+      - "寰幆绁炵粡缃戠粶 RNN": 01-ai-basics/dl-rnn.md
+      - "寰蒋 AI for Beginners 璇剧▼瀵艰": 01-ai-basics/microsoft-ai-for-beginners.md
+  - "馃挰 澶ц瑷€妯″瀷":
       - 02-llm/index.md
-      - 澶ц瑷€妯″瀷姒傝堪: 02-llm/llm-intro.md
-      - Transformer 鏋舵瀯: 02-llm/transformer-architecture.md
-      - Tokenizer 涓庤瘝琛?: 02-llm/tokenizer.md
-      - 棰勮缁冧笌瑙勬ā瀹氬緥: 02-llm/pretraining.md
-      - 寰皟: 02-llm/fine-tuning.md
-      - 瀵归綈(RLHF 涓?DPO): 02-llm/rlhf-alignment.md
-      - 鎺ㄧ悊涓庨儴缃?: 02-llm/inference-deployment.md
-      - 妫€绱㈠寮虹敓鎴?RAG: 02-llm/rag.md
-      - 妯″瀷鍚庤缁?棰勮缁?SFT/RL): 02-llm/agent-post-training.md
-      - 鎺ㄧ悊鐨勯璁粌-鍚庤缁冩帴鍙?缂╂斁寰?: 02-llm/reasoning-pretraining-posttraining.md
-  - 馃洜 Agent:
+      - "澶ц瑷€妯″瀷姒傝堪": 02-llm/llm-intro.md
+      - "Transformer 鏋舵瀯": 02-llm/transformer-architecture.md
+      - "Tokenizer 涓庤瘝琛?": 02-llm/tokenizer.md
+      - "棰勮缁冧笌瑙勬ā瀹氬緥": 02-llm/pretraining.md
+      - "寰皟": 02-llm/fine-tuning.md
+      - "瀵归綈(RLHF 涓?DPO)": 02-llm/rlhf-alignment.md
+      - "鎺ㄧ悊涓庨儴缃?": 02-llm/inference-deployment.md
+      - "妫€绱㈠寮虹敓鎴?RAG": 02-llm/rag.md
+      - "妯″瀷鍚庤缁?棰勮缁?SFT/RL)": 02-llm/agent-post-training.md
+      - "鎺ㄧ悊鐨勯璁粌-鍚庤缁冩帴鍙?缂╂斁寰?": 02-llm/reasoning-pretraining-posttraining.md
+  - "馃洜 Agent":
       - 03-agents/index.md
-      - AI Agent 鍏ラ棬: 03-agents/agent-intro.md
-      - Context Engineering: 03-agents/context-engineering.md
-      - 涓婁笅鏂囧伐绋嬬鐞嗘柟妗?鍏ㄦ櫙): 03-agents/context-engineering-playbook.md
-      - 涓婁笅鏂囧伐绋嬪畼鏂逛竴鎵嬭祫鏂?: 03-agents/context-engineering-official-sources.md
-      - 鏂囨。婕傜Щ娌荤悊(SSOT 鍒?CI 闂ㄧ): 03-agents/context-engineering-doc-drift.md
-      - 浠ｇ爜娉ㄩ噴绾緥(WHY 闈?WHAT): 03-agents/context-engineering-comment-discipline.md
-      - 涓婁笅鏂囧帇缂╀笌鎻愮ず缂撳瓨: 03-agents/context-engineering-compression-caching.md
-      - Agent 澶氳疆瀵硅瘽涓婁笅鏂囩鐞?nanobot 婧愮爜鎷嗚В): 03-agents/agent-context-management.md
-      - Outlines Index(娓愯繘寮忔姭闇叉浛浠?RAG): 03-agents/outlines-index-doc-retrieval.md
-      - 鐢熶骇绾?Agent 9 灞傛灦鏋?: 03-agents/ai-infra-layering.md
-      - 鏍稿績缁勪欢: 03-agents/agent-core-components.md
-      - 宸ュ叿璋冪敤: 03-agents/tool-calling.md
-      - Agent 妗嗘灦: 03-agents/agent-frameworks.md
-      - LangChain 1.x(LCEL 涓?@tool): 03-agents/langchain-framework.md
-      - LlamaIndex(RAG 涓撳): 03-agents/llamaindex-framework.md
-      - AutoGen(澶氭櫤鑳戒綋鍗忎綔): 03-agents/autogen-framework.md
-      - nanobot(杞婚噺鑷墭绠?: 03-agents/nanobot-framework.md
-      - Qwen-Agent(閫氫箟瀹樻柟): 03-agents/qwen-agent-framework.md
-      - Deep Agents(LangChain Harness): 03-agents/deepagents-framework.md
-      - Agent 妗嗘灦涓冩柟瀵规瘮: 03-agents/agent-frameworks-seven-comparison.md
-      - Agno(骞冲彴 SDK): 03-agents/agno-framework.md
-      - OpenAI Agents SDK: 03-agents/openai-agents-sdk.md
-      - Pydantic AI: 03-agents/pydantic-ai-framework.md
-      - AgentScope(闃块噷閫氫箟): 03-agents/agentscope-framework.md
-      - Microsoft Agent Framework: 03-agents/microsoft-agent-framework.md
-      - Mastra(JS 鍏ㄦ爤): 03-agents/mastra-framework.md
-      - VoltAgent(鍙屽舰鎬?: 03-agents/voltagent-framework.md
-      - 澶?Agent 鍗忎綔: 03-agents/multi-agent.md
-      - Anthropic 澶氭櫤鑳戒綋鐮旂┒绯荤粺(orchestrator-worker): 03-agents/agent-multi-agent-research-system.md
-      - 闀挎椂浠诲姟 Harness(璺ㄧ獥鍙ｄ笁浠跺): 03-agents/agent-harness-long-running.md
-      - OpenAI 闀挎椂 agent 涓変欢濂?Skills+Shell+Compaction): 03-agents/agent-long-running-openai.md
-      - 宸ュ叿璁捐浜斿師鍒?Advanced tool use: 03-agents/agent-tool-design-practice.md
-      - Agent 寮€鍙戝疄璺?: 03-agents/agent-practice.md
-      - Agent 寮€鍙戞柟娉曢€夊瀷(鍥涙柟娉曟帶鍒跺眰绾?: 03-agents/agent-development-methods.md
-      - 鍩轰簬鎻掍欢鐨?Agent 寮€鍙戣寖寮?鍘熷瓙鍖栭€忔槑): 03-agents/agent-plugin-development-paradigm.md
-      - Agent 璇勬祴: 03-agents/agent-evaluation.md
-      - Agent 闈㈣瘯棰樼煡璇嗘彁鐐?: 03-agents/agent-interview-knowledge.md
-      - WorkBuddy Bench(瀹屾垚楠屾敹): 03-agents/workbuddy-bench.md
-      - 銆婃繁鍏ョ悊瑙?AI Agent銆嬪璇讳笌绱㈠紩: 03-agents/ai-agent-book-guide.md
-      - Agent 鎸佺画杩涘寲: 03-agents/agent-continuous-evolution.md
-      - 澶氭ā鎬佷笌瀹炴椂浜や簰: 03-agents/agent-multimodal-realtime.md
-      - Agent 瑙勫垝涓庡伐浣滄祦妯″紡: 03-agents/agent-planning-patterns.md
-      - 10 涓?AI Agent 宸ヤ綔娴佹ā鏉?涓氬姟瀹炰緥): 03-agents/agent-workflow-templates.md
-      - Building effective agents(浜旂妯″紡鍘熸枃): 03-agents/agent-building-effective-agents.md
-      - Agent 璁板繂浣撶郴: 03-agents/agent-memory-systems.md
-      - Agent 鍏变韩璁板繂(澶?Agent 澶ц剳): 03-agents/agent-shared-memory.md
-      - 璁板繂妯″潡宸ョ▼璁捐(Hermes 鎷嗚В): 03-agents/agent-memory-harness-design.md
-      - Subagent(涓婁笅鏂囬殧绂?: 03-agents/subagent-isolation.md
-      - 璇勪及椹卞姩寮€鍙?EDD): 03-agents/agent-eval-driven-dev.md
-      - Agent 鏋舵瀯璁捐浣撶郴瀵艰: 03-agents/agent-architecture-series.md
-      - 鎺ㄧ悊鏃堕獙璇佽璁¤寖寮?: 03-agents/agent-test-time-verification.md
-      - Prompt 宸ョ▼: 03-agents/prompt-engineering.md
-      - 澶ц妯?Agent 绯荤粺璁捐: 03-agents/agent-system-scaling.md
-      - Agent 濡備綍鐞嗚В涓氬姟: 03-agents/agent-business-understanding.md
-      - Agent 鎰忓浘璇嗗埆(鍒嗗眰璺敱): 03-agents/agent-intent-recognition.md
-      - 鐢熶骇绾?Agent 鏋舵瀯: 03-agents/agent-production-architecture.md
-      - Agent 鎬ц兘鍓栨瀽: 03-agents/agent-performance-analysis.md
-      - AI 鍗忎綔瑙勫垯璁捐: 03-agents/agent-collaboration-rules.md
-      - Agent 鍥惧伐浣滄祦璁捐: 03-agents/agent-graph-design.md
-      - Agent 绯荤粺璁捐鐨?5 涓喅绛?: 03-agents/agent-system-5-decisions.md
-      - Agent 妗嗘灦閫夊瀷鍦板浘: 03-agents/agent-framework-selection.md
-      - Agent 瀹归敊璁捐(瀹屾暣鎬濊矾): 03-agents/agent-fault-tolerance-design.md
-      - Agent 鎸佷箙鍖栬繍琛?7 灏忔椂闂): 03-agents/agent-persistence-patterns.md
-      - Agent 鏋舵瀯鍏ㄦ櫙(涓冩。閫夊瀷): 03-agents/agent-architecture-panorama.md
-      - Agentic vs Agentive(鐪熸鐨?Agent): 03-agents/agent-model-critique.md
-      - Agentic Abstention(鍋滄鍒ゆ柇鍔?: 03-agents/agentic-abstention.md
-      - 缁忓吀澶氭櫤鑳戒綋绯荤粺(娑岀幇鏅鸿兘): 03-agents/multi-agent-systems-classical.md
-      - Agent 鏋舵瀯鍙嶇喌澧?闀挎湡娌荤悊): 03-agents/agent-architecture-antientropy.md
-      - Agent 娌荤悊璁捐(Hook 鎶ゆ爮): 03-agents/agent-governance-hooks.md
-      - 澶氭櫤鑳戒綋鍗忎綔璁捐(Team/Room): 03-agents/agent-team-room-collaboration.md
-      - Session 閫氫俊璁捐(寮傛鍗忎綔鑼冨紡): 03-agents/agent-collaboration-messaging.md
-  - 馃殌 瀹炴垬:
+      - "AI Agent 鍏ラ棬": 03-agents/agent-intro.md
+      - "Context Engineering": 03-agents/context-engineering.md
+      - "涓婁笅鏂囧伐绋嬬鐞嗘柟妗?鍏ㄦ櫙)": 03-agents/context-engineering-playbook.md
+      - "涓婁笅鏂囧伐绋嬪畼鏂逛竴鎵嬭祫鏂?": 03-agents/context-engineering-official-sources.md
+      - "鏂囨。婕傜Щ娌荤悊(SSOT 鍒?CI 闂ㄧ)": 03-agents/context-engineering-doc-drift.md
+      - "浠ｇ爜娉ㄩ噴绾緥(WHY 闈?WHAT)": 03-agents/context-engineering-comment-discipline.md
+      - "涓婁笅鏂囧帇缂╀笌鎻愮ず缂撳瓨": 03-agents/context-engineering-compression-caching.md
+      - "Agent 澶氳疆瀵硅瘽涓婁笅鏂囩鐞?nanobot 婧愮爜鎷嗚В)": 03-agents/agent-context-management.md
+      - "Outlines Index(娓愯繘寮忔姭闇叉浛浠?RAG)": 03-agents/outlines-index-doc-retrieval.md
+      - "鐢熶骇绾?Agent 9 灞傛灦鏋?": 03-agents/ai-infra-layering.md
+      - "鏍稿績缁勪欢": 03-agents/agent-core-components.md
+      - "宸ュ叿璋冪敤": 03-agents/tool-calling.md
+      - "Agent 妗嗘灦": 03-agents/agent-frameworks.md
+      - "LangChain 1.x(LCEL 涓?@tool)": 03-agents/langchain-framework.md
+      - "LlamaIndex(RAG 涓撳)": 03-agents/llamaindex-framework.md
+      - "AutoGen(澶氭櫤鑳戒綋鍗忎綔)": 03-agents/autogen-framework.md
+      - "nanobot(杞婚噺鑷墭绠?": 03-agents/nanobot-framework.md
+      - "Qwen-Agent(閫氫箟瀹樻柟)": 03-agents/qwen-agent-framework.md
+      - "Deep Agents(LangChain Harness)": 03-agents/deepagents-framework.md
+      - "Agent 妗嗘灦涓冩柟瀵规瘮": 03-agents/agent-frameworks-seven-comparison.md
+      - "Agno(骞冲彴 SDK)": 03-agents/agno-framework.md
+      - "OpenAI Agents SDK": 03-agents/openai-agents-sdk.md
+      - "Pydantic AI": 03-agents/pydantic-ai-framework.md
+      - "AgentScope(闃块噷閫氫箟)": 03-agents/agentscope-framework.md
+      - "Microsoft Agent Framework": 03-agents/microsoft-agent-framework.md
+      - "Mastra(JS 鍏ㄦ爤)": 03-agents/mastra-framework.md
+      - "VoltAgent(鍙屽舰鎬?": 03-agents/voltagent-framework.md
+      - "澶?Agent 鍗忎綔": 03-agents/multi-agent.md
+      - "Anthropic 澶氭櫤鑳戒綋鐮旂┒绯荤粺(orchestrator-worker)": 03-agents/agent-multi-agent-research-system.md
+      - "闀挎椂浠诲姟 Harness(璺ㄧ獥鍙ｄ笁浠跺)": 03-agents/agent-harness-long-running.md
+      - "OpenAI 闀挎椂 agent 涓変欢濂?Skills+Shell+Compaction)": 03-agents/agent-long-running-openai.md
+      - "宸ュ叿璁捐浜斿師鍒?Advanced tool use": 03-agents/agent-tool-design-practice.md
+      - "Agent 寮€鍙戝疄璺?": 03-agents/agent-practice.md
+      - "Agent 寮€鍙戞柟娉曢€夊瀷(鍥涙柟娉曟帶鍒跺眰绾?": 03-agents/agent-development-methods.md
+      - "鍩轰簬鎻掍欢鐨?Agent 寮€鍙戣寖寮?鍘熷瓙鍖栭€忔槑)": 03-agents/agent-plugin-development-paradigm.md
+      - "Agent 璇勬祴": 03-agents/agent-evaluation.md
+      - "Agent 闈㈣瘯棰樼煡璇嗘彁鐐?": 03-agents/agent-interview-knowledge.md
+      - "WorkBuddy Bench(瀹屾垚楠屾敹)": 03-agents/workbuddy-bench.md
+      - "銆婃繁鍏ョ悊瑙?AI Agent銆嬪璇讳笌绱㈠紩": 03-agents/ai-agent-book-guide.md
+      - "Agent 鎸佺画杩涘寲": 03-agents/agent-continuous-evolution.md
+      - "澶氭ā鎬佷笌瀹炴椂浜や簰": 03-agents/agent-multimodal-realtime.md
+      - "Agent 瑙勫垝涓庡伐浣滄祦妯″紡": 03-agents/agent-planning-patterns.md
+      - "10 涓?AI Agent 宸ヤ綔娴佹ā鏉?涓氬姟瀹炰緥)": 03-agents/agent-workflow-templates.md
+      - "Building effective agents(浜旂妯″紡鍘熸枃)": 03-agents/agent-building-effective-agents.md
+      - "Agent 璁板繂浣撶郴": 03-agents/agent-memory-systems.md
+      - "Agent 鍏变韩璁板繂(澶?Agent 澶ц剳)": 03-agents/agent-shared-memory.md
+      - "璁板繂妯″潡宸ョ▼璁捐(Hermes 鎷嗚В)": 03-agents/agent-memory-harness-design.md
+      - "Subagent(涓婁笅鏂囬殧绂?": 03-agents/subagent-isolation.md
+      - "璇勪及椹卞姩寮€鍙?EDD)": 03-agents/agent-eval-driven-dev.md
+      - "Agent 鏋舵瀯璁捐浣撶郴瀵艰": 03-agents/agent-architecture-series.md
+      - "鎺ㄧ悊鏃堕獙璇佽璁¤寖寮?": 03-agents/agent-test-time-verification.md
+      - "Prompt 宸ョ▼": 03-agents/prompt-engineering.md
+      - "澶ц妯?Agent 绯荤粺璁捐": 03-agents/agent-system-scaling.md
+      - "Agent 濡備綍鐞嗚В涓氬姟": 03-agents/agent-business-understanding.md
+      - "Agent 鎰忓浘璇嗗埆(鍒嗗眰璺敱)": 03-agents/agent-intent-recognition.md
+      - "鐢熶骇绾?Agent 鏋舵瀯": 03-agents/agent-production-architecture.md
+      - "Agent 鎬ц兘鍓栨瀽": 03-agents/agent-performance-analysis.md
+      - "AI 鍗忎綔瑙勫垯璁捐": 03-agents/agent-collaboration-rules.md
+      - "Agent 鍥惧伐浣滄祦璁捐": 03-agents/agent-graph-design.md
+      - "Agent 绯荤粺璁捐鐨?5 涓喅绛?": 03-agents/agent-system-5-decisions.md
+      - "Agent 妗嗘灦閫夊瀷鍦板浘": 03-agents/agent-framework-selection.md
+      - "Agent 瀹归敊璁捐(瀹屾暣鎬濊矾)": 03-agents/agent-fault-tolerance-design.md
+      - "Agent 鎸佷箙鍖栬繍琛?7 灏忔椂闂)": 03-agents/agent-persistence-patterns.md
+      - "Agent 鏋舵瀯鍏ㄦ櫙(涓冩。閫夊瀷)": 03-agents/agent-architecture-panorama.md
+      - "Agentic vs Agentive(鐪熸鐨?Agent)": 03-agents/agent-model-critique.md
+      - "Agentic Abstention(鍋滄鍒ゆ柇鍔?": 03-agents/agentic-abstention.md
+      - "缁忓吀澶氭櫤鑳戒綋绯荤粺(娑岀幇鏅鸿兘)": 03-agents/multi-agent-systems-classical.md
+      - "Agent 鏋舵瀯鍙嶇喌澧?闀挎湡娌荤悊)": 03-agents/agent-architecture-antientropy.md
+      - "Agent 娌荤悊璁捐(Hook 鎶ゆ爮)": 03-agents/agent-governance-hooks.md
+      - "澶氭櫤鑳戒綋鍗忎綔璁捐(Team/Room)": 03-agents/agent-team-room-collaboration.md
+      - "Session 閫氫俊璁捐(寮傛鍗忎綔鑼冨紡)": 03-agents/agent-collaboration-messaging.md
+  - "馃殌 瀹炴垬":
       - 04-practice/index.md
-      - Agent 瀹夊叏瀹¤瀹炴垬: 04-practice/agent-security-audit-practice.md
-      - Agent 鏁堟灉浼樺寲瀹炴垬(AgentLoop 7 姝ラ棴鐜?: 04-practice/agent-effect-optimization-practice.md
-      - SKILL.md 缁撴灉椹卞姩鑷繘鍖?璇勬祴+杞ㄨ抗): 04-practice/skill-evolution-results-driven.md
-      - 寰楃墿 AI Native 鐮斿彂鑼冨紡: 04-practice/ai-native-order-system-spec-driven.md
-      - 鑵捐 Vibe Flowing(AI 鍘熺敓鐮斿彂鍥㈤槦): 04-practice/ai-native-dev-team-vibeflowing.md
-      - DeepTutor(娓ぇ AI 杈呭宸ヤ綔绌洪棿): 04-practice/deeptutor-agent-workspace.md
-      - 闃块噷浜?AgentTeams(浼佷笟绾у Agent 鍗忎綔): 04-practice/aliyun-agentteams-enterprise.md
-      - Hermes OKF 鐭ヨ瘑搴?Agent 鎼缓鐭ヨ瘑搴?: 04-practice/hermes-okf-knowledge-base.md
-      - 绔埌绔満鍣ㄥ涔犻」鐩?: 04-practice/practice-end-to-end-ml.md
-      - numpy 浠庨浂瀹炵幇绁炵粡缃戠粶: 04-practice/practice-numpy-nn.md
-      - 璋冪敤 LLM API 鏋勫缓搴旂敤: 04-practice/practice-llm-api.md
-      - 鎺掓煡娓呭崟: 04-practice/practice-debug-checklist.md
-  - 馃摎 鍙傝€:
+      - "Agent 瀹夊叏瀹¤瀹炴垬": 04-practice/agent-security-audit-practice.md
+      - "Agent 鏁堟灉浼樺寲瀹炴垬(AgentLoop 7 姝ラ棴鐜?": 04-practice/agent-effect-optimization-practice.md
+      - "SKILL.md 缁撴灉椹卞姩鑷繘鍖?璇勬祴+杞ㄨ抗)": 04-practice/skill-evolution-results-driven.md
+      - "寰楃墿 AI Native 鐮斿彂鑼冨紡": 04-practice/ai-native-order-system-spec-driven.md
+      - "鑵捐 Vibe Flowing(AI 鍘熺敓鐮斿彂鍥㈤槦)": 04-practice/ai-native-dev-team-vibeflowing.md
+      - "DeepTutor(娓ぇ AI 杈呭宸ヤ綔绌洪棿)": 04-practice/deeptutor-agent-workspace.md
+      - "闃块噷浜?AgentTeams(浼佷笟绾у Agent 鍗忎綔)": 04-practice/aliyun-agentteams-enterprise.md
+      - "Hermes OKF 鐭ヨ瘑搴?Agent 鎼缓鐭ヨ瘑搴?": 04-practice/hermes-okf-knowledge-base.md
+      - "绔埌绔満鍣ㄥ涔犻」鐩?": 04-practice/practice-end-to-end-ml.md
+      - "numpy 浠庨浂瀹炵幇绁炵粡缃戠粶": 04-practice/practice-numpy-nn.md
+      - "璋冪敤 LLM API 鏋勫缓搴旂敤": 04-practice/practice-llm-api.md
+      - "鎺掓煡娓呭崟": 04-practice/practice-debug-checklist.md
+  - "馃摎 鍙傝€":
       - 05-reference/index.md
-      - 蹇呰璁烘枃娓呭崟: 05-reference/reference-papers.md
-      - 涔︾睄涓庤绋?: 05-reference/reference-books-courses.md
-      - 宸ュ叿涓庡簱: 05-reference/reference-tools.md
-      - 鍗氬涓庣ぞ鍖?: 05-reference/reference-blogs.md
-  - 馃彚 浼佷笟钀藉湴涓?FDE:
+      - "蹇呰璁烘枃娓呭崟": 05-reference/reference-papers.md
+      - "涔︾睄涓庤绋?": 05-reference/reference-books-courses.md
+      - "宸ュ叿涓庡簱": 05-reference/reference-tools.md
+      - "鍗氬涓庣ぞ鍖?": 05-reference/reference-blogs.md
+  - "馃彚 浼佷笟钀藉湴涓?FDE":
       - 06-enterprise/index.md
-      - 鐢熶骇绾?Agent 鍏ㄦ櫙(鏋舵瀯鈫掔粍缁団啋浜烘墠): 06-enterprise/production-agent-panorama.md
-      - Ontology 涓?Agent 浼佷笟钀藉湴:
+      - "鐢熶骇绾?Agent 鍏ㄦ櫙(鏋舵瀯鈫掔粍缁団啋浜烘墠)": 06-enterprise/production-agent-panorama.md
+      - "Ontology 涓?Agent 浼佷笟钀藉湴":
           - 06-enterprise/ontology-agent-adoption/index.md
-          - Ontology as Code: 06-enterprise/ontology-agent-adoption/ontology-as-code.md
-          - Ontology 鍥涘ぇ鎶€鏈?RDF/OWL/SPARQL/SHACL): 06-enterprise/ontology-agent-adoption/ontology-four-technologies.md
-          - Palantir 鎿嶄綔鍨嬫湰浣撹(鐞嗚): 06-enterprise/ontology-agent-adoption/palantir-operational-ontology.md
-          - OAG 涓?Ontology 椹卞姩鐨勪紒涓?Agent: 06-enterprise/ontology-agent-adoption/palantir-oag-agent.md
-          - Palantir 鏋勫缓妗堜緥涓庤竟鐣?: 06-enterprise/ontology-agent-adoption/palantir-cases-and-reflection.md
-          - Palantir Foundry 5姝ユ妸鏁版嵁鍙樺璞?: 06-enterprise/ontology-agent-adoption/palantir-foundry-5-steps.md
-          - Palantir 鍏徃鍏ㄦ櫙(瀹樻柟鏂囨。瑙ｈ): 06-enterprise/ontology-agent-adoption/palantir-company-overview.md
-          - 浼佷笟涓氬姟 Agent 钀藉湴(鍥涙璺緞): 06-enterprise/ontology-agent-adoption/enterprise-agent-business-rollout.md
-          - Agent 钀藉湴鏂规硶璁?寰櫤鑳戒綋): 06-enterprise/ontology-agent-adoption/agent-landing-micro-agents.md
-          - 浼佷笟 Agent 浣撶郴璁捐(鍥涜绱?涓夊眰): 06-enterprise/ontology-agent-adoption/enterprise-agent-system-design.md
-          - 浼佷笟 Agent 涓婄敓浜х殑鍥涢亾闃茬嚎: 06-enterprise/ontology-agent-adoption/enterprise-agent-production-deployment.md
-          - 楂樺痉 AI Native 鐭ヨ瘑搴?妗堜緥): 06-enterprise/ontology-agent-adoption/ai-native-knowledge-base-gaode.md
-          - AI 鍘熺敓缁勭粐鏂规硶璁?65% PR): 06-enterprise/ontology-agent-adoption/ai-native-organization-methodology.md
-          - 浼佷笟 Agent 宸ョ▼鍖?涓€)浠诲姟杈圭晫涓庡伐鍏锋不鐞?: 06-enterprise/ontology-agent-adoption/enterprise-agent-boundaries-tools.md
-          - 浼佷笟 Agent 宸ョ▼鍖?浜?寮傚父鎭㈠涓庝汉宸ユ帴绠?: 06-enterprise/ontology-agent-adoption/enterprise-agent-recovery-handoff.md
-          - 浼佷笟 Agent 宸ョ▼鍖?涓?鏉冮檺銆侀泦鎴愪笌鍙娴嬫€?: 06-enterprise/ontology-agent-adoption/enterprise-agent-permission-integration-observability.md
-          - 浼佷笟 Agent 宸ョ▼鍖?鍥?Tool/MCP/Skills/Harness: 06-enterprise/ontology-agent-adoption/enterprise-agent-tooling-harness.md
-          - Agent 鏄换鍔℃墽琛岀郴缁?: 06-enterprise/ontology-agent-adoption/agent-as-task-execution-system.md
-          - Agent 钀藉湴澶辫触鏍瑰洜鍦ㄧ瓫閫?涓変釜绛涘瓙): 06-enterprise/ontology-agent-adoption/enterprise-agent-selection-screening.md
-      - AI Friendly 鏋舵瀯:
+          - "Ontology as Code": 06-enterprise/ontology-agent-adoption/ontology-as-code.md
+          - "Ontology 鍥涘ぇ鎶€鏈?RDF/OWL/SPARQL/SHACL)": 06-enterprise/ontology-agent-adoption/ontology-four-technologies.md
+          - "Palantir 鎿嶄綔鍨嬫湰浣撹(鐞嗚)": 06-enterprise/ontology-agent-adoption/palantir-operational-ontology.md
+          - "OAG 涓?Ontology 椹卞姩鐨勪紒涓?Agent": 06-enterprise/ontology-agent-adoption/palantir-oag-agent.md
+          - "Palantir 鏋勫缓妗堜緥涓庤竟鐣?": 06-enterprise/ontology-agent-adoption/palantir-cases-and-reflection.md
+          - "Palantir Foundry 5姝ユ妸鏁版嵁鍙樺璞?": 06-enterprise/ontology-agent-adoption/palantir-foundry-5-steps.md
+          - "Palantir 鍏徃鍏ㄦ櫙(瀹樻柟鏂囨。瑙ｈ)": 06-enterprise/ontology-agent-adoption/palantir-company-overview.md
+          - "浼佷笟涓氬姟 Agent 钀藉湴(鍥涙璺緞)": 06-enterprise/ontology-agent-adoption/enterprise-agent-business-rollout.md
+          - "Agent 钀藉湴鏂规硶璁?寰櫤鑳戒綋)": 06-enterprise/ontology-agent-adoption/agent-landing-micro-agents.md
+          - "浼佷笟 Agent 浣撶郴璁捐(鍥涜绱?涓夊眰)": 06-enterprise/ontology-agent-adoption/enterprise-agent-system-design.md
+          - "浼佷笟 Agent 涓婄敓浜х殑鍥涢亾闃茬嚎": 06-enterprise/ontology-agent-adoption/enterprise-agent-production-deployment.md
+          - "楂樺痉 AI Native 鐭ヨ瘑搴?妗堜緥)": 06-enterprise/ontology-agent-adoption/ai-native-knowledge-base-gaode.md
+          - "AI 鍘熺敓缁勭粐鏂规硶璁?65% PR)": 06-enterprise/ontology-agent-adoption/ai-native-organization-methodology.md
+          - "浼佷笟 Agent 宸ョ▼鍖?涓€)浠诲姟杈圭晫涓庡伐鍏锋不鐞?": 06-enterprise/ontology-agent-adoption/enterprise-agent-boundaries-tools.md
+          - "浼佷笟 Agent 宸ョ▼鍖?浜?寮傚父鎭㈠涓庝汉宸ユ帴绠?": 06-enterprise/ontology-agent-adoption/enterprise-agent-recovery-handoff.md
+          - "浼佷笟 Agent 宸ョ▼鍖?涓?鏉冮檺銆侀泦鎴愪笌鍙娴嬫€?": 06-enterprise/ontology-agent-adoption/enterprise-agent-permission-integration-observability.md
+          - "浼佷笟 Agent 宸ョ▼鍖?鍥?Tool/MCP/Skills/Harness": 06-enterprise/ontology-agent-adoption/enterprise-agent-tooling-harness.md
+          - "Agent 鏄换鍔℃墽琛岀郴缁?": 06-enterprise/ontology-agent-adoption/agent-as-task-execution-system.md
+          - "Agent 钀藉湴澶辫触鏍瑰洜鍦ㄧ瓫閫?涓変釜绛涘瓙)": 06-enterprise/ontology-agent-adoption/enterprise-agent-selection-screening.md
+      - "AI Friendly 鏋舵瀯":
           - 06-enterprise/ai-friendly-architecture/index.md
-          - AI Friendly 鍚庣鏋舵瀯: 06-enterprise/ai-friendly-architecture/ai-friendly-backend.md
-          - Context System 鏋舵瀯(鍥涘眰杩愯绾﹀畾): 06-enterprise/ai-friendly-architecture/context-system-architecture.md
-          - 鏂囨。鏁村悎涓哄崟涓€浜嬪疄鏉ユ簮(SSOT): 06-enterprise/ai-friendly-architecture/documentation-ssot-governance.md
-      - AI 缁勭粐杞瀷涓庤秴绾т釜浣:
+          - "AI Friendly 鍚庣鏋舵瀯": 06-enterprise/ai-friendly-architecture/ai-friendly-backend.md
+          - "Context System 鏋舵瀯(鍥涘眰杩愯绾﹀畾)": 06-enterprise/ai-friendly-architecture/context-system-architecture.md
+          - "鏂囨。鏁村悎涓哄崟涓€浜嬪疄鏉ユ簮(SSOT)": 06-enterprise/ai-friendly-architecture/documentation-ssot-governance.md
+      - "AI 缁勭粐杞瀷涓庤秴绾т釜浣":
           - 06-enterprise/ai-org-transformation/index.md
-          - 浠庤秴绾т釜浣撳埌瓒呯骇缁勭粐: 06-enterprise/ai-org-transformation/super-individual-to-super-org.md
-          - 浼佷笟 AI 鎴樼暐(浜旂浠峰€兼ā鍨?: 06-enterprise/ai-org-transformation/ai-value-models-openai.md
-          - 涓汉 AI 鎬濈淮(浠庡啓浠ｇ爜鐨勪汉鍒?AI 鍗忎綔鑰?: 06-enterprise/ai-org-transformation/ai-native-mindset-individual.md
-      - FDE 鐞嗚涓庢柟娉曡:
+          - "浠庤秴绾т釜浣撳埌瓒呯骇缁勭粐": 06-enterprise/ai-org-transformation/super-individual-to-super-org.md
+          - "浼佷笟 AI 鎴樼暐(浜旂浠峰€兼ā鍨?": 06-enterprise/ai-org-transformation/ai-value-models-openai.md
+          - "涓汉 AI 鎬濈淮(浠庡啓浠ｇ爜鐨勪汉鍒?AI 鍗忎綔鑰?": 06-enterprise/ai-org-transformation/ai-native-mindset-individual.md
+      - "FDE 鐞嗚涓庢柟娉曡":
           - 06-enterprise/fde-methodology/index.md
-          - 銆婂墠绾块儴缃插伐绋嬪笀銆嬪璇讳笌绱㈠紩: 06-enterprise/fde-methodology/fde-book-guide.md
-          - FDE 鐨勫礇璧?: 06-enterprise/fde-methodology/fde-rising.md
-          - 瑙ｅ喅姝ｇ‘鐨勯棶棰?: 06-enterprise/fde-methodology/fde-problem.md
-          - 璧㈠緱瀹㈡埛: 06-enterprise/fde-methodology/fde-acquisition.md
-          - 婵€娲婚儴缃?: 06-enterprise/fde-methodology/fde-activation.md
-          - 瀹堜綇缁害: 06-enterprise/fde-methodology/fde-retention.md
-          - 鎵╁ぇ鏀跺叆: 06-enterprise/fde-methodology/fde-revenue.md
-          - 瑙勬ā鍖栧鍒?: 06-enterprise/fde-methodology/fde-scaling.md
-          - 妗堜緥闆嗕笌鑱屼笟閬撳痉: 06-enterprise/fde-methodology/fde-cases.md
-  - 馃洜锔?Agent Coding 缁忛獙:
+          - "銆婂墠绾块儴缃插伐绋嬪笀銆嬪璇讳笌绱㈠紩": 06-enterprise/fde-methodology/fde-book-guide.md
+          - "FDE 鐨勫礇璧?": 06-enterprise/fde-methodology/fde-rising.md
+          - "瑙ｅ喅姝ｇ‘鐨勯棶棰?": 06-enterprise/fde-methodology/fde-problem.md
+          - "璧㈠緱瀹㈡埛": 06-enterprise/fde-methodology/fde-acquisition.md
+          - "婵€娲婚儴缃?": 06-enterprise/fde-methodology/fde-activation.md
+          - "瀹堜綇缁害": 06-enterprise/fde-methodology/fde-retention.md
+          - "鎵╁ぇ鏀跺叆": 06-enterprise/fde-methodology/fde-revenue.md
+          - "瑙勬ā鍖栧鍒?": 06-enterprise/fde-methodology/fde-scaling.md
+          - "妗堜緥闆嗕笌鑱屼笟閬撳痉": 06-enterprise/fde-methodology/fde-cases.md
+  - "馃洜锔?Agent Coding 缁忛獙":
       - 07-agent-coding/index.md
-      - 浣跨敤缁忛獙:
+      - "浣跨敤缁忛獙":
           - 07-agent-coding/experience/index.md
-          - Ralph Wiggum 寰幆(鏃犻檺寰幆鏂规硶璁?: 07-agent-coding/experience/ralph-wiggum-loop.md
-          - AI 鏃朵唬 TDD 瀹炶返(鍥涘眰钀藉湴 Codex): 07-agent-coding/experience/ai-tdd-practice.md
-          - Loop Engineering 鏃犱汉鍊煎畧杩唬: 07-agent-coding/experience/loop-engineering.md
-          - Vibe Coding 鏈€浣冲疄璺?宸ョ▼闂幆鎬荤翰): 07-agent-coding/experience/vibe-coding-engineering-practice.md
-          - OpenAI Harness Engineering(0 琛屾墜鍐欐垬鎶?: 07-agent-coding/experience/openai-harness-engineering.md
-          - 缁?Coding Agent 绔嬭鐭?: 07-agent-coding/experience/agent-rules-agents-md.md
-          - OpenAI 瀹樻柟 Prompt 鎸囧崡: 07-agent-coding/experience/openai-prompt-guide.md
-          - Git Worktree 骞惰寮€鍙戦殧绂?: 07-agent-coding/experience/git-worktree-parallel-agents.md
-          - Graph Engineering 14姝ヨ矾绾垮浘: 07-agent-coding/experience/graph-engineering-14-steps.md
-          - Agent 浜ゆ帴鏂规硶璁?handoff): 07-agent-coding/experience/handoff-handover-methodology.md
-          - Spec-First 鍐崇瓥鏍?16 鎬濈淮妯″瀷): 07-agent-coding/experience/spec-first-decision-stack.md
-          - AI Coding Harness 璁捐缁忛獙: 07-agent-coding/experience/ai-coding-harness-design.md
-          - AI Native 宸ヤ綔鏂瑰紡(绠＄悊寮忎簲浠朵簨): 07-agent-coding/experience/ai-native-manage-5-things.md
-          - AI 鍗忎綔 7 鏉″畨鍏ㄦ搷浣滆鑼?: 07-agent-coding/experience/ai-coding-7-safety-rules.md
-          - 鐢?Agent 鎸佺画浜や粯(璁ょ煡澶嶆潅搴?: 07-agent-coding/experience/agent-cognitive-complexity-gates.md
-          - Gate 妯″紡璇﹁В: 07-agent-coding/experience/gate-pattern.md
-          - Agentic Code Review(浠ｇ爜瀹℃煡): 07-agent-coding/experience/agentic-code-review.md
-          - Agent Hook 浣跨敤鎸囧崡(鍒囬潰鏈哄埗): 07-agent-coding/experience/agent-hooks-usage.md
-          - Agent Hook 瀹炴垬(Codex/Claude Code 閰嶇疆): 07-agent-coding/experience/agent-hooks-codex-claude-practice.md
-          - 鏁版嵁鎶撳彇/鍒嗘瀽缁忛獙绗旇: 07-agent-coding/experience/data-scraping-notes.md
-      - Skill 鏀惰棌:
+          - "Ralph Wiggum 寰幆(鏃犻檺寰幆鏂规硶璁?": 07-agent-coding/experience/ralph-wiggum-loop.md
+          - "AI 鏃朵唬 TDD 瀹炶返(鍥涘眰钀藉湴 Codex)": 07-agent-coding/experience/ai-tdd-practice.md
+          - "Loop Engineering 鏃犱汉鍊煎畧杩唬": 07-agent-coding/experience/loop-engineering.md
+          - "Vibe Coding 鏈€浣冲疄璺?宸ョ▼闂幆鎬荤翰)": 07-agent-coding/experience/vibe-coding-engineering-practice.md
+          - "OpenAI Harness Engineering(0 琛屾墜鍐欐垬鎶?": 07-agent-coding/experience/openai-harness-engineering.md
+          - "缁?Coding Agent 绔嬭鐭?": 07-agent-coding/experience/agent-rules-agents-md.md
+          - "OpenAI 瀹樻柟 Prompt 鎸囧崡": 07-agent-coding/experience/openai-prompt-guide.md
+          - "Git Worktree 骞惰寮€鍙戦殧绂?": 07-agent-coding/experience/git-worktree-parallel-agents.md
+          - "Graph Engineering 14姝ヨ矾绾垮浘": 07-agent-coding/experience/graph-engineering-14-steps.md
+          - "Agent 浜ゆ帴鏂规硶璁?handoff)": 07-agent-coding/experience/handoff-handover-methodology.md
+          - "Spec-First 鍐崇瓥鏍?16 鎬濈淮妯″瀷)": 07-agent-coding/experience/spec-first-decision-stack.md
+          - "AI Coding Harness 璁捐缁忛獙": 07-agent-coding/experience/ai-coding-harness-design.md
+          - "AI Native 宸ヤ綔鏂瑰紡(绠＄悊寮忎簲浠朵簨)": 07-agent-coding/experience/ai-native-manage-5-things.md
+          - "AI 鍗忎綔 7 鏉″畨鍏ㄦ搷浣滆鑼?": 07-agent-coding/experience/ai-coding-7-safety-rules.md
+          - "鐢?Agent 鎸佺画浜や粯(璁ょ煡澶嶆潅搴?": 07-agent-coding/experience/agent-cognitive-complexity-gates.md
+          - "Gate 妯″紡璇﹁В": 07-agent-coding/experience/gate-pattern.md
+          - "Agentic Code Review(浠ｇ爜瀹℃煡)": 07-agent-coding/experience/agentic-code-review.md
+          - "Agent Hook 浣跨敤鎸囧崡(鍒囬潰鏈哄埗)": 07-agent-coding/experience/agent-hooks-usage.md
+          - "Agent Hook 瀹炴垬(Codex/Claude Code 閰嶇疆)": 07-agent-coding/experience/agent-hooks-codex-claude-practice.md
+          - "鏁版嵁鎶撳彇/鍒嗘瀽缁忛獙绗旇": 07-agent-coding/experience/data-scraping-notes.md
+      - "Skill 鏀惰棌":
           - 07-agent-coding/skills/index.md
-          - GSD 宸ヤ綔娴佺郴缁?涓婁笅鏂囧伐绋?: 07-agent-coding/skills/gsd-workflow-skill.md
-          - gstack(瑙掕壊鍖栬櫄鎷熷洟闃?: 07-agent-coding/skills/gstack-skills.md
-          - Spec Kit(GitHub 瑙勬牸椹卞姩宸ュ叿): 07-agent-coding/skills/spec-kit-github.md
-          - SDD 涓?OpenSpec+Superpowers: 07-agent-coding/skills/sdd-openspec-superpowers.md
-          - prd-writer(鐢?AI 鍐?PRD): 07-agent-coding/skills/prd-writer-skill.md
-          - Matt Pocock 鐨?Skills For Real Engineers: 07-agent-coding/skills/mattpocock-skills.md
-          - 绉戠爺棰嗗煙鐜版垚 Skill 鏀惰棌: 07-agent-coding/skills/research-skills-collection.md
-          - Eval Engineering Skill: 07-agent-coding/skills/eval-engineering-skill.md
-          - handoff Skill(鎺ュ姏鏂囨。): 07-agent-coding/skills/handoff-skill.md
-          - Spec-First Skill(宸ョ▼闂幆): 07-agent-coding/skills/spec-first-skill.md
-          - patent-disclosure-skill(涓撳埄浜ゅ簳涔?: 07-agent-coding/skills/patent-disclosure-skill.md
-          - Obsidian AI Skill 鏀惰棌: 07-agent-coding/skills/obsidian-ai-skills.md
-          - Agent Skill 鐗堟湰绠＄悊: 07-agent-coding/skills/skill-version-management.md
-          - Skill 娌荤悊(Nacos AI Registry): 07-agent-coding/skills/skill-governance-registry.md
-          - Skill 娴嬭瘎(浜斿ぇ缁村害): 07-agent-coding/skills/skill-evaluation.md
-          - SkillHub(TRACE 璐ㄩ噺璇勬祴涓庡垎鍙?: 07-agent-coding/skills/skillhub-trace-evaluation.md
-          - Agent Plugins 1.0(Skill 缁熶竴鎻掑ご瑙勮寖): 07-agent-coding/skills/agent-plugins-spec.md
-          - Agent Skills 璁捐鐞嗗康(progressive disclosure): 07-agent-coding/skills/agent-skills-design.md
-      - 椤圭洰 Agent 閰嶇疆:
+          - "GSD 宸ヤ綔娴佺郴缁?涓婁笅鏂囧伐绋?": 07-agent-coding/skills/gsd-workflow-skill.md
+          - "gstack(瑙掕壊鍖栬櫄鎷熷洟闃?": 07-agent-coding/skills/gstack-skills.md
+          - "Spec Kit(GitHub 瑙勬牸椹卞姩宸ュ叿)": 07-agent-coding/skills/spec-kit-github.md
+          - "SDD 涓?OpenSpec+Superpowers": 07-agent-coding/skills/sdd-openspec-superpowers.md
+          - "prd-writer(鐢?AI 鍐?PRD)": 07-agent-coding/skills/prd-writer-skill.md
+          - "Matt Pocock 鐨?Skills For Real Engineers": 07-agent-coding/skills/mattpocock-skills.md
+          - "绉戠爺棰嗗煙鐜版垚 Skill 鏀惰棌": 07-agent-coding/skills/research-skills-collection.md
+          - "Eval Engineering Skill": 07-agent-coding/skills/eval-engineering-skill.md
+          - "handoff Skill(鎺ュ姏鏂囨。)": 07-agent-coding/skills/handoff-skill.md
+          - "Spec-First Skill(宸ョ▼闂幆)": 07-agent-coding/skills/spec-first-skill.md
+          - "patent-disclosure-skill(涓撳埄浜ゅ簳涔?": 07-agent-coding/skills/patent-disclosure-skill.md
+          - "Obsidian AI Skill 鏀惰棌": 07-agent-coding/skills/obsidian-ai-skills.md
+          - "Agent Skill 鐗堟湰绠＄悊": 07-agent-coding/skills/skill-version-management.md
+          - "Skill 娌荤悊(Nacos AI Registry)": 07-agent-coding/skills/skill-governance-registry.md
+          - "Skill 娴嬭瘎(浜斿ぇ缁村害)": 07-agent-coding/skills/skill-evaluation.md
+          - "SkillHub(TRACE 璐ㄩ噺璇勬祴涓庡垎鍙?": 07-agent-coding/skills/skillhub-trace-evaluation.md
+          - "Agent Plugins 1.0(Skill 缁熶竴鎻掑ご瑙勮寖)": 07-agent-coding/skills/agent-plugins-spec.md
+          - "Agent Skills 璁捐鐞嗗康(progressive disclosure)": 07-agent-coding/skills/agent-skills-design.md
+      - "椤圭洰 Agent 閰嶇疆":
           - 07-agent-coding/agent-config/index.md
-          - 鎼缓涓汉椤圭洰鐨?Agent 閰嶇疆(EltexSoft): 07-agent-coding/agent-config/claude-code-setup.md
-      - Claude Code 娣卞害瑙ｆ瀽:
+          - "鎼缓涓汉椤圭洰鐨?Agent 閰嶇疆(EltexSoft)": 07-agent-coding/agent-config/claude-code-setup.md
+      - "Claude Code 娣卞害瑙ｆ瀽":
           - 07-agent-coding/claude-code-deep-dive/index.md
-          - 鏋舵瀯涓庡伐鍏风郴缁?: 07-agent-coding/claude-code-deep-dive/claude-architecture-tools.md
-          - 瀹樻柟鏈€浣冲疄璺?楠岃瘉闂幆/鍥涢樁娈?瑙勬ā鍖?: 07-agent-coding/claude-code-deep-dive/claude-code-best-practices.md
-          - Sandboxing(鍙岃竟鐣岄殧绂?鍑瘉澶栫疆): 07-agent-coding/claude-code-deep-dive/claude-code-sandboxing.md
-          - Worktree 涓?Agent Teams: 07-agent-coding/claude-code-deep-dive/claude-worktree-teams.md
-          - Cross-session Messaging(浼氳瘽閫氫俊): 07-agent-coding/claude-code-deep-dive/claude-cross-session-messaging.md
-          - Dynamic Workflows(ultracode 缂栨帓): 07-agent-coding/claude-code-deep-dive/claude-workflows.md
-          - Skills/Plugin/Subagent: 07-agent-coding/claude-code-deep-dive/claude-skills-plugin-subagent.md
-          - 闅愯棌鎶€宸?: 07-agent-coding/claude-code-deep-dive/claude-code-tips.md
-          - 婧愮爜瑙ｆ瀽(20 绔犲叏鏁村悎): 07-agent-coding/claude-code-deep-dive/claude-code-harness-analysis.md
-          - Tmux 鍏ラ棬(Claude Code 閰嶅): 07-agent-coding/claude-code-deep-dive/tmux-for-claude-code.md
-  - 馃О Harness 妗嗘灦涓庡紑婧愭柟妗:
+          - "鏋舵瀯涓庡伐鍏风郴缁?": 07-agent-coding/claude-code-deep-dive/claude-architecture-tools.md
+          - "瀹樻柟鏈€浣冲疄璺?楠岃瘉闂幆/鍥涢樁娈?瑙勬ā鍖?": 07-agent-coding/claude-code-deep-dive/claude-code-best-practices.md
+          - "Sandboxing(鍙岃竟鐣岄殧绂?鍑瘉澶栫疆)": 07-agent-coding/claude-code-deep-dive/claude-code-sandboxing.md
+          - "Worktree 涓?Agent Teams": 07-agent-coding/claude-code-deep-dive/claude-worktree-teams.md
+          - "Cross-session Messaging(浼氳瘽閫氫俊)": 07-agent-coding/claude-code-deep-dive/claude-cross-session-messaging.md
+          - "Dynamic Workflows(ultracode 缂栨帓)": 07-agent-coding/claude-code-deep-dive/claude-workflows.md
+          - "Skills/Plugin/Subagent": 07-agent-coding/claude-code-deep-dive/claude-skills-plugin-subagent.md
+          - "闅愯棌鎶€宸?": 07-agent-coding/claude-code-deep-dive/claude-code-tips.md
+          - "婧愮爜瑙ｆ瀽(20 绔犲叏鏁村悎)": 07-agent-coding/claude-code-deep-dive/claude-code-harness-analysis.md
+          - "Tmux 鍏ラ棬(Claude Code 閰嶅)": 07-agent-coding/claude-code-deep-dive/tmux-for-claude-code.md
+  - "馃О Harness 妗嗘灦涓庡紑婧愭柟妗":
       - 08-harness/index.md
-      - 缂栫爜 Agent 宸ュ叿: 08-harness/coding-agents.md
-      - 閫氱敤缂栨帓妗嗘灦: 08-harness/orchestration-frameworks.md
-      - 閰嶅寮€婧愭柟妗?: 08-harness/harness-tools.md
-      - PenguinHarness(涓撻鏀跺綍): 08-harness/penguin-harness.md
-      - Pi Agent(杩愯鏃舵灦鏋?鎻掍欢+DeepSearch): 08-harness/pi-agent-plugins.md
-      - Pi Agent Harness 娣卞害瑙ｆ瀽(鍝插+鍥涘眰+鐢熸€?: 08-harness/pi-agent-harness-deep-dive.md
-      - DeepSeek Harness(涓€鍒囩殕鎻掍欢): 08-harness/deepseek-harness.md
-      - Cordis 鎻掍欢妗嗘灦(鏁欑▼/鍘熺悊/鍙潬鎬?: 08-harness/cordis-plugin-framework.md
-      - TencentDB Agent Memory(涓撻鏀跺綍): 08-harness/agent-memory-plugin.md
-      - Multica(涓撻鏀跺綍): 08-harness/multica.md
-      - Agent Harness 鍙戝睍鍙蹭笌绔炰簤鏍煎眬: 08-harness/harness-history-landscape.md
-      - OpenWorker 妗岄潰 Agent 鎷嗚В: 08-harness/openworker-architecture.md
-      - AgentScope 2.0(Managed Agents 搴曞骇): 08-harness/agentscope-managed-agents.md
-      - 浜戠杞欢宸ュ巶(娣卞害鎷嗚В): 08-harness/cloud-software-factory.md
-      - Headroom(涓婁笅鏂囧帇缂╁眰): 08-harness/headroom-context-compression.md
-      - TuyaOpen(AI 纭欢 Harness): 08-harness/tuyaopen-ai-hardware.md
-      - Reasonix 浣跨敤鏁欑▼(灏忕櫧鐗?: 08-harness/reasonix-tutorial.md
-      - OpenCode 浣跨敤鏁欑▼(灏忕櫧鐗?: 08-harness/opencode-tutorial.md
-      - Crush(缁堢缂栫▼鎼。): 08-harness/crush-coding-agent.md
-      - Avernet(Agent 鍗忎綔灞?: 08-harness/avernet-collaboration-network.md
-      - AutoAgent(闆朵唬鐮佹鏋?: 08-harness/autoagent-zero-code-framework.md
+      - "缂栫爜 Agent 宸ュ叿": 08-harness/coding-agents.md
+      - "閫氱敤缂栨帓妗嗘灦": 08-harness/orchestration-frameworks.md
+      - "閰嶅寮€婧愭柟妗?": 08-harness/harness-tools.md
+      - "PenguinHarness(涓撻鏀跺綍)": 08-harness/penguin-harness.md
+      - "Pi Agent(杩愯鏃舵灦鏋?鎻掍欢+DeepSearch)": 08-harness/pi-agent-plugins.md
+      - "Pi Agent Harness 娣卞害瑙ｆ瀽(鍝插+鍥涘眰+鐢熸€?": 08-harness/pi-agent-harness-deep-dive.md
+      - "DeepSeek Harness(涓€鍒囩殕鎻掍欢)": 08-harness/deepseek-harness.md
+      - "Cordis 鎻掍欢妗嗘灦(鏁欑▼/鍘熺悊/鍙潬鎬?": 08-harness/cordis-plugin-framework.md
+      - "TencentDB Agent Memory(涓撻鏀跺綍)": 08-harness/agent-memory-plugin.md
+      - "Multica(涓撻鏀跺綍)": 08-harness/multica.md
+      - "Agent Harness 鍙戝睍鍙蹭笌绔炰簤鏍煎眬": 08-harness/harness-history-landscape.md
+      - "OpenWorker 妗岄潰 Agent 鎷嗚В": 08-harness/openworker-architecture.md
+      - "AgentScope 2.0(Managed Agents 搴曞骇)": 08-harness/agentscope-managed-agents.md
+      - "浜戠杞欢宸ュ巶(娣卞害鎷嗚В)": 08-harness/cloud-software-factory.md
+      - "Headroom(涓婁笅鏂囧帇缂╁眰)": 08-harness/headroom-context-compression.md
+      - "TuyaOpen(AI 纭欢 Harness)": 08-harness/tuyaopen-ai-hardware.md
+      - "Reasonix 浣跨敤鏁欑▼(灏忕櫧鐗?": 08-harness/reasonix-tutorial.md
+      - "OpenCode 浣跨敤鏁欑▼(灏忕櫧鐗?": 08-harness/opencode-tutorial.md
+      - "Crush(缁堢缂栫▼鎼。)": 08-harness/crush-coding-agent.md
+      - "Avernet(Agent 鍗忎綔灞?": 08-harness/avernet-collaboration-network.md
+      - "AutoAgent(闆朵唬鐮佹鏋?": 08-harness/autoagent-zero-code-framework.md
   - 馃摜 鏀朵欢绠? inbox/README.md
-  - 馃彨 Agent 鍓嶆部瀛︽湳:
+  - "馃彨 Agent 鍓嶆部瀛︽湳":
       - 09-agent-research/index.md
-      - 鎺ㄧ悊鏃堕獙璇?DeepVerifier)璁烘枃瑙ｆ瀽: 09-agent-research/inference-time-verification.md
-      - Critique of Agent Model 璁烘枃瑙ｆ瀽(GIC): 09-agent-research/agent-model-critique-paper.md
-      - 鑷垜鏀硅繘缁艰堪(妯″瀷鏇存柊鍒拌剼鎵嬫灦婕斿寲): 09-agent-research/self-improving-agents-survey.md
-      - Self-Harness(Agent 鑷垜鏀归€?: 09-agent-research/self-harness-paper.md
-      - 鑷繘鍖?Agent 缁艰堪: 09-agent-research/self-evolving-agents-survey.md
-      - Harness Handbook(琛屼负瀹氫綅): 09-agent-research/harness-handbook.md
-      - LLM 璁板繂缁艰堪(涓夎酱鍒嗙被娉?: 09-agent-research/llm-memory-survey.md
-      - Cordis 鏃剁┖鍙粍鍚堟€ц鏂囩患杩?鎻掍欢鍖栦笌 AGI 璺緞): 09-agent-research/spatiotemporal-composability-paper-survey.md
-      - LongHorizon-Harness(闀跨▼浠诲姟鐘舵€佺鐞?: 09-agent-research/longhorizon-harness-paper.md
-  - 馃摫 楦胯挋寮€鍙:
+      - "鎺ㄧ悊鏃堕獙璇?DeepVerifier)璁烘枃瑙ｆ瀽": 09-agent-research/inference-time-verification.md
+      - "Critique of Agent Model 璁烘枃瑙ｆ瀽(GIC)": 09-agent-research/agent-model-critique-paper.md
+      - "鑷垜鏀硅繘缁艰堪(妯″瀷鏇存柊鍒拌剼鎵嬫灦婕斿寲)": 09-agent-research/self-improving-agents-survey.md
+      - "Self-Harness(Agent 鑷垜鏀归€?": 09-agent-research/self-harness-paper.md
+      - "鑷繘鍖?Agent 缁艰堪": 09-agent-research/self-evolving-agents-survey.md
+      - "Harness Handbook(琛屼负瀹氫綅)": 09-agent-research/harness-handbook.md
+      - "LLM 璁板繂缁艰堪(涓夎酱鍒嗙被娉?": 09-agent-research/llm-memory-survey.md
+      - "Cordis 鏃剁┖鍙粍鍚堟€ц鏂囩患杩?鎻掍欢鍖栦笌 AGI 璺緞)": 09-agent-research/spatiotemporal-composability-paper-survey.md
+      - "LongHorizon-Harness(闀跨▼浠诲姟鐘舵€佺鐞?": 09-agent-research/longhorizon-harness-paper.md
+  - "馃摫 楦胯挋寮€鍙":
       - 10-harmonyos/index.md
-      - 楦胯挋骞冲彴鍏ㄦ櫙涓庡紑鍙戝熀绾?: 10-harmonyos/harmonyos-platform-overview.md
-      - ArkUI 寮€鍙?: 10-harmonyos/harmonyos-arkui-development.md
-      - 楦胯挋璐ㄩ噺涓庡彂甯?: 10-harmonyos/harmonyos-quality-release.md
-      - AI 杈呭姪楦胯挋寮€鍙?: 10-harmonyos/harmonyos-ai-development.md
-      - 楦胯挋绂荤嚎鐭ヨ瘑搴?API 12-23): 10-harmonyos/harmonyos-offline-reference.md
+      - "楦胯挋骞冲彴鍏ㄦ櫙涓庡紑鍙戝熀绾?": 10-harmonyos/harmonyos-platform-overview.md
+      - "ArkUI 寮€鍙?": 10-harmonyos/harmonyos-arkui-development.md
+      - "楦胯挋璐ㄩ噺涓庡彂甯?": 10-harmonyos/harmonyos-quality-release.md
+      - "AI 杈呭姪楦胯挋寮€鍙?": 10-harmonyos/harmonyos-ai-development.md
+      - "楦胯挋绂荤嚎鐭ヨ瘑搴?API 12-23)": 10-harmonyos/harmonyos-offline-reference.md
 
 extra:
   generator: false
   social:
-    - icon: fontawesome/brands/github
+    - "icon": fontawesome/brands/github
       link: https://github.com/
 
 copyright: "AI 椹卞姩鐨勫涔?Wiki 鈥?涓汉瀛︿範绗旇,閮ㄥ垎鍐呭鏉ヨ嚜鍏紑璧勬枡,璇锋敞鏄庢潵婧?
