@@ -185,7 +185,7 @@ nav:
       - numpy 浠庨浂瀹炵幇绁炵粡缃戠粶: 04-practice/practice-numpy-nn.md
       - 璋冪敤 LLM API 鏋勫缓搴旂敤: 04-practice/practice-llm-api.md
       - 鎺掓煡娓呭崟: 04-practice/practice-debug-checklist.md
-  - 馃摎 鍙傝€?
+  - 馃摎 鍙傝€:
       - 05-reference/index.md
       - 蹇呰璁烘枃娓呭崟: 05-reference/reference-papers.md
       - 涔︾睄涓庤绋?: 05-reference/reference-books-courses.md
@@ -295,7 +295,7 @@ nav:
           - 闅愯棌鎶€宸?: 07-agent-coding/claude-code-deep-dive/claude-code-tips.md
           - 婧愮爜瑙ｆ瀽(20 绔犲叏鏁村悎): 07-agent-coding/claude-code-deep-dive/claude-code-harness-analysis.md
           - Tmux 鍏ラ棬(Claude Code 閰嶅): 07-agent-coding/claude-code-deep-dive/tmux-for-claude-code.md
-  - 馃О Harness 妗嗘灦涓庡紑婧愭柟妗?
+  - 馃О Harness 妗嗘灦涓庡紑婧愭柟妗:
       - 08-harness/index.md
       - 缂栫爜 Agent 宸ュ叿: 08-harness/coding-agents.md
       - 閫氱敤缂栨帓妗嗘灦: 08-harness/orchestration-frameworks.md
@@ -330,7 +330,7 @@ nav:
       - LLM 璁板繂缁艰堪(涓夎酱鍒嗙被娉?: 09-agent-research/llm-memory-survey.md
       - Cordis 鏃剁┖鍙粍鍚堟€ц鏂囩患杩?鎻掍欢鍖栦笌 AGI 璺緞): 09-agent-research/spatiotemporal-composability-paper-survey.md
       - LongHorizon-Harness(闀跨▼浠诲姟鐘舵€佺鐞?: 09-agent-research/longhorizon-harness-paper.md
-  - 馃摫 楦胯挋寮€鍙?
+  - 馃摫 楦胯挋寮€鍙:
       - 10-harmonyos/index.md
       - 楦胯挋骞冲彴鍏ㄦ櫙涓庡紑鍙戝熀绾?: 10-harmonyos/harmonyos-platform-overview.md
       - ArkUI 寮€鍙?: 10-harmonyos/harmonyos-arkui-development.md
